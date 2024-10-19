@@ -1,2 +1,2 @@
-# homelab-iac
-IAC for my homelab setup
+# Homelab IAC
+Infra as Code for my Homelab Setup
