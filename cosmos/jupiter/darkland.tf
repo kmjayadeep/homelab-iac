@@ -21,7 +21,7 @@ resource "proxmox_vm_qemu" "darkland" {
   sockets                = 1
   tablet                 = true
   vm_state               = "running"
-  tags = "game,valheim"
+  tags                   = "game,valheim"
   disks {
     ide {
       ide2 {
@@ -33,8 +33,8 @@ resource "proxmox_vm_qemu" "darkland" {
     scsi {
       scsi0 {
         disk {
-          size                 = "100G"
-          storage              = "local-lvm"
+          size    = "100G"
+          storage = "local-lvm"
         }
       }
     }
