@@ -2,7 +2,7 @@ resource "proxmox_vm_qemu" "nixos-test" {
   target_node            = "jupiter"
   agent                  = 1
   bios                   = "seabios"
-  boot                   = " "
+  clone                  = "nixos-base"
   ciupgrade              = false
   cores                  = 2
   define_connection_info = false
