@@ -10,7 +10,7 @@ resource "proxmox_vm_qemu" "nixos-test" {
   force_create           = false
   full_clone             = true
   hotplug                = "network,disk,usb"
-  ipconfig0              = "ip=192.168.1.60/24,gw=192.168.1.1,ip6=dhcp"
+  ipconfig0              = "ip=192.168.1.64/24,gw=192.168.1.1,ip6=dhcp"
   kvm                    = true
   memory                 = 4098
   name                   = "nixos-test"
