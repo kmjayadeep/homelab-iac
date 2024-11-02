@@ -22,19 +22,10 @@
     nix.settings.trusted-users = [ "root" "@wheel" ];
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-    # Enable mDNS for `hostname.local` addresses
-    services.avahi.enable = true;
-    services.avahi.nssmdns = true;
-    services.avahi.publish = {
-      enable = true;
-      addresses = true;
-    };
-
     # Some sane packages we need on every system
     environment.systemPackages = with pkgs; [
       vim  # for emergencies
       git # for pulling nix flakes
-      python3 # for ansible
     ];
 
     # Don't ask for passwords
