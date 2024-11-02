@@ -1,7 +1,7 @@
 module "fireland" {
   source = "../../terraform-modules/proxmox-vm-qemu"
 
-  vmid       = 201
+  vmid        = 201
   target_node = "jupiter"
   name        = "fireland"
   clone       = "nixos-base"
@@ -12,4 +12,10 @@ module "fireland" {
   ipv4_addr   = "192.168.1.70/24"
   ipv4_gw     = "192.168.1.1"
   disk_size   = "100G"
+}
+
+module "fireland_s3" {
+  source      = "../../terraform-modules/minio_s3_bucket"
+  name        = "fireland-valaheim-backup"
+  create_user = true
 }
