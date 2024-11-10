@@ -12,6 +12,7 @@ module "fireland" {
   ipv4_addr   = "192.168.1.70/24"
   ipv4_gw     = "192.168.1.1"
   disk_size   = "100G"
+  tags        = "game,valheim"
 }
 
 module "fireland_s3" {

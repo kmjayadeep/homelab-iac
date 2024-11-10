@@ -20,7 +20,7 @@ resource "proxmox_vm_qemu" "darkland" {
   scsihw                 = "virtio-scsi-single"
   sockets                = 1
   tablet                 = true
-  vm_state               = "running"
+  vm_state               = "stopped"
   tags                   = "game,valheim"
   disks {
     ide {

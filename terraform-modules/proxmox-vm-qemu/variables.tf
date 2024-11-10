@@ -50,3 +50,9 @@ variable "disk_size" {
   description = "Disk size. Eg: 30G"
   default     = "50G"
 }
+
+variable "tags" {
+  description = "Comma separated tags for the VM"
+  type        = string
+  default     = ""
+}

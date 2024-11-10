@@ -23,6 +23,7 @@ resource "proxmox_vm_qemu" "this" {
   sshkeys                = var.sshkeys
   tablet                 = true
   vm_state               = "running"
+  tags                   = var.tags
   disks {
     ide {
       ide2 {
