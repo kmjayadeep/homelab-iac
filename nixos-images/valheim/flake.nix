@@ -16,6 +16,7 @@
           ./modules/user.nix
           ./modules/valheim-server.nix
           ./modules/backup.nix
+          ./modules/tailscale.nix
           ./hosts/fireland.nix
         ];
       };
