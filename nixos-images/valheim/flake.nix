@@ -15,6 +15,7 @@
           ./configuration.nix
           ./modules/user.nix
           ./modules/valheim-server.nix
+          ./modules/backup.nix
           ./hosts/fireland.nix
         ];
       };
