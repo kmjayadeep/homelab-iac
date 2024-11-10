@@ -3,6 +3,8 @@
 {
   services.nginx = {
     enable = true;
+    clientMaxBodySize = "100m";
+    recommendedProxySettings = true; # Add X- headers
     virtualHosts."coder.cosmos.cboxlab.com" = {
       # Set up the reverse proxy
       locations."/" = {
