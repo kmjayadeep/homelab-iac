@@ -1,6 +1,6 @@
 {
   config,
-  pkgs,
+  lib,
   ...
 }: {
   services.valheim = {
@@ -8,7 +8,7 @@
     # crossplay = true;
     password = lib.strings.fileContents ../secrets/secret-valheim-password;
     adminList = [
-      lib.strings.fileContents ../secrets/secret-admin-id;
+      "${lib.strings.fileContents ../secrets/secret-admin-id}"
     ];
   };
 
