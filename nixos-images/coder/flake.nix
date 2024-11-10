@@ -8,6 +8,9 @@
         system = "x86_64-linux";
         modules = [
           ./configuration.nix
+          ./modules/user.nix
+          ./modules/coder.nix
+          ./hosts/coder.nix
         ];
       };
 
