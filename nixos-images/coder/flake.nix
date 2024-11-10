@@ -10,6 +10,7 @@
           ./configuration.nix
           ./modules/user.nix
           ./modules/coder.nix
+          ./modules/proxy.nix
           ./hosts/coder.nix
         ];
       };

@@ -7,8 +7,8 @@
 
   services.coder = {
     enable = true;
-    listenAddress = "0.0.0.0:3000";
-    accessUrl = "http://coder.cosmos.cboxlab.com:3000";
+    listenAddress = "127.0.0.1:3000";
+    accessUrl = "https://coder.cosmos.cboxlab.com";
     group = "docker";
     database = {
       createLocally = false;
