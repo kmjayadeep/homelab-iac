@@ -1,0 +1,56 @@
+# General
+alias kz="kustomize"
+alias zshrc="$EDITOR ~/.zshrc;source ~/.zshrc"
+alias aliasconf="$EDITOR ~/.bash_aliases;source ~/.bash_aliases"
+alias please=sudo
+alias c="wl-copy"
+alias sctl="sudo systemctl"
+alias sutl="systemctl --user"
+alias o="xdg-open"
+alias weather='curl "wttr.in?0Fq"'
+alias moon="curl wttr.in/moon"
+
+
+# taskwarrior
+alias tt="taskwarrior-tui"
+alias in="task +INBOX"
+alias today="task today"
+
+# docker
+alias dc=docker-compose
+alias pc=podman-compose
+
+# Kubernetes
+alias k=kubectl
+alias kctx=kubectx
+alias kns=kubens
+alias kc="kubie ctx"
+alias kn="kubie ns"
+alias knip="kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type==\"InternalIP\")].address}'"
+alias kip="kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type==\"ExternalIP\")].address}'"
+alias kp="kubectl port-forward --address 0.0.0.0"
+alias klo="kubectl logs -f"
+alias ke="kubectl exec -ti"
+alias kaf="kubectl apply -f"
+
+# alias po for k get po, deploy for k get deploy etc
+for res in po deploy svc netsvc slicegw slice ing vs gw dr ds se svcim svcex cm secret serviceexport serviceimport
+do
+  alias $res="kubectl get $res"
+  alias d$res="kubectl describe $res"
+  alias e$res="kubectl edit $res"
+  alias w$res="watch kubectl get $res"
+done
+
+# exec into pod
+function ksh(){
+  pod=$1
+  container=$2
+  if [ -z $container ]
+  then
+    kubectl exec -ti $pod -- sh
+  else
+    kubectl exec -it $pod -c $container -- sh
+  fi
+}
+
