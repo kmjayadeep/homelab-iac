@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }: {
 
   networking = {
-    hostName = "jd-cloud";
+    hostName = "jd-vm";
     interfaces.ens18 = {
       ipv4.addresses = [{
         address = "192.168.1.74";
