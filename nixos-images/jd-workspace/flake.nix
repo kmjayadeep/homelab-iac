@@ -24,6 +24,7 @@
         modules = [
           ./configuration.nix
           ./modules/docker.nix
+          ./modules/ssh.nix
           ./modules/system.nix
           ./modules/tailscale.nix
           ./modules/user.nix
