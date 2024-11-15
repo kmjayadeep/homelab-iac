@@ -38,7 +38,28 @@
     "root": {
       "inputs": {
         "home-manager": "home-manager",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "scripts": "scripts"
+      }
+    },
+    "scripts": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1728236752,
+        "narHash": "sha256-Ed4qbUeyAAnkAGd/oqi9KSC7rc2FT/2gvKNKlAzt/jU=",
+        "owner": "kmjayadeep",
+        "repo": "scripts",
+        "rev": "7107ad3edb1e0646c250585626b4af436dc0d647",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kmjayadeep",
+        "repo": "scripts",
+        "type": "github"
       }
     }
   },
