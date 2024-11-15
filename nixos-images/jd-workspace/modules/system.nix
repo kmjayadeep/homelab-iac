@@ -24,5 +24,11 @@
 
   # Remove unecessary preinstalled packages
   environment.defaultPackages = [];
+
+  # Port 7681
+  services.ttyd= {
+    enable = true;
+    writeable = true;
+  };
 }
 
