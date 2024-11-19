@@ -22,7 +22,7 @@ resource "proxmox_vm_qemu" "this" {
   sockets                = 1
   sshkeys                = var.sshkeys
   tablet                 = true
-  vm_state               = "running"
+  vm_state               = var.vm_state
   tags                   = var.tags
   disks {
     ide {

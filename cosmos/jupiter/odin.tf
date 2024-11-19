@@ -13,6 +13,7 @@ module "odin" {
   ipv4_gw     = "192.168.1.1"
   disk_size   = "100G"
   tags        = "game,valheim"
+  vm_state    = "stopped"
 }
 
 module "odin_s3" {
