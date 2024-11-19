@@ -1,14 +1,14 @@
 { config, lib, pkgs, ... }: {
 
   networking = {
-    hostName = "fireland";
+    hostName = "odin";
     interfaces.ens18 = {
       ipv4.addresses = [{
-        address = "192.168.1.70";
+        address = "192.168.1.75";
         prefixLength = 24;
       }];
       ipv6.addresses = [{
-        address = "fe80::170";
+        address = "fe80::175";
         prefixLength = 64;
       }];
     };
@@ -19,9 +19,9 @@
   };
 
   services.valheim = {
-    worldName =  "DARKLAND";
-    serverName = "valheim-homelab-fireland";
+    worldName =  "First";
+    serverName = "valheim-homelab-odin";
   };
 
-  environment.etc.restic-env.source = ../secrets/fireland/secret-restic.env;
+  environment.etc.restic-env.source = ../secrets/odin/secret-restic.env;
 }
