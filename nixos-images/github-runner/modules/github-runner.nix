@@ -3,11 +3,16 @@
   environment.etc.github-pat.source = ../secrets/secret-pat;
 
   services.github-runners = {
-    cosmos = {
+    runner = {
       enable = true;
-      name = "cosmos";
+      name = "runner";
       tokenFile = "/etc/github-pat";
       url = "https://github.com/kmjayadeep/homelab-iac";
+      extraLabels = [ "nixos" "cosmos" ];
+      extraPackages = with pkgs; [
+        busybox
+        nodejs_22
+      ];
     };
   };
 
