@@ -1,0 +1,32 @@
+name: Terraform Format Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform-fmt:
+    runs-on: cosmos
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest
+
+      - name: Check Terraform format
+        run: |
+          terraform_files=$(find . -name "*.tf")
+          if [ -z "$terraform_files" ]; then
+            echo "No Terraform files to check."
+            exit 0
+          fi
+          for file in $terraform_files; do
+            echo "Checking format for $file"
+            terraform fmt -check -diff "$file"
+          done
+
