@@ -19,3 +19,12 @@ output "odin_bucket_secret_key" {
   value     = module.odin_s3.secret_key
   sensitive = true
 }
+
+output "chillyfries_bucket_access_key" {
+  value = module.chillyfries_s3.access_key
+}
+
+output "chillyfries_bucket_secret_key" {
+  value     = module.chillyfries_s3.secret_key
+  sensitive = true
+}
