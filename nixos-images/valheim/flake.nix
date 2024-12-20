@@ -32,6 +32,18 @@
           ./hosts/odin.nix
         ];
       };
+      nixosConfigurations.chillyfries = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          valheim-server.nixosModules.default
+          ./configuration.nix
+          ./modules/user.nix
+          ./modules/valheim-server.nix
+          ./modules/backup.nix
+          ./modules/tailscale.nix
+          ./hosts/chillyfries.nix
+        ];
+      };
 
     };
 }
