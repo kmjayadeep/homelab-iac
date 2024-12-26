@@ -8,6 +8,7 @@
 
   systemd.services.pgweb = {
     enable = true;
+    wantedBy = ["multi-user.target"];
     description = "Postgres visualizer";
 
     script = ''

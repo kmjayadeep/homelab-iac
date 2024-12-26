@@ -17,7 +17,6 @@
 
     boot.growPartition = lib.mkDefault true;
 
-
     # Don't ask for passwords
     security.sudo.wheelNeedsPassword = false;
 
@@ -61,12 +60,11 @@
     ];
 
     networking = {
+      nameservers = [ "1.1.1.1" "8.8.8.8" ];
       useNetworkd = true;
       dhcpcd.IPv6rs = true; # Enable getting public IPv6 from router
       firewall.enable = false;
     };
-
-    services.resolved.enable = false;
 
     environment.systemPackages = with pkgs; [
       vim
