@@ -24,6 +24,11 @@ variable "memory" {
   default = 2048
 }
 
+variable "balloon" {
+  type    = number
+  default = null
+}
+
 variable "desc" {
   type = string
 }

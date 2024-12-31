@@ -14,6 +14,7 @@ resource "proxmox_vm_qemu" "this" {
   ipconfig0              = "ip=${var.ipv4_addr},gw=${var.ipv4_gw},ip6=dhcp"
   kvm                    = true
   memory                 = var.memory
+  balloon                = var.balloon != null ? var.balloon : var.memory / 2
   name                   = var.name
   onboot                 = true
   protection             = false
