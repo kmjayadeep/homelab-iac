@@ -2,7 +2,8 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
   inputs.valheim-server = {
-    url = "github:aidalgol/valheim-server-flake";
+    # url = "github:aidalgol/valheim-server-flake";
+    url = "github:kmjayadeep/valheim-server-flake/025d547db55575af38ef13c59b0530c4ff198375";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 

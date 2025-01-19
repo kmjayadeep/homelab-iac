@@ -2,11 +2,11 @@
   "nodes": {
     "nixpkgs": {
       "locked": {
-        "lastModified": 1730958623,
-        "narHash": "sha256-JwQZIGSYnRNOgDDoIgqKITrPVil+RMWHsZH1eE1VGN0=",
+        "lastModified": 1737110817,
+        "narHash": "sha256-DSenga8XjPaUV5KUFW/i3rNkN7jm9XmguW+qQ1ZJTR4=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "85f7e662eda4fa3a995556527c87b2524b691933",
+        "rev": "041c867bad68dfe34b78b2813028a2e2ea70a23c",
         "type": "github"
       },
       "original": {
@@ -51,16 +51,17 @@
         "steam-fetcher": "steam-fetcher"
       },
       "locked": {
-        "lastModified": 1730228940,
-        "narHash": "sha256-Cm+5VtUi3WXTnOEcmY/MEGCWrQx5UpiG6417D0cFgmc=",
-        "owner": "aidalgol",
+        "lastModified": 1737280066,
+        "narHash": "sha256-fIeZgMigAFR+BT3BHGkMApX89DUSiXyNWEs7deawT4I=",
+        "owner": "kmjayadeep",
         "repo": "valheim-server-flake",
-        "rev": "a72c9ec8046164f6c7656601c99ba55846fcb16b",
+        "rev": "025d547db55575af38ef13c59b0530c4ff198375",
         "type": "github"
       },
       "original": {
-        "owner": "aidalgol",
+        "owner": "kmjayadeep",
         "repo": "valheim-server-flake",
+        "rev": "025d547db55575af38ef13c59b0530c4ff198375",
         "type": "github"
       }
     }

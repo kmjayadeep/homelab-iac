@@ -21,6 +21,12 @@
   services.valheim = {
     worldName =  "DARKLAND";
     serverName = "valheim-homelab-chillyfries";
+    extraArgs = [
+      "-modifier deathpenalty casual"
+      "-modifier raids none"
+      "-modifier resources most"
+      "-setkey StaminaRate 50"
+    ];
   };
 
   environment.etc.restic-env.source = ../secrets/chillyfries/secret-restic.env;
