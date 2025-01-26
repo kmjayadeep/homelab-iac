@@ -13,7 +13,7 @@ module "valkyrie" {
   ipv4_gw     = "192.168.1.1"
   disk_size   = "200G"
   tags        = "game,valheim"
-  vm_state    = "stopped"
+  vm_state    = "running"
 }
 
 module "valkyrie_s3" {
