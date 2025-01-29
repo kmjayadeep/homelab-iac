@@ -83,6 +83,13 @@
       '';
     };
 
+    boot.kernelModules = [
+      "ip6_tables"
+      "ip6table_mangle"
+      "ip6table_raw"
+      "ip6table_filter"
+    ];
+
     boot.kernel.sysctl = {
       "fs.inotify.max_user_instances" = 1024;
 
