@@ -12,6 +12,7 @@
       "coder"
       "shoppinglist"
       "uptimekuma"
+      "taskplanner"
     ];
     ensureUsers = [
       {
@@ -36,6 +37,10 @@
       }
       {
         name = "uptimekuma";
+        ensureDBOwnership = true;
+      }
+      {
+        name = "taskplanner";
         ensureDBOwnership = true;
       }
       {

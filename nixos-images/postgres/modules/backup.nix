@@ -20,7 +20,7 @@
       set -eu
       mkdir -p /tmp/postgres-backup
       source /etc/restic-env
-      for DB_NAME in totp planka immich coder; do
+      for DB_NAME in totp planka immich coder taskplanner; do
         ${pkgs.postgresql_16}/bin/pg_dump -c -d "''$DB_NAME" -F tar -f "/tmp/postgres-backup/''${DB_NAME}_backup.tar"
       done
       ls /tmp/postgres-backup
