@@ -3,11 +3,8 @@ resource "vault_jwt_auth_backend_role" "near-dns" {
   role_name         = "auth.jwt.near-dns"
   bound_audiences   = ["https://github.com/kmjayadeep"]
   bound_claims_type = "string"
-  bound_subject     = "repo:kmjayadeep/near-dns"
   bound_claims = {
-    actor                 = "kmjayadeep"
-    runner_environment    = "self-hosted"
-    repository_owner      = "kmjayadeep"
+    repository = "kmjayadeep/near-dns"
   }
   user_claim     = "sub"
   role_type      = "jwt"
@@ -21,7 +18,7 @@ resource "vault_jwt_auth_backend_role" "near-dns" {
 resource "vault_policy" "near-dns" {
   name   = "near-dns"
   policy = <<EOT
-path "homelab/kv/near-dns/*" {
+path "homelab/kv/data/near-dns/*" {
   capabilities = ["read"]
 }
 EOT
