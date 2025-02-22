@@ -10,6 +10,7 @@
           ./configuration.nix
           ./modules/user.nix
           ./modules/adguard.nix
+          ./modules/cloudflare.nix
           ./hosts/gatekeeper.nix
         ];
       };
