@@ -11,6 +11,9 @@
         ingress = {
           "taskplanner.cboxlab.com" = "https://taskplanner.cosmos.cboxlab.com";
         };
+        originRequest = {
+          httpHostHeader = "taskplanner.cosmos.cboxlab.com";
+        };
         default = "http_status:404";
       };
     };
