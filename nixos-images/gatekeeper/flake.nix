@@ -11,6 +11,7 @@
           ./modules/user.nix
           ./modules/adguard.nix
           ./modules/cloudflare.nix
+          ./modules/pihole.nix
           ./hosts/gatekeeper.nix
         ];
       };
