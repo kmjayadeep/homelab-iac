@@ -3,7 +3,7 @@
 
   inputs.valheim-server = {
     # url = "github:aidalgol/valheim-server-flake";
-    url = "github:kmjayadeep/valheim-server-flake/06cbab6774c3754a44866b00fd8215aadbf53de5";
+    url = "github:kmjayadeep/valheim-server-flake/5b95198dca8af8287108b610432d88aef5fa29fc";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
