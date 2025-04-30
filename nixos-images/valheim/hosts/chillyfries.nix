@@ -26,6 +26,7 @@
       "-modifier raids none"
       "-modifier resources most"
       "-setkey StaminaRate 50"
+      "-modifier portals casual"
     ];
   };
 
