@@ -71,6 +71,7 @@
     environment.systemPackages = with pkgs; [
       vim
       git
+      tailscale
     ];
 
     system.stateVersion = lib.mkDefault "24.05";
