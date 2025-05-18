@@ -10,7 +10,6 @@
           ./configuration.nix
           ./modules/adguard.nix
           ./modules/cloudflare.nix
-          ./modules/pihole.nix
           ./modules/tailscale.nix
           ./modules/user.nix
           ./hosts/gatekeeper.nix
