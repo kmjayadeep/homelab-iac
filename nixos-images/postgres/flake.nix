@@ -12,6 +12,7 @@
           ./modules/monitoring.nix
           ./modules/pgweb.nix
           ./modules/postgres.nix
+          ./modules/proxy.nix
           ./modules/user.nix
           ./hosts/helios.nix
         ];
