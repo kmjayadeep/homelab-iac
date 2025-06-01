@@ -10,6 +10,7 @@
           ./configuration.nix
           ./modules/backup.nix
           ./modules/monitoring.nix
+          ./modules/mongodb.nix
           ./modules/pgweb.nix
           ./modules/postgres.nix
           ./modules/proxy.nix
