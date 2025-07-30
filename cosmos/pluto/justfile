@@ -1,0 +1,7 @@
+# Show infra diff
+plan:
+  terraform plan
+
+# Apply infra changes
+apply:
+  terraform apply
