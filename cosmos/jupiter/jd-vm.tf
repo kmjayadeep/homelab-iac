@@ -13,5 +13,6 @@ module "jd-vm" {
   ipv4_gw     = "192.168.1.1"
   disk_size   = "200G"
   tags        = "development,workspace"
+  vm_state    = "stopped"
 }
 
