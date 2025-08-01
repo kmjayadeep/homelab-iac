@@ -11,7 +11,7 @@
           ./configuration.nix
           ./modules/k3s-master.nix
           ./modules/user.nix
-          ./hosts/titania-worker1.nix
+          ./hosts/titania.nix
         ];
       };
 
