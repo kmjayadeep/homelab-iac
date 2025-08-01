@@ -96,6 +96,20 @@
       # https://www.blackmoreops.com/2014/09/22/linux-kernel-panic-issue-fix-hung_task_timeout_secs-blocked-120-seconds-problem/
       "vm.dirty_ratio" = 10;
       "vm.dirty_background_ratio" = 5;
+
+      # Need for tailscale
+      "net.ipv4.ip_forward" = 1;
+      "net.ipv6.conf.all.forwarding" = 1;
+    };
+
+    services.tailscale = {
+      enable = true;
+      extraSetFlags = [
+        "--accept-dns=false"
+      ];
+      extraUpFlags = [
+        "--accept-dns=false"
+      ];
     };
 
     services.openiscsi = {
