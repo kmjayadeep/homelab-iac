@@ -12,13 +12,13 @@ terraform {
 }
 
 provider "proxmox" {
-  pm_api_url = "https://jupiter.cosmos.cboxlab.com:8006/api2/json"
+  pm_api_url      = "https://jupiter.cosmos.cboxlab.com:8006/api2/json"
   pm_tls_insecure = true
 }
 
 provider "proxmox" {
-  alias = "mars"
-  pm_api_url = "https://mars.cosmos.cboxlab.com:8006/api2/json"
+  alias           = "mars"
+  pm_api_url      = "https://mars.cosmos.cboxlab.com:8006/api2/json"
   pm_tls_insecure = true
 }
 
