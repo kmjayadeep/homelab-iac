@@ -5,11 +5,10 @@ resource "proxmox_vm_qemu" "this" {
   bios                   = "seabios"
   clone                  = var.clone
   ciupgrade              = false
-  cores                  = var.cores
   define_connection_info = false
-  desc                   = var.desc
+  description            = var.desc
   force_create           = false
-  full_clone             = true
+  full_clone             = var.clone != "" ? true : false
   hotplug                = "network,disk,usb"
   ipconfig0              = "ip=${var.ipv4_addr},gw=${var.ipv4_gw},ip6=dhcp"
   kvm                    = true
@@ -20,16 +19,19 @@ resource "proxmox_vm_qemu" "this" {
   protection             = false
   qemu_os                = "l26"
   scsihw                 = "virtio-scsi-single"
-  sockets                = 1
   sshkeys                = var.sshkeys
   tablet                 = true
   vm_state               = var.vm_state
   tags                   = var.tags
+  cpu {
+    cores                  = var.cores
+    sockets = 1
+  }
   disks {
     ide {
       ide2 {
         cloudinit {
-          storage = "local-lvm"
+          storage = var.storage
         }
       }
     }
@@ -38,12 +40,13 @@ resource "proxmox_vm_qemu" "this" {
         disk {
           format  = "raw"
           size    = var.disk_size
-          storage = "local-lvm"
+          storage = var.storage
         }
       }
     }
   }
   network {
+    id = 0
     bridge = "vmbr0"
     model  = "virtio"
   }

@@ -11,6 +11,7 @@ variable "name" {
 }
 
 variable "clone" {
+  default = ""
   type = string
 }
 
@@ -54,6 +55,12 @@ variable "disk_size" {
   type        = string
   description = "Disk size. Eg: 30G"
   default     = "50G"
+}
+
+variable "storage" {
+  type        = string
+  description = "Proxmox storage to use for the VM disk and cloudinit"
+  default     = "local-lvm"
 }
 
 variable "tags" {
