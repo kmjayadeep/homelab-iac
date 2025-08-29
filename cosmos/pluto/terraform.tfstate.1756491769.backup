@@ -1,0 +1,229 @@
+{
+  "version": 4,
+  "terraform_version": "1.13.0",
+  "serial": 1,
+  "lineage": "c75824df-33cf-3c1a-0667-9fe0690f69f5",
+  "outputs": {},
+  "resources": [
+    {
+      "module": "module.titania-worker1",
+      "mode": "managed",
+      "type": "proxmox_vm_qemu",
+      "name": "this",
+      "provider": "provider[\"registry.terraform.io/telmate/proxmox\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "additional_wait": 5,
+            "agent": 1,
+            "agent_timeout": null,
+            "args": "",
+            "automatic_reboot": true,
+            "balloon": 10240,
+            "bios": "seabios",
+            "boot": " ",
+            "bootdisk": "",
+            "ci_wait": null,
+            "cicustom": null,
+            "cipassword": "",
+            "ciupgrade": false,
+            "ciuser": "",
+            "clone": "nixos-base",
+            "clone_wait": 10,
+            "cores": 4,
+            "cpu": "host",
+            "default_ipv4_address": null,
+            "default_ipv6_address": null,
+            "define_connection_info": false,
+            "desc": "Titania master node",
+            "disk": [],
+            "disks": [
+              {
+                "ide": [
+                  {
+                    "ide0": [],
+                    "ide1": [],
+                    "ide2": [
+                      {
+                        "cdrom": [],
+                        "cloudinit": [
+                          {
+                            "storage": "local-lvm"
+                          }
+                        ],
+                        "disk": [],
+                        "passthrough": []
+                      }
+                    ],
+                    "ide3": []
+                  }
+                ],
+                "sata": [],
+                "scsi": [],
+                "virtio": [
+                  {
+                    "virtio0": [
+                      {
+                        "cdrom": [],
+                        "disk": [
+                          {
+                            "asyncio": "",
+                            "backup": true,
+                            "cache": "",
+                            "discard": false,
+                            "format": "raw",
+                            "id": 0,
+                            "iops_r_burst": 0,
+                            "iops_r_burst_length": 0,
+                            "iops_r_concurrent": 0,
+                            "iops_wr_burst": 0,
+                            "iops_wr_burst_length": 0,
+                            "iops_wr_concurrent": 0,
+                            "iothread": false,
+                            "linked_disk_id": -1,
+                            "mbps_r_burst": 0,
+                            "mbps_r_concurrent": 0,
+                            "mbps_wr_burst": 0,
+                            "mbps_wr_concurrent": 0,
+                            "readonly": false,
+                            "replicate": false,
+                            "serial": "",
+                            "size": "800G",
+                            "storage": "local-lvm",
+                            "wwn": ""
+                          }
+                        ],
+                        "passthrough": []
+                      }
+                    ],
+                    "virtio1": [],
+                    "virtio10": [],
+                    "virtio11": [],
+                    "virtio12": [],
+                    "virtio13": [],
+                    "virtio14": [],
+                    "virtio15": [],
+                    "virtio2": [],
+                    "virtio3": [],
+                    "virtio4": [],
+                    "virtio5": [],
+                    "virtio6": [],
+                    "virtio7": [],
+                    "virtio8": [],
+                    "virtio9": []
+                  }
+                ]
+              }
+            ],
+            "efidisk": [],
+            "force_create": false,
+            "force_recreate_on_change_of": null,
+            "full_clone": true,
+            "hagroup": "",
+            "hastate": "",
+            "hostpci": [],
+            "hotplug": "network,disk,usb",
+            "id": "pluto/qemu/101",
+            "ipconfig0": "ip=192.168.1.40/24,gw=192.168.1.1,ip6=dhcp",
+            "ipconfig1": null,
+            "ipconfig10": null,
+            "ipconfig11": null,
+            "ipconfig12": null,
+            "ipconfig13": null,
+            "ipconfig14": null,
+            "ipconfig15": null,
+            "ipconfig2": null,
+            "ipconfig3": null,
+            "ipconfig4": null,
+            "ipconfig5": null,
+            "ipconfig6": null,
+            "ipconfig7": null,
+            "ipconfig8": null,
+            "ipconfig9": null,
+            "kvm": true,
+            "linked_vmid": 0,
+            "machine": "",
+            "memory": 10240,
+            "name": "titania",
+            "nameserver": null,
+            "network": [
+              {
+                "bridge": "vmbr0",
+                "firewall": false,
+                "link_down": false,
+                "macaddr": "5A:5C:C4:06:61:23",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate": 0,
+                "tag": -1
+              }
+            ],
+            "numa": false,
+            "onboot": true,
+            "os_network_config": null,
+            "os_type": null,
+            "pool": "",
+            "protection": false,
+            "pxe": null,
+            "qemu_os": "l26",
+            "reboot_required": false,
+            "scsihw": "virtio-scsi-single",
+            "searchdomain": null,
+            "serial": [],
+            "skip_ipv4": false,
+            "skip_ipv6": false,
+            "smbios": [
+              {
+                "family": "",
+                "manufacturer": "",
+                "product": "",
+                "serial": "",
+                "sku": "",
+                "uuid": "053fcd30-1e37-4a76-9a86-acd94c810cb7",
+                "version": ""
+              }
+            ],
+            "sockets": 1,
+            "ssh_forward_ip": null,
+            "ssh_host": null,
+            "ssh_port": null,
+            "ssh_private_key": null,
+            "ssh_user": null,
+            "sshkeys": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDVFwMXBBljf+W5diHw9sz+A5AQhojFh8xXHCvznJkebVimhPU18dP7aL6K91tMdx+1rDbW3XyqWlAcuJY55j/G1JMyMGGTSCWkUlovZArqFAWxyadQ9s7Ev13bSF+h2qaL1x8tFAYK/L/LR4OOHSKXzqdeS2WeZgIFEuBW6HDnlGGV0aVVLo6f7wTIt4QK48IiUxKDo+giN5vmXtcBg0F88DhbDtLip3Yab6Sqm4v5PCIM4XiKkULqMLGqfQoUItFi0MGEq1P2qvQ/pVdHEjMoPjXfnwI0Jr4T6NN/QO8lsEfyYlI8qtZ2MvTYdqmOvrY37cYx2BJsIQvwC1wzERgqboEUk0qsRwNqIUcAbOaBIADDn11FUQyvYZ2S8QeIqiwkdyE+jJuPTTgzh5RtuFoqyKuIQohzPDIhAmr65xygcYUyM7vRji5F20dVxc92fNc7ec1FCsbPoSHdW41PkimO2+plyhMFkYrbRo2Hzi6pW+LkmPDbZTMWDo6RM07G+1DIGoDUmSxCQDgkoHHG+x6U0mKh2YSX9zwIxr/9h/dvEyWYCG09XNmxFlGHNNlb0Us52UJ4Ax53WnNoxECH0RDojRQkn3m3v0xxFU9C/RaER48N7ppEDjL9dtcM0lF714TbpBQYBM2oJYJIoCX0Cj/fyrSxofHTYARsnBzblDZA9Q== kmjayadeep@gmail.com",
+            "startup": "",
+            "tablet": true,
+            "tags": "k8s",
+            "target_node": "pluto",
+            "target_nodes": null,
+            "timeouts": null,
+            "unused_disk": [],
+            "usb": [],
+            "vcpus": 0,
+            "vga": [],
+            "vm_state": "running",
+            "vmid": 101
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "cipassword"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "ssh_private_key"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWZhdWx0IjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19"
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

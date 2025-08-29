@@ -1,4 +1,4 @@
-module "titania-worker1" {
+module "titania-master" {
   source = "../../terraform-modules/proxmox-vm-qemu"
 
   vmid        = 101
