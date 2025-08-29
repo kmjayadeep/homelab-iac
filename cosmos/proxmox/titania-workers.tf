@@ -18,5 +18,5 @@ module "titania-worker1" {
   storage     = "ssd-lvm"
   disk_size   = "300G"
   tags        = "k8s"
-  vm_state    = "stopped"
+  vm_state    = "running"
 }
