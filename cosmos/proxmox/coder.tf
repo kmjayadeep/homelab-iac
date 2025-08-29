@@ -13,4 +13,5 @@ module "coder" {
   ipv4_gw     = "192.168.1.1"
   disk_size   = "100G"
   tags        = "coder,development"
+  vm_state    = "stopped"
 }

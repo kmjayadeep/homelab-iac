@@ -13,4 +13,5 @@ module "helios" {
   ipv4_gw     = "192.168.1.1"
   disk_size   = "100G"
   tags        = "db,postgres"
+  vm_state    = "stopped"
 }

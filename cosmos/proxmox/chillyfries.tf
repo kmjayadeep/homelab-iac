@@ -13,6 +13,7 @@ module "chillyfries" {
   ipv4_gw     = "192.168.1.1"
   disk_size   = "200G"
   tags        = "game,valheim"
+  vm_state    = "stopped"
 }
 
 module "chillyfries_s3" {

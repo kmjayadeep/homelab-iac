@@ -14,4 +14,5 @@ module "titania-worker1" {
   ipv4_gw     = "192.168.1.1"
   disk_size   = "300G"
   tags        = "k8s"
+  vm_state    = "stopped"
 }
