@@ -4,7 +4,6 @@
     package = pkgs.k3s_1_33;
     enable = true;
     role = "server";
-    tokenFile = "/etc/k3s-token";
     extraFlags = toString [
       "--cluster-init"
       "--disable traefik"
@@ -26,7 +25,5 @@
       "--kubelet-arg=allowed-unsafe-sysctls=net.ipv6.*,net.ipv4.*"
     ];
   };
-
-  environment.etc.k3s-token.source = ../secrets/secret-k3s-token;
 }
 
