@@ -15,7 +15,7 @@ resource "proxmox_vm_qemu" "this" {
   memory                 = var.memory
   balloon                = var.balloon != null ? var.balloon : var.memory / 2
   name                   = var.name
-  onboot                 = true
+  onboot                 = var.onboot
   protection             = false
   qemu_os                = "l26"
   scsihw                 = "virtio-scsi-single"

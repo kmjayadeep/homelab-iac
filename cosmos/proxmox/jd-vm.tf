@@ -17,5 +17,6 @@ module "jd-vm" {
   disk_size   = "200G"
   tags        = "development,workspace"
   vm_state    = "stopped"
+  onboot      = false
 }
 

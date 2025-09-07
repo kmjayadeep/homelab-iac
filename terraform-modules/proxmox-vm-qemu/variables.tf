@@ -30,6 +30,12 @@ variable "balloon" {
   default = null
 }
 
+variable "onboot" {
+  description = "Start the VM on Proxmox host boot"
+  type    = bool
+  default = true
+}
+
 variable "desc" {
   type = string
 }
