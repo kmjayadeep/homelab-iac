@@ -56,11 +56,4 @@
       host  all      all    172.25.0.0/16    scram-sha-256
     '';
   };
-
-  services.prometheus.exporters.postgres = {
-    enable = true;
-    listenAddress = "0.0.0.0";
-    port = 9187;
-    dataSource = "user=postgres host=/run/postgresql/ sslmode=disable"; 
-  };
 }
