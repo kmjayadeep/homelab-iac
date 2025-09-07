@@ -24,7 +24,7 @@ resource "proxmox_vm_qemu" "this" {
   vm_state               = var.vm_state
   tags                   = var.tags
   cpu {
-    cores                  = var.cores
+    cores   = var.cores
     sockets = 1
   }
   disks {
@@ -46,7 +46,7 @@ resource "proxmox_vm_qemu" "this" {
     }
   }
   network {
-    id = 0
+    id     = 0
     bridge = "vmbr0"
     model  = "virtio"
   }

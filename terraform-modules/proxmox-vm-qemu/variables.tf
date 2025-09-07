@@ -12,7 +12,7 @@ variable "name" {
 
 variable "clone" {
   default = ""
-  type = string
+  type    = string
 }
 
 variable "cores" {
@@ -32,8 +32,8 @@ variable "balloon" {
 
 variable "onboot" {
   description = "Start the VM on Proxmox host boot"
-  type    = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "desc" {
