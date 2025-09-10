@@ -16,7 +16,7 @@ module "chillyfries" {
   storage     = "local-lvm"
   disk_size   = "200G"
   tags        = "game,valheim"
-  vm_state    = "stopped"
+  vm_state    = "running"
 }
 
 module "chillyfries_s3" {
