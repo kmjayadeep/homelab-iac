@@ -16,7 +16,7 @@ terraform {
 }
 
 provider "proxmox" {
-  pm_api_url      = "https://jupiter.cosmos.cboxlab.com:8006/api2/json"
+  pm_api_url      = "https://mars.cosmos.cboxlab.com:8006/api2/json"
   pm_tls_insecure = true
 }
 
@@ -30,6 +30,10 @@ provider "proxmox-bpg" {
   alias           = "mars-bpg"
   endpoint      = "https://mars.cosmos.cboxlab.com:8006/"
   insecure = true
+  ssh {
+    agent = true
+    username = "root"
+  }
 }
 
 provider "minio" {

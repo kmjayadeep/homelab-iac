@@ -1,8 +1,8 @@
 variable "cloudinit_username" {
-  default = "operator"
+  default = "cosmos"
 }
 variable "cloudinit_password" {
-  default = "operator"
+  default = "cosmos"
 }
 variable "cloudinit_ssh_public_key" { 
 }
