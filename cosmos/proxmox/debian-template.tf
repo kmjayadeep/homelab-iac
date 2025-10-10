@@ -8,10 +8,11 @@ resource "proxmox_virtual_environment_vm" "debian_13_template" {
 
   machine     = "q35"
   bios        = "ovmf"
-  description = "Managed by Terraform"
+  description = "Debian 13 cloud image base template"
 
   cpu {
     cores = 2
+    type  = "host"
   }
 
   memory {
@@ -37,13 +38,16 @@ resource "proxmox_virtual_environment_vm" "debian_13_template" {
       }
     }
 
-    #user_data_file_id = proxmox_virtual_environment_file.user_data_cloud_config.id
   }
 
   network_device {
     bridge = "vmbr0"
   }
 
+  agent {
+    # read 'Qemu guest agent' section, change to true only when ready
+    enabled = true
+  }
 }
 
 resource "proxmox_virtual_environment_download_file" "latest_debian_13_qcow2_img" {

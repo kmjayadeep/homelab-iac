@@ -1,21 +1,40 @@
-module "valheim-rivers" {
-  source = "../../terraform-modules/proxmox-vm-qemu"
-  providers = {
-    proxmox = proxmox.mars
+resource "proxmox_virtual_environment_vm" "valheim-rivers" {
+  provider = proxmox-bpg.mars-bpg
+  name      = "valheim-rivers"
+  node_name = "mars"
+  bios        = "ovmf"
+
+  clone {
+    vm_id = proxmox_virtual_environment_vm.debian_13_template.id
   }
 
-  vmid        = 121
-  target_node = "mars"
-  name        = "valheim-rivers"
-  clone       = "debian-13-cloudinit"
-  cores       = 2
-  memory      = 4096
-  desc        = "valheim server for rivers world - seed IEatPizzaP"
-  sshkeys     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDVFwMXBBljf+W5diHw9sz+A5AQhojFh8xXHCvznJkebVimhPU18dP7aL6K91tMdx+1rDbW3XyqWlAcuJY55j/G1JMyMGGTSCWkUlovZArqFAWxyadQ9s7Ev13bSF+h2qaL1x8tFAYK/L/LR4OOHSKXzqdeS2WeZgIFEuBW6HDnlGGV0aVVLo6f7wTIt4QK48IiUxKDo+giN5vmXtcBg0F88DhbDtLip3Yab6Sqm4v5PCIM4XiKkULqMLGqfQoUItFi0MGEq1P2qvQ/pVdHEjMoPjXfnwI0Jr4T6NN/QO8lsEfyYlI8qtZ2MvTYdqmOvrY37cYx2BJsIQvwC1wzERgqboEUk0qsRwNqIUcAbOaBIADDn11FUQyvYZ2S8QeIqiwkdyE+jJuPTTgzh5RtuFoqyKuIQohzPDIhAmr65xygcYUyM7vRji5F20dVxc92fNc7ec1FCsbPoSHdW41PkimO2+plyhMFkYrbRo2Hzi6pW+LkmPDbZTMWDo6RM07G+1DIGoDUmSxCQDgkoHHG+x6U0mKh2YSX9zwIxr/9h/dvEyWYCG09XNmxFlGHNNlb0Us52UJ4Ax53WnNoxECH0RDojRQkn3m3v0xxFU9C/RaER48N7ppEDjL9dtcM0lF714TbpBQYBM2oJYJIoCX0Cj/fyrSxofHTYARsnBzblDZA9Q== kmjayadeep@gmail.com"
-  ipv4_addr   = "192.168.1.121/24"
-  ipv4_gw     = "192.168.1.1"
-  storage     = "ssd-lvm"
-  disk_size   = "200G"
-  tags        = "game,valheim"
-  vm_state    = "stopped"
+  agent {
+    # NOTE: The agent is installed and enabled as part of the cloud-init configuration in the template VM, see cloud-config.tf
+    # The working agent is *required* to retrieve the VM IP addresses.
+    # If you are using a different cloud-init configuration, or a different clone source
+    # that does not have the qemu-guest-agent installed, you may need to disable the `agent` below and remove the `vm_ipv4_address` output.
+    # See https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_vm#qemu-guest-agent for more details.
+    enabled = false
+  }
+
+  memory {
+    dedicated = 2048
+  }
+
+  initialization {
+    dns {
+      servers = ["1.1.1.1"]
+    }
+    ip_config {
+      ipv4 {
+        address = "192.168.1.121/24"
+        gateway = "192.168.1.1"
+      }
+    }
+    user_account {
+      username = var.cloudinit_username
+      keys     = [var.cloudinit_ssh_public_key]
+      password = var.cloudinit_password
+    }
+  }
 }
