@@ -37,7 +37,10 @@ resource "proxmox_virtual_environment_vm" "debian_13_template" {
         address = "dhcp"
       }
     }
-
+    user_account {
+      username = "debian"
+      password = "debian"
+    }
   }
 
   network_device {
