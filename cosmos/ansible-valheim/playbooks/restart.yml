@@ -1,0 +1,11 @@
+---
+- name: Restart Valheim Server
+  hosts: valheim_servers
+  become: true
+  
+  tasks:
+    - name: Restart Valheim service
+      ansible.builtin.systemd:
+        name: valheim
+        state: restarted
+

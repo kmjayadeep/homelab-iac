@@ -1,0 +1,11 @@
+---
+- name: Stop Valheim Server
+  hosts: valheim_servers
+  become: true
+  
+  tasks:
+    - name: Stop Valheim service
+      ansible.builtin.systemd:
+        name: valheim
+        state: stopped
+

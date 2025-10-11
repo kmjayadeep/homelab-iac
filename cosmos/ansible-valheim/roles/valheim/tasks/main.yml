@@ -1,0 +1,16 @@
+---
+- name: Include prerequisite tasks
+  include_tasks: prerequisites.yml
+
+- name: Include SteamCMD installation tasks
+  include_tasks: steamcmd.yml
+
+- name: Include Valheim server setup tasks
+  include_tasks: valheim.yml
+
+- name: Include systemd service tasks
+  include_tasks: systemd.yml
+
+- name: Include firewall configuration tasks
+  include_tasks: firewall.yml
+

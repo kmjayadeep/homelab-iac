@@ -1,0 +1,10 @@
+---
+- name: Setup Valheim Server
+  hosts: valheim_servers
+  become: true
+  
+  tasks:
+    - name: Include valheim role
+      include_role:
+        name: valheim
+

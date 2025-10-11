@@ -1,0 +1,22 @@
+#!/bin/bash
+
+export templdpath=$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH={{ valheim_install_dir }}/linux64:$LD_LIBRARY_PATH
+export SteamAppId=892970
+
+# Start Valheim server
+{{ valheim_install_dir }}/valheim_server.x86_64 \
+  -name "{{ valheim_server_name }}" \
+  -port {{ valheim_server_port }} \
+  -world "{{ valheim_world_name }}" \
+  -password "{{ valheim_server_password }}" \
+{% if valheim_modifiers is defined and valheim_modifiers | length > 0 %}
+{% for modifier in valheim_modifiers %}
+  {{ modifier }} \
+{% endfor %}
+{% endif %}
+  -nographics \
+  -batchmode
+
+export LD_LIBRARY_PATH=$templdpath
+

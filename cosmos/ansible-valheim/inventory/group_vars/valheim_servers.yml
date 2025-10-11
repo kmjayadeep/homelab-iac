@@ -1,0 +1,29 @@
+---
+# Valheim Server Configuration
+valheim_server_name: "valheim-rivers"
+valheim_world_name: "rivers"
+valheim_server_password: "12345"
+
+# Server settings
+valheim_server_port: 2456
+
+# Server modifiers (game difficulty/gameplay tweaks)
+valheim_modifiers:
+  - "-modifier deathpenalty casual"
+  - "-modifier combat hard"
+  - "-modifier resources most"
+  - "-setkey StaminaRate 50"
+
+# Installation paths
+valheim_install_dir: "/home/valheim/valheim-server"
+valheim_data_dir: "/home/valheim/.config/unity3d/IronGate/Valheim"
+steamcmd_dir: "/home/valheim/steamcmd"
+
+# SteamCMD settings
+valheim_app_id: "896660"  # Valheim Dedicated Server App ID
+steam_user: "valheim"
+steam_group: "valheim"
+steam_home: "/home/valheim"
+
+# Server mods (optional, requires manual setup)
+valheim_mods_enabled: false

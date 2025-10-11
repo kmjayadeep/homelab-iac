@@ -1,0 +1,26 @@
+---
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+    policy: deny
+
+- name: Allow SSH
+  community.general.ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+
+- name: Allow Valheim server ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: udp
+  loop:
+    - "{{ valheim_server_port }}"
+    - "{{ valheim_server_port + 1 }}"
+    - "{{ valheim_server_port + 2 }}"
+
+- name: Reload UFW
+  community.general.ufw:
+    state: reloaded
+

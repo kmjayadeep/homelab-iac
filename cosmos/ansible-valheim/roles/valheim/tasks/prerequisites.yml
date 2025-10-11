@@ -1,0 +1,46 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Enable i386 architecture
+  ansible.builtin.command: dpkg --add-architecture i386
+  changed_when: false
+
+- name: Update apt cache after adding i386
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install required system packages
+  ansible.builtin.apt:
+    name:
+      - lib32gcc-s1
+      - libsdl2-2.0-0:i386
+      - curl
+      - wget
+      - tar
+      - ufw
+    state: present
+
+- name: Ensure valheim user exists
+  ansible.builtin.user:
+    name: "{{ steam_user }}"
+    home: "{{ steam_home }}"
+    shell: /bin/bash
+    state: present
+
+- name: Accept Steam license agreement
+  ansible.builtin.debconf:
+    name: "steam"
+    question: "steam/question"
+    value: "I AGREE"
+    vtype: "select"
+
+- name: Accept Steam license agreement (license)
+  ansible.builtin.debconf:
+    name: "steamcmd"
+    question: "steam/license"
+    value: ""
+    vtype: "note"
+

@@ -1,0 +1,31 @@
+---
+- name: Update Valheim Server
+  hosts: valheim_servers
+  become: true
+  
+  tasks:
+    - name: Stop Valheim service
+      ansible.builtin.systemd:
+        name: valheim
+        state: stopped
+    
+    - name: Update Valheim server
+      ansible.builtin.command:
+        cmd: >
+          {{ steamcmd_dir }}/steamcmd.sh
+          +force_install_dir {{ valheim_install_dir }}
+          +login anonymous
+          +app_update {{ valheim_app_id }} validate
+          +quit
+      become_user: "{{ steam_user }}"
+      register: update_result
+    
+    - name: Display update result
+      ansible.builtin.debug:
+        msg: "{{ update_result.stdout_lines }}"
+    
+    - name: Start Valheim service
+      ansible.builtin.systemd:
+        name: valheim
+        state: started
+

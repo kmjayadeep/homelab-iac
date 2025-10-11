@@ -1,0 +1,11 @@
+---
+- name: Start Valheim Server
+  hosts: valheim_servers
+  become: true
+  
+  tasks:
+    - name: Start Valheim service
+      ansible.builtin.systemd:
+        name: valheim
+        state: started
+

@@ -1,0 +1,51 @@
+---
+- name: Create Valheim directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ steam_user }}"
+    group: "{{ steam_group }}"
+    mode: '0755'
+  loop:
+    - "{{ valheim_install_dir }}"
+    - "{{ valheim_data_dir }}"
+
+- name: Install/Update Valheim Dedicated Server
+  ansible.builtin.command:
+    cmd: >
+      {{ steamcmd_dir }}/steamcmd.sh
+      +force_install_dir {{ valheim_install_dir }}
+      +login anonymous
+      +app_update {{ valheim_app_id }} validate
+      +quit
+  become_user: "{{ steam_user }}"
+  register: valheim_install
+  changed_when: "'Success! App' in valheim_install.stdout"
+
+- name: Create Valheim start script
+  ansible.builtin.template:
+    src: start_valheim.sh.j2
+    dest: "{{ valheim_install_dir }}/start_valheim.sh"
+    owner: "{{ steam_user }}"
+    group: "{{ steam_group }}"
+    mode: '0755'
+
+- name: Set proper permissions for Valheim server files
+  ansible.builtin.file:
+    path: "{{ valheim_install_dir }}"
+    owner: "{{ steam_user }}"
+    group: "{{ steam_group }}"
+    recurse: yes
+
+- name: Display server information
+  ansible.builtin.debug:
+    msg:
+      - "Valheim server installation complete!"
+      - "Server Name: {{ valheim_server_name }}"
+      - "World Name: {{ valheim_world_name }}"
+      - "Server Port: {{ valheim_server_port }}"
+      - "Installation Directory: {{ valheim_install_dir }}"
+      - "Data Directory: {{ valheim_data_dir }}"
+      - "Start with: sudo systemctl start valheim"
+      - "Check logs with: sudo journalctl -u valheim -f"
+

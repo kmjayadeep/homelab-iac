@@ -1,0 +1,34 @@
+---
+- name: Create SteamCMD directory
+  ansible.builtin.file:
+    path: "{{ steamcmd_dir }}"
+    state: directory
+    owner: "{{ steam_user }}"
+    group: "{{ steam_group }}"
+    mode: '0755'
+
+- name: Download SteamCMD
+  ansible.builtin.get_url:
+    url: https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
+    dest: "{{ steamcmd_dir }}/steamcmd_linux.tar.gz"
+    owner: "{{ steam_user }}"
+    group: "{{ steam_group }}"
+    mode: '0644'
+
+- name: Extract SteamCMD
+  ansible.builtin.unarchive:
+    src: "{{ steamcmd_dir }}/steamcmd_linux.tar.gz"
+    dest: "{{ steamcmd_dir }}"
+    remote_src: yes
+    owner: "{{ steam_user }}"
+    group: "{{ steam_group }}"
+    creates: "{{ steamcmd_dir }}/steamcmd.sh"
+
+- name: Initialize SteamCMD (first run)
+  ansible.builtin.command:
+    cmd: "{{ steamcmd_dir }}/steamcmd.sh +quit"
+  become_user: "{{ steam_user }}"
+  changed_when: false
+  register: steamcmd_init
+  failed_when: false
+
