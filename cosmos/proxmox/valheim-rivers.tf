@@ -1,13 +1,12 @@
-resource "proxmox_virtual_environment_vm" "debian_13" {
+resource "proxmox_virtual_environment_vm" "valheim_rivers" {
   provider = proxmox-bpg.mars-bpg
-  name      = "debian-13"
+  name      = "valheim-rivers"
   node_name = "mars"
 
   machine     = "q35"
   bios        = "ovmf"
-  description = "Debian 13 cloud image"
-
-  started = false
+  description = "Valheim server with the seed IEatPizzaP"
+  tags        = ["game", "valheim"]
 
   cpu {
     cores = 2
@@ -15,7 +14,7 @@ resource "proxmox_virtual_environment_vm" "debian_13" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 4096
   }
 
   efi_disk {
@@ -27,7 +26,7 @@ resource "proxmox_virtual_environment_vm" "debian_13" {
     datastore_id = "ssd-lvm"
     import_from  = proxmox_virtual_environment_download_file.latest_debian_13_qcow2_img.id
     interface    = "virtio0"
-    size         = 20
+    size         = 100
   }
 
   initialization {
@@ -36,7 +35,7 @@ resource "proxmox_virtual_environment_vm" "debian_13" {
         address = "dhcp"
       }
     }
-    user_data_file_id = proxmox_virtual_environment_file.debian_13_user_data.id
+    user_data_file_id = proxmox_virtual_environment_file.valheim_server_user_data.id
   }
 
   network_device {
@@ -48,19 +47,7 @@ resource "proxmox_virtual_environment_vm" "debian_13" {
   }
 }
 
-resource "proxmox_virtual_environment_download_file" "latest_debian_13_qcow2_img" {
-  provider = proxmox-bpg.mars-bpg
-
-  url = "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
-
-  content_type = "import"
-  datastore_id = "nfs-templates"
-  node_name    = "mars"
-  # need to rename the file to *.qcow2 to indicate the actual file format for import
-  file_name = "debian-13-genericcloud-amd64.qcow2"
-}
-
-resource "proxmox_virtual_environment_file" "debian_13_user_data" {
+resource "proxmox_virtual_environment_file" "valheim_server_user_data" {
   provider = proxmox-bpg.mars-bpg
   content_type = "snippets"
   datastore_id = "nfs-templates"
@@ -69,7 +56,7 @@ resource "proxmox_virtual_environment_file" "debian_13_user_data" {
   source_raw {
     data = <<-EOF
     #cloud-config
-    hostname: debian-13
+    hostname: valheim-rivers
     timezone: Europe/Berlin
     users:
       - name: "${var.cloudinit_username}"
@@ -81,17 +68,36 @@ resource "proxmox_virtual_environment_file" "debian_13_user_data" {
         sudo: ALL=(ALL) NOPASSWD:ALL
         plain_text_passwd: "${var.cloudinit_password}"
         lock_passwd: false
+      - name: valheim
+        groups:
+          - games
+        shell: /bin/bash
+        create_home: true
+        home: /home/valheim
+        system: false
+      - name: ansible
+        gecos: Ansible User
+        groups: users,admin,wheel
+        sudo: "ALL=(ALL) NOPASSWD:ALL"
+        shell: /bin/bash
+        lock_passwd: true
+        ssh_authorized_keys:
+          - "${var.cloudinit_ssh_public_key}"
     package_update: true
     packages:
       - qemu-guest-agent
       - net-tools
       - curl
     runcmd:
+      # Enable and start qemu-guest-agent
       - systemctl enable qemu-guest-agent
       - systemctl start qemu-guest-agent
+      
+      
+      # Final setup indicator
       - echo "done" > /tmp/cloud-config.done
     EOF
 
-    file_name = "debian_13_cloudinit.yaml"
+    file_name = "valheim_rivers_cloudinit.yaml"
   }
 }
