@@ -1,5 +1,5 @@
 resource "proxmox_virtual_environment_vm" "debian_13" {
-  provider = proxmox-bpg.mars-bpg
+  provider  = proxmox-bpg.mars-bpg
   name      = "debian-13"
   node_name = "mars"
 
@@ -61,7 +61,7 @@ resource "proxmox_virtual_environment_download_file" "latest_debian_13_qcow2_img
 }
 
 resource "proxmox_virtual_environment_file" "debian_13_user_data" {
-  provider = proxmox-bpg.mars-bpg
+  provider     = proxmox-bpg.mars-bpg
   content_type = "snippets"
   datastore_id = "nfs-templates"
   node_name    = "mars"

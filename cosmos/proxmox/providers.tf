@@ -27,11 +27,11 @@ provider "proxmox" {
 }
 
 provider "proxmox-bpg" {
-  alias           = "mars-bpg"
-  endpoint      = "https://mars.cosmos.cboxlab.com:8006/"
+  alias    = "mars-bpg"
+  endpoint = "https://mars.cosmos.cboxlab.com:8006/"
   insecure = true
   ssh {
-    agent = true
+    agent    = true
     username = "root"
   }
 }

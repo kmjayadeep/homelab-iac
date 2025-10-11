@@ -1,5 +1,5 @@
 resource "proxmox_virtual_environment_vm" "valheim_rivers" {
-  provider = proxmox-bpg.mars-bpg
+  provider  = proxmox-bpg.mars-bpg
   name      = "valheim-rivers"
   node_name = "mars"
 
@@ -48,7 +48,7 @@ resource "proxmox_virtual_environment_vm" "valheim_rivers" {
 }
 
 resource "proxmox_virtual_environment_file" "valheim_server_user_data" {
-  provider = proxmox-bpg.mars-bpg
+  provider     = proxmox-bpg.mars-bpg
   content_type = "snippets"
   datastore_id = "nfs-templates"
   node_name    = "mars"
