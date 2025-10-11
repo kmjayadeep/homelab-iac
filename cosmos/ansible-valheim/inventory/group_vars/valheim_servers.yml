@@ -1,7 +1,7 @@
 ---
 # Valheim Server Configuration
 valheim_server_name: "valheim-rivers"
-valheim_world_name: "rivers"
+valheim_world_name: "Rivers"
 valheim_server_password: "12345"
 
 # Server settings
