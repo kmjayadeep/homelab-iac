@@ -6,3 +6,14 @@ variable "cloudinit_password" {
 }
 variable "cloudinit_ssh_public_key" {
 }
+
+variable "cloudflare_zone_id" {
+  description = "CloudFlare Zone ID for DNS records"
+  type        = string
+}
+
+variable "cloudflare_domain" {
+  description = "Domain name for DNS records"
+  type        = string
+  default     = "cboxlab.com"
+}

@@ -12,6 +12,10 @@ terraform {
       source  = "bpg/proxmox"
       version = "0.84.1"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "5.11.0"
+    }
   }
 }
 
@@ -39,4 +43,8 @@ provider "proxmox-bpg" {
 provider "minio" {
   minio_server = "minio.cosmos.cboxlab.com"
   minio_ssl    = true
+}
+
+provider "cloudflare" {
+  # API token will be provided via CLOUDFLARE_API_TOKEN environment variable
 }
