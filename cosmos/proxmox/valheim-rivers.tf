@@ -104,10 +104,10 @@ resource "proxmox_virtual_environment_file" "valheim_server_user_data" {
 
 resource "cloudflare_dns_record" "valheim_rivers" {
   zone_id = var.cloudflare_zone_id
-  name = "valheim-rivers.cosmos.cboxlab.com"
-  type = "A"
+  name    = "valheim-rivers.cosmos.cboxlab.com"
+  type    = "A"
   comment = "Valheim Rivers server (IEatPizzaP seed)"
-  content   = proxmox_virtual_environment_vm.valheim_rivers.ipv4_addresses[1][0]
+  content = proxmox_virtual_environment_vm.valheim_rivers.ipv4_addresses[1][0]
   proxied = false
-  ttl  = 300
+  ttl     = 300
 }
