@@ -111,3 +111,9 @@ resource "cloudflare_dns_record" "valheim_rivers" {
   proxied = false
   ttl     = 300
 }
+
+module "valheim_rivers_s3" {
+  source      = "../../terraform-modules/minio_s3_bucket"
+  name        = "valheim-rivers-backup"
+  create_user = true
+}
