@@ -1,0 +1,123 @@
+---
+- name: Valheim Backup Operations
+  hosts: valheim_servers
+  become: yes
+  vars_prompt:
+    - name: backup_operation
+      prompt: "Choose backup operation (setup|backup|restore|list)"
+      default: "backup"
+      private: no
+  vars_files:
+    - ../inventory/group_vars/vault.yml
+
+  tasks:
+    - name: Verify backup is enabled
+      fail:
+        msg: "Backup is not enabled. Set backup_enabled: true in group_vars"
+      when: not backup_enabled | default(false)
+
+    - name: Setup backup (install restic and configure)
+      block:
+        - name: Include backup setup tasks
+          include_role:
+            name: valheim
+            tasks_from: backup
+      when: backup_operation == "setup"
+
+    - name: Perform manual backup
+      block:
+        - name: Run backup service
+          ansible.builtin.systemd:
+            name: backup-valheim.service
+            state: started
+          register: backup_result
+
+        - name: Wait for backup to complete
+          ansible.builtin.wait_for:
+            path: /var/log/journal
+            timeout: 600
+          ignore_errors: yes
+
+        - name: Show backup logs
+          ansible.builtin.command:
+            cmd: journalctl -u backup-valheim.service --since="1 minute ago" --no-pager
+          register: backup_logs
+
+        - name: Display backup results
+          ansible.builtin.debug:
+            var: backup_logs.stdout_lines
+      when: backup_operation == "backup"
+
+    - name: List backup snapshots
+      block:
+        - name: List restic snapshots
+          ansible.builtin.shell: |
+            source /etc/restic-env
+            restic snapshots
+          register: snapshots
+          become_user: "{{ steam_user }}"
+
+        - name: Display snapshots
+          ansible.builtin.debug:
+            var: snapshots.stdout_lines
+      when: backup_operation == "list"
+
+    - name: Restore from backup
+      block:
+        - name: Get available snapshots
+          ansible.builtin.shell: |
+            source /etc/restic-env
+            restic snapshots --json
+          register: snapshots_json
+          become_user: "{{ steam_user }}"
+
+        - name: Parse snapshots
+          set_fact:
+            snapshots_list: "{{ snapshots_json.stdout | from_json }}"
+
+        - name: Display available snapshots
+          ansible.builtin.debug:
+            msg: "Snapshot {{ item.short_id }}: {{ item.time }} - {{ item.paths | join(', ') }}"
+          loop: "{{ snapshots_list }}"
+          when: snapshots_list | length > 0
+
+        - name: Prompt for snapshot ID
+          pause:
+            prompt: "Enter the snapshot ID to restore from (or 'latest' for most recent)"
+          register: snapshot_choice
+
+        - name: Stop Valheim service before restore
+          ansible.builtin.systemd:
+            name: valheim
+            state: stopped
+
+        - name: Create backup of current worlds
+          ansible.builtin.command:
+            cmd: cp -r {{ valheim_data_dir }}/worlds_local {{ valheim_data_dir }}/worlds_local.backup.{{ ansible_date_time.epoch }}
+          ignore_errors: yes
+
+        - name: Restore from snapshot
+          ansible.builtin.shell: |
+            source /etc/restic-env
+            {% if snapshot_choice.user_input == 'latest' %}
+            restic restore latest --target /tmp/restore
+            {% else %}
+            restic restore {{ snapshot_choice.user_input }} --target /tmp/restore
+            {% endif %}
+            cp -r /tmp/restore{{ valheim_data_dir }}/worlds_local/* {{ valheim_data_dir }}/worlds_local/
+            chown -R {{ steam_user }}:{{ steam_group }} {{ valheim_data_dir }}/worlds_local
+            rm -rf /tmp/restore
+          become_user: "{{ steam_user }}"
+
+        - name: Start Valheim service after restore
+          ansible.builtin.systemd:
+            name: valheim
+            state: started
+
+        - name: Display restore completion
+          ansible.builtin.debug:
+            msg: 
+              - "Restore completed successfully!"
+              - "Original worlds backed up to: {{ valheim_data_dir }}/worlds_local.backup.{{ ansible_date_time.epoch }}"
+              - "Valheim service has been restarted"
+      when: backup_operation == "restore"

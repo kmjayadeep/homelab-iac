@@ -27,3 +27,18 @@ steam_home: "/home/valheim"
 
 # Server mods (optional, requires manual setup)
 valheim_mods_enabled: false
+
+# Backup Configuration
+backup_enabled: true
+backup_schedule: "hourly"  # hourly, daily, etc.
+backup_retention:
+  keep_last: 10
+  keep_daily: 10
+  keep_monthly: 12
+
+# Restic configuration variables will be loaded from vault.yaml
+# The vault variables (restic_repository, restic_password, etc.) are automatically available
+
+# Paths to backup
+backup_paths:
+  - "{{ valheim_data_dir }}/worlds_local"

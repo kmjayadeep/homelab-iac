@@ -1,0 +1,69 @@
+---
+- name: Install restic backup tool
+  ansible.builtin.apt:
+    name: restic
+    state: present
+    update_cache: yes
+  when: backup_enabled | default(false)
+
+- name: Create restic environment file
+  ansible.builtin.template:
+    src: restic-env.j2
+    dest: /etc/restic-env
+    owner: "{{ steam_user }}"
+    group: "{{ steam_group }}"
+    mode: '0600'
+  when: backup_enabled | default(false)
+
+- name: Create backup script
+  ansible.builtin.template:
+    src: backup-valheim.sh.j2
+    dest: /usr/local/bin/backup-valheim.sh
+    owner: root
+    group: root
+    mode: '0755'
+  when: backup_enabled | default(false)
+
+- name: Create systemd service for valheim backup
+  ansible.builtin.template:
+    src: backup-valheim.service.j2
+    dest: /etc/systemd/system/backup-valheim.service
+    owner: root
+    group: root
+    mode: '0644'
+  when: backup_enabled | default(false)
+  notify: reload systemd
+
+- name: Create systemd timer for valheim backup
+  ansible.builtin.template:
+    src: backup-valheim.timer.j2
+    dest: /etc/systemd/system/backup-valheim.timer
+    owner: root
+    group: root
+    mode: '0644'
+  when: backup_enabled | default(false)
+  notify: reload systemd
+
+- name: Enable and start backup timer
+  ansible.builtin.systemd:
+    name: backup-valheim.timer
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  when: backup_enabled | default(false)
+
+- name: Display backup configuration
+  ansible.builtin.debug:
+    msg:
+      - "Backup configuration:"
+      - "  Enabled: {{ backup_enabled | default(false) }}"
+      - "  Schedule: {{ backup_schedule | default('hourly') }}"
+      - "  Backup paths: {{ backup_paths | default([]) }}"
+      - "  Retention: last {{ backup_retention.keep_last | default(10) }}, daily {{ backup_retention.keep_daily | default(10) }}, monthly {{ backup_retention.keep_monthly | default(12) }}"
+      - "  Repository: {{ restic_repository | default('NOT SET') }}"
+      - ""
+      - "Manual backup commands:"
+      - "  Test backup: sudo systemctl start backup-valheim.service"
+      - "  Check backup logs: sudo journalctl -u backup-valheim.service -f"
+      - "  List snapshots: sudo -u {{ steam_user }} restic -r $RESTIC_REPOSITORY snapshots"
+  when: backup_enabled | default(false)

@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Source restic environment
+source /etc/restic-env
+
+# Check if repository is set
+if [ -z "$RESTIC_REPOSITORY" ]; then
+    echo "ERROR: RESTIC_REPOSITORY not set in /etc/restic-env"
+    exit 1
+fi
+
+# Check if password is set
+if [ -z "$RESTIC_PASSWORD" ]; then
+    echo "ERROR: RESTIC_PASSWORD not set in /etc/restic-env"
+    exit 1
+fi
+
+# Initialize repository if it doesn't exist
+if ! restic snapshots > /dev/null 2>&1; then
+    echo "Initializing restic repository..."
+    restic init
+fi
+
+echo "Starting Valheim world backup..."
+
+# Backup each configured path
+{% for path in backup_paths %}
+if [ -d "{{ path }}" ]; then
+    echo "Backing up {{ path }}..."
+    restic backup "{{ path }}" --retry-lock 10m
+else
+    echo "Warning: {{ path }} does not exist, skipping..."
+fi
+{% endfor %}
+
+echo "Cleaning up old backups..."
+# Clean up old backups according to retention policy
+restic forget \
+    --keep-last {{ backup_retention.keep_last | default(10) }} \
+    --keep-daily {{ backup_retention.keep_daily | default(10) }} \
+    --keep-monthly {{ backup_retention.keep_monthly | default(12) }} \
+    --prune
+
+echo "Listing current snapshots..."
+restic snapshots
+
+# Post to uptime URL if configured and valheim service is running
+if [ -n "$UPTIME_URL" ]; then
+    if systemctl is-active --quiet valheim; then
+        echo "Posting to uptime service..."
+        curl -fsS -m 10 --retry 5 "$UPTIME_URL" > /dev/null
+        echo "Backup completed successfully & Posted uptime status"
+    else
+        echo "Valheim service is not running, skipping uptime ping"
+    fi
+else
+    echo "Backup completed successfully (no uptime URL configured)"
+fi

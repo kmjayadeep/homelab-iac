@@ -1,0 +1,42 @@
+---
+- name: Create Valheim systemd service
+  ansible.builtin.template:
+    src: valheim.service.j2
+    dest: /etc/systemd/system/valheim.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload systemd
+
+- name: Ensure systemd is reloaded
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Enable and start Valheim service
+  ansible.builtin.systemd:
+    name: valheim
+    enabled: yes
+    state: started
+
+- name: Wait for Valheim service to be active (quick check)
+  ansible.builtin.command: systemctl is-active valheim
+  register: valheim_active
+  retries: 5
+  delay: 5
+  until: valheim_active.rc == 0
+  ignore_errors: yes
+
+- name: Display service startup status
+  ansible.builtin.debug:
+    msg: |
+      Valheim service status: {{ 'Active' if valheim_active.rc == 0 else 'Starting/Failed' }}
+      
+      The Valheim server may take several minutes to fully start up.
+      Monitor the startup process with:
+        sudo journalctl -u valheim -f
+      
+      Check if the server is ready:
+        sudo systemctl status valheim
+        netstat -tulpn | grep {{ valheim_server_port }}
+      
+      Server will be available on port {{ valheim_server_port }} when ready.

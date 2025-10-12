@@ -1,0 +1,18 @@
+[Unit]
+Description=Backup valheim worlds using restic
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User={{ steam_user }}
+ExecStart=/usr/local/bin/backup-valheim.sh
+
+# Set working directory to valheim user's home
+WorkingDirectory={{ steam_home }}
+
+# Resource limits
+IOSchedulingClass=2
+IOSchedulingPriority=6
+CPUSchedulingPolicy=2
+CPUSchedulingPriority=19

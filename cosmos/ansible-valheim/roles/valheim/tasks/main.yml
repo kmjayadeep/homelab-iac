@@ -9,8 +9,12 @@
   include_tasks: valheim.yml
 
 - name: Include systemd service tasks
-  include_tasks: systemd.yml
+  include_tasks: systemd-fast.yml
 
 - name: Include firewall configuration tasks
   include_tasks: firewall.yml
+
+- name: Include backup configuration tasks
+  include_tasks: backup.yml
+  when: backup_enabled | default(false)
 
