@@ -1,10 +1,14 @@
 { config, lib, pkgs, ... }: {
 
+  environment.etc.k3s-env.source = ../secrets/secret-k3s-env;
+
   services.k3s = {
     package = pkgs.k3s_1_33;
     enable = true;
     role = "server";
+    # environmentFile = "/etc/k3s-env";
     extraFlags = toString [
+      # "--datastore-endpoint=$K3S_DATASTORE_ENDPOINT"
       "--cluster-init"
       "--disable traefik"
       "--disable servicelb"
