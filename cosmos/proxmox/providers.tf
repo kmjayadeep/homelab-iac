@@ -40,6 +40,16 @@ provider "proxmox-bpg" {
   }
 }
 
+provider "proxmox-bpg" {
+  alias    = "pluto-bpg"
+  endpoint = "https://pluto.cosmos.cboxlab.com:8006/"
+  insecure = true
+  ssh {
+    agent    = true
+    username = "root"
+  }
+}
+
 provider "minio" {
   minio_server = "minio.cosmos.cboxlab.com"
   minio_ssl    = true

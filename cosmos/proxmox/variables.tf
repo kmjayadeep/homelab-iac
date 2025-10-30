@@ -17,3 +17,13 @@ variable "cloudflare_domain" {
   type        = string
   default     = "cboxlab.com"
 }
+
+variable "cloudflare_api_token" {
+  description = "API Token for Cloudflare provider"
+  type        = string
+}
+
+variable "acme_email" {
+  description = "Email address for ACME"
+  type        = string
+}
