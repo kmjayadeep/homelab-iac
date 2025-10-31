@@ -26,6 +26,8 @@ resource "hcloud_server" "nova" {
     environment = "homelab"
     managed_by  = "terraform"
   }
+
+  firewall_ids = [hcloud_firewall.nova_firewall.id]
 }
 
 # Firewall resource for basic security
@@ -47,10 +49,4 @@ resource "hcloud_firewall" "nova_firewall" {
     environment = "homelab"
     managed_by  = "terraform"
   }
-}
-
-# Attach firewall to server
-resource "hcloud_firewall_attachment" "nova_firewall_attachment" {
-  firewall_id = hcloud_firewall.nova_firewall.id
-  server_ids  = [hcloud_server.nova.id]
 }
