@@ -7,9 +7,9 @@ resource "proxmox_virtual_environment_acme_account" "jd-mars" {
 }
 
 resource "proxmox_virtual_environment_acme_dns_plugin" "jd-cloudflare" {
-  provider  = proxmox-bpg.mars-bpg
-  plugin = "cloudflare"
-  api    = "cf"
+  provider = proxmox-bpg.mars-bpg
+  plugin   = "cloudflare"
+  api      = "cf"
   data = {
     CF_Token = var.cloudflare_api_token
   }

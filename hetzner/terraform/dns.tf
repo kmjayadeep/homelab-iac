@@ -5,6 +5,6 @@ resource "cloudflare_dns_record" "nova_aaaa" {
   content = hcloud_server.nova.ipv6_address
   type    = "AAAA"
   ttl     = 300
-  
+
   comment = "Nova server IPv6 address - managed by Terraform"
 }

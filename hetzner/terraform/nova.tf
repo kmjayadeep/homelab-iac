@@ -9,7 +9,7 @@ resource "hcloud_server" "nova" {
   server_type = "cx23"
   image       = "debian-13"
   location    = "nbg1"
-  
+
   ssh_keys = [data.hcloud_ssh_key.nova_ssh_key.id]
 
   network {
@@ -21,7 +21,7 @@ resource "hcloud_server" "nova" {
     ipv4_enabled = false
     ipv6_enabled = true
   }
-  
+
   labels = {
     environment = "homelab"
     managed_by  = "terraform"
@@ -33,7 +33,7 @@ resource "hcloud_server" "nova" {
 # Firewall resource for basic security
 resource "hcloud_firewall" "nova_firewall" {
   name = "nova-firewall"
-  
+
   # SSH access
   rule {
     direction = "in"
@@ -44,7 +44,7 @@ resource "hcloud_firewall" "nova_firewall" {
       "::/0"
     ]
   }
-  
+
   labels = {
     environment = "homelab"
     managed_by  = "terraform"

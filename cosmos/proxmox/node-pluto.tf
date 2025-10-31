@@ -7,9 +7,9 @@ resource "proxmox_virtual_environment_acme_account" "jd-pluto" {
 }
 
 resource "proxmox_virtual_environment_acme_dns_plugin" "jd-cloudflare-pluto" {
-  provider  = proxmox-bpg.pluto-bpg
-  plugin = "cloudflare"
-  api    = "cf"
+  provider = proxmox-bpg.pluto-bpg
+  plugin   = "cloudflare"
+  api      = "cf"
   data = {
     CF_Token = var.cloudflare_api_token
   }
