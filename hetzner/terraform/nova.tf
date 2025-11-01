@@ -45,6 +45,17 @@ resource "hcloud_firewall" "nova_firewall" {
     ]
   }
 
+  # HTTPS access
+  rule {
+    direction = "in"
+    port      = "443"
+    protocol  = "tcp"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
+
   labels = {
     environment = "homelab"
     managed_by  = "terraform"

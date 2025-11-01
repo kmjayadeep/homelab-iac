@@ -1,0 +1,18 @@
+---
+- name: Install Podman and dependencies
+  apt:
+    name:
+      - podman
+      - fuse-overlayfs
+      - certbot
+    state: present
+    update_cache: yes
+
+- name: Run nginx container
+  containers.podman.podman_container:
+    name: nginx-proxy
+    image: docker.io/nginx:alpine
+    state: started
+    ports:
+      - "443:80"
+    restart_policy: always

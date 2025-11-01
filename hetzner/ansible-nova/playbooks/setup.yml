@@ -1,0 +1,9 @@
+---
+- name: Setup Containerized Services on Nova
+  hosts: nova
+  become: true
+  
+  tasks:
+    - name: Include podman role
+      include_role:
+        name: podman
