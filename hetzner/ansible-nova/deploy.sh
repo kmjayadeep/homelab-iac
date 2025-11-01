@@ -14,9 +14,6 @@ if ! command -v ansible &> /dev/null; then
     exit 1
 fi
 
-echo "Installing Ansible collections..."
-ansible-galaxy collection install -r requirements.yml
-
 echo "Deploying to nova..."
 ansible-playbook playbooks/setup.yml
 

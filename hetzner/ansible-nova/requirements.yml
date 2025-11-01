@@ -1,4 +1,2 @@
 ---
-collections:
-  - name: containers.podman
-    version: ">=1.10.0"
+# No special collections needed - using built-in Ansible modules only!

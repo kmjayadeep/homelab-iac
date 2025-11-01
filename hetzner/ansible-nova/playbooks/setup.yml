@@ -1,9 +1,13 @@
 ---
-- name: Setup Containerized Services on Nova
+- name: Setup Nova Server
   hosts: nova
   become: true
   
   tasks:
-    - name: Include podman role
+    - name: Install Podman
       include_role:
         name: podman
+    
+    - name: Install Nginx
+      include_role:
+        name: nginx

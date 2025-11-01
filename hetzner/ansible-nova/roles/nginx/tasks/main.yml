@@ -1,0 +1,56 @@
+---
+- name: Install nginx and SSL tools
+  apt:
+    name:
+      - nginx
+      - certbot
+      - python3-certbot-nginx
+    state: present
+    update_cache: yes
+
+- name: Enable and start nginx
+  systemd:
+    name: nginx
+    enabled: yes
+    state: started
+
+- name: Create basic reverse proxy config
+  copy:
+    content: |
+      server {
+          listen 443;
+          listen [::]:443;
+          server_name nova.hetzner.cboxlab.com;
+          
+          # Health check
+          location /health {
+              return 200 "OK\n";
+              add_header Content-Type text/plain;
+          }
+          
+          # Default response
+          location / {
+              return 200 "Nova Server Ready!\n";
+              add_header Content-Type text/plain;
+          }
+      }
+    dest: /etc/nginx/sites-available/nova
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable site
+  file:
+    src: /etc/nginx/sites-available/nova
+    dest: /etc/nginx/sites-enabled/nova
+    state: link
+
+- name: Remove default nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Restart nginx
+  systemd:
+    name: nginx
+    state: restarted
