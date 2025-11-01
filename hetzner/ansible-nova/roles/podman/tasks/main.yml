@@ -10,16 +10,16 @@
 
 - name: Create compose directory
   file:
-    path: /opt/nova-services
+    path: /opt/podman-compose
     state: directory
     owner: root
     group: root
     mode: '0755'
 
-- name: Create docker-compose.yml from template
-  template:
-    src: docker-compose.yml.j2
-    dest: /opt/nova-services/docker-compose.yml
+- name: Copy compose.yml
+  copy:
+    src: compose.yml
+    dest: /opt/podman-compose/compose.yml
     owner: root
     group: root
     mode: '0644'
@@ -27,4 +27,4 @@
 - name: Start services with podman-compose
   command: podman-compose up -d
   args:
-    chdir: /opt/nova-services
+    chdir: /opt/podman-compose
