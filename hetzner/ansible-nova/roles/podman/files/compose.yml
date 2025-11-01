@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   psuite-syncthing:
-    image: docker.io/nginx:1.25-alpine
+    image: docker.io/nginx:1.29-alpine
     container_name: psuite
     restart: always
     ports:
