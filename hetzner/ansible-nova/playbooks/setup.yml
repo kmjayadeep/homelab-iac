@@ -2,12 +2,11 @@
 - name: Setup Nova Server
   hosts: nova
   become: true
-  
+
   tasks:
-    - name: Install Podman
-      include_role:
-        name: podman
-    
     - name: Install Nginx
       include_role:
         name: nginx
+    - name: Install Podman
+      include_role:
+        name: podman

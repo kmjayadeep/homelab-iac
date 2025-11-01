@@ -14,7 +14,7 @@
     enabled: yes
     state: started
 
-- name: Create basic reverse proxy config
+- name: Create initial nginx config (will be updated with container IP)
   copy:
     content: |
       server {
@@ -22,16 +22,9 @@
           listen [::]:443;
           server_name nova.hetzner.cboxlab.com;
           
-          # Health check
-          location /health {
-              return 200 "OK\n";
-              add_header Content-Type text/plain;
-          }
-          
-          # Default response
+          # Temporary config - will be updated with actual container IP
           location / {
-              return 200 "Nova Server Ready!\n";
-              add_header Content-Type text/plain;
+              return 503 "Container not ready yet";
           }
       }
     dest: /etc/nginx/sites-available/nova
