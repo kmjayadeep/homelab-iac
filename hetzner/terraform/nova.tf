@@ -67,6 +67,28 @@ resource "hcloud_firewall" "nova_firewall" {
     ]
   }
 
+  # Syncthing sync protocol (TCP)
+  rule {
+    direction = "in"
+    port      = "22000"
+    protocol  = "tcp"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
+
+  # Syncthing sync protocol (UDP)
+  rule {
+    direction = "in"
+    port      = "22000"
+    protocol  = "udp"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
+
   labels = {
     environment = "homelab"
     managed_by  = "terraform"

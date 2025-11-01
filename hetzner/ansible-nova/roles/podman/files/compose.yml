@@ -2,13 +2,35 @@ version: '3.8'
 
 services:
   psuite-syncthing:
-    image: docker.io/nginx:1.25-alpine
-    container_name: psuite
+    image: docker.io/linuxserver/syncthing:2.0.10
+    container_name: psuite-syncthing
+    hostname: psuite
     restart: always
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Zurich
+    volumes:
+      - psuite-data:/data
+      - psuite-config:/config
     ports:
-      - "8080:80"
+      - "8384:8384"  # Web UI
+      - "22000:22000/tcp"  # Sync protocol (TCP)
+      - "22000:22000/udp"  # Sync protocol (UDP)  
     networks:
       - psuite-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8384/rest/noauth/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  psuite-data:
+    driver: local
+  psuite-config:
+    driver: local
 
 networks:
   psuite-network:

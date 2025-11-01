@@ -6,8 +6,8 @@ set -e
 echo "Updating containers on nova..."
 
 # SSH to nova and update containers
-ssh -6 root@nova.hetzner.cboxlab.com << 'EOF'
-cd /opt/nova-services
+ssh -6 root@psuite.hetzner.cboxlab.com << 'EOF'
+cd /opt/podman-compose
 
 # Pull latest images and recreate containers
 podman-compose pull

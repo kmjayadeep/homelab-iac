@@ -17,9 +17,16 @@ Or use direnv: `cp .envrc.example .envrc && direnv allow`
 ./update.sh
 ```
 
+## Services
+
+- **Syncthing**: https://psuite.hetzner.cboxlab.com (personal sync)
+  - Ports: 8384 (web), 22000 (sync), 21027 (discovery)  
+  - Volumes: `psuite-data` and `psuite-config` (persistent)
+  - Health checks: `/rest/noauth/health`
+
 ## Add Service
 
-1. Edit `roles/podman/templates/docker-compose.yml.j2` - add service + port
+1. Edit `roles/podman/files/compose.yml` - add service + port
 2. Edit `roles/nginx/files/nginx.conf` - add upstream server  
 3. Run `./deploy.sh`
 
@@ -33,7 +40,7 @@ my-app:
 
 ```nginx
 upstream backend {
-    server 127.0.0.1:8080;   # nginx-app
+    server 127.0.0.1:8384;   # psuite syncthing
     server 127.0.0.1:3000;   # my-app
 }
 ```
