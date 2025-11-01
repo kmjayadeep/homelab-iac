@@ -20,13 +20,4 @@ jobs:
 
       - name: Check Terraform format
         run: |
-          terraform_files=$(find . -name "*.tf")
-          if [ -z "$terraform_files" ]; then
-            echo "No Terraform files to check."
-            exit 0
-          fi
-          for file in $terraform_files; do
-            echo "Checking format for $file"
-            terraform fmt -check -diff "$file"
-          done
-
+          terraform fmt -check -diff -recursive .
