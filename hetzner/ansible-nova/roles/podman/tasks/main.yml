@@ -5,6 +5,7 @@
       - podman
       - podman-compose
       - fuse-overlayfs
+      - aardvark-dns
     state: present
     update_cache: yes
 
@@ -23,6 +24,15 @@
     owner: root
     group: root
     mode: '0644'
+
+- name: Create IPv6-only Podman network
+  containers.podman.podman_network:
+    name: psuite-network
+    state: present
+    ipv6: true
+    subnet: "fd00:db8:1::/64"
+    gateway: "fd00:db8:1::1"
+
 
 - name: Start services with podman-compose
   command: podman-compose up -d

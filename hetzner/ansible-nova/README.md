@@ -1,7 +1,8 @@
 # Nova Server
 
 Host nginx (443 SSL) → localhost ports → containers  
-Wildcard cert: `*.hetzner.cboxlab.com` (DNS challenge)
+Wildcard cert: `*.hetzner.cboxlab.com` (DNS challenge)  
+IPv6-only networking with Podman
 
 ## Setup
 
@@ -20,9 +21,18 @@ Or use direnv: `cp .envrc.example .envrc && direnv allow`
 ## Services
 
 - **Syncthing**: https://psuite.hetzner.cboxlab.com (personal sync)
-  - Ports: 8384 (web), 22000 (sync), 21027 (discovery)  
+  - Ports: 8384 (web), 22000 (sync)  
   - Volumes: `psuite-data` and `psuite-config` (persistent)
-  - Health checks: `/rest/noauth/health`
+  - Networking: IPv6-only (IPv4 disabled in containers)
+  - DNS: 2001:4860:4860::8888
+
+## Troubleshooting
+
+IPv6-only networking troubleshooting:
+```bash
+ssh -6 root@psuite.hetzner.cboxlab.com
+bash /root/troubleshoot-podman.sh
+```
 
 ## Add Service
 

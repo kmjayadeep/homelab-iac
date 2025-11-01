@@ -20,7 +20,7 @@ services:
     networks:
       - psuite-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8384/rest/noauth/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8384/rest/noauth/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -34,4 +34,4 @@ volumes:
 
 networks:
   psuite-network:
-    driver: bridge
+    external: true
