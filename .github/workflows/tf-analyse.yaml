@@ -11,7 +11,7 @@ jobs:
     runs-on: cosmos
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
