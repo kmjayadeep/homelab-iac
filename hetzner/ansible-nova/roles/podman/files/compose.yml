@@ -1,12 +1,15 @@
 version: '3.8'
 
 services:
+  # Make sure to chown the data and config directories to 1000:1000
   psuite-syncthing:
     image: docker.io/linuxserver/syncthing:2.0.10
     container_name: psuite-syncthing
-    hostname: psuite
+    hostname: psuite-hetzner
     restart: always
     environment:
+      - PUID=1000
+      - PGID=1000
       - TZ=Europe/Zurich
     volumes:
       - psuite-data:/data
