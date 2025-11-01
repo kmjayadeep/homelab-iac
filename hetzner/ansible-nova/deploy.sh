@@ -18,12 +18,20 @@ echo "Installing collections..."
 ansible-galaxy collection install -r requirements.yml
 
 echo "Deploying to nova..."
+
+# Check for required environment variable
+if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+    echo "Error: CLOUDFLARE_API_TOKEN environment variable is required"
+    echo "Export it first: export CLOUDFLARE_API_TOKEN=your-token"
+    exit 1
+fi
+
 ansible-playbook playbooks/setup.yml
 
 echo ""
 echo "✅ Done!"
 echo ""
-echo "Access: https://nova.hetzner.cboxlab.com"
-echo "SSH:    ssh -6 root@nova.hetzner.cboxlab.com"
-echo "Logs:   podman logs -f nginx-proxy"
+echo "Access: https://psuite.hetzner.cboxlab.com"
+echo "SSH:    ssh -6 root@psuite.hetzner.cboxlab.com"
+echo "Logs:   podman logs -f nginx-app"
 echo ""

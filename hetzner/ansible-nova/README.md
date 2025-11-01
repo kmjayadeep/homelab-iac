@@ -1,12 +1,15 @@
 # Nova Server
 
-Host nginx (443) → localhost ports → containers
+Host nginx (443 SSL) → localhost ports → containers  
+Wildcard cert: `*.hetzner.cboxlab.com` (DNS challenge)
 
-## Deploy
+## Setup
 
-```bash
-./deploy.sh
-```
+1. Edit `inventory/group_vars/nova.yml` - set your email
+2. Set API token: `export CLOUDFLARE_API_TOKEN="your-token"`
+3. Deploy: `./deploy.sh`
+
+Or use direnv: `cp .envrc.example .envrc && direnv allow`
 
 ## Update
 

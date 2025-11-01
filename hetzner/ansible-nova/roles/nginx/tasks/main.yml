@@ -4,7 +4,7 @@
     name:
       - nginx
       - certbot
-      - python3-certbot-nginx
+      - python3-certbot-dns-cloudflare
     state: present
     update_cache: yes
 
@@ -33,7 +33,37 @@
     enabled: yes
     state: started
 
-- name: Reload nginx
+- name: Create cloudflare credentials file
+  copy:
+    content: |
+      dns_cloudflare_api_token = {{ cloudflare_api_token }}
+    dest: /root/.cloudflare-credentials
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Request wildcard certificate via DNS challenge
+  command: >
+    certbot certonly
+    --dns-cloudflare
+    --dns-cloudflare-credentials /root/.cloudflare-credentials
+    --dns-cloudflare-propagation-seconds 60
+    --email {{ acme_email }}
+    --agree-tos
+    --non-interactive
+    --domain "*.hetzner.cboxlab.com"
+    --domain "hetzner.cboxlab.com"
+  args:
+    creates: /etc/letsencrypt/live/hetzner.cboxlab.com/fullchain.pem
+
+- name: Setup certificate renewal
+  cron:
+    name: "certbot renewal"
+    minute: "0"
+    hour: "2"
+    job: "certbot renew --quiet && systemctl reload nginx"
+
+- name: Reload nginx (after certificate)
   systemd:
     name: nginx
     state: reloaded

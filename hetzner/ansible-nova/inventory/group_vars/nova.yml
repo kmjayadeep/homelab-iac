@@ -1,1 +1,3 @@
----
+# SSL Certificate Configuration
+acme_email: "jd@cboxlab.com"  # Change this!
+cloudflare_api_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
