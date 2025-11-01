@@ -1,0 +1,11 @@
+# Local customizations
+services.yml
+docker-compose.override.yml
+.env
+
+# Ansible generated files
+*.retry
+
+# OS files
+.DS_Store
+Thumbs.db

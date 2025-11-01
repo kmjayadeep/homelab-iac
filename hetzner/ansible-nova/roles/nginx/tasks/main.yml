@@ -8,25 +8,9 @@
     state: present
     update_cache: yes
 
-- name: Enable and start nginx
-  systemd:
-    name: nginx
-    enabled: yes
-    state: started
-
-- name: Create initial nginx config (will be updated with container IP)
+- name: Create host nginx config
   copy:
-    content: |
-      server {
-          listen 443;
-          listen [::]:443;
-          server_name nova.hetzner.cboxlab.com;
-          
-          # Temporary config - will be updated with actual container IP
-          location / {
-              return 503 "Container not ready yet";
-          }
-      }
+    src: nginx.conf
     dest: /etc/nginx/sites-available/nova
     owner: root
     group: root
@@ -43,7 +27,13 @@
     path: /etc/nginx/sites-enabled/default
     state: absent
 
-- name: Restart nginx
+- name: Enable and start nginx
   systemd:
     name: nginx
-    state: restarted
+    enabled: yes
+    state: started
+
+- name: Reload nginx
+  systemd:
+    name: nginx
+    state: reloaded

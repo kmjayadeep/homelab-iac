@@ -3,45 +3,28 @@
   apt:
     name:
       - podman
+      - podman-compose
       - fuse-overlayfs
     state: present
     update_cache: yes
 
-- name: Run containerized nginx (no port binding)
-  containers.podman.podman_container:
-    name: nginx-app
-    image: docker.io/nginx:alpine
-    state: started
-    restart_policy: always
+- name: Create compose directory
+  file:
+    path: /opt/nova-services
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
 
-- name: Get container IP
-  containers.podman.podman_container_info:
-    name: nginx-app
-  register: container_info
-
-- name: Update nginx config with container IP
-  copy:
-    content: |
-      server {
-          listen 443;
-          listen [::]:443;
-          server_name nova.hetzner.cboxlab.com;
-          
-          # Proxy to containerized nginx (direct IP)
-          location / {
-              proxy_pass http://{{ container_info.containers[0].NetworkSettings.IPAddress }}:80;
-              proxy_set_header Host $host;
-              proxy_set_header X-Real-IP $remote_addr;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header X-Forwarded-Proto $scheme;
-          }
-      }
-    dest: /etc/nginx/sites-available/nova
+- name: Create docker-compose.yml from template
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/nova-services/docker-compose.yml
     owner: root
     group: root
     mode: '0644'
 
-- name: Reload nginx with new container IP
-  systemd:
-    name: nginx
-    state: reloaded
+- name: Start services with podman-compose
+  command: podman-compose up -d
+  args:
+    chdir: /opt/nova-services
