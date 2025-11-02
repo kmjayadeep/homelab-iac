@@ -18,3 +18,13 @@ resource "cloudflare_dns_record" "psuite_aaaa" {
 
   comment = "PSuite server IPv6 address - managed by Terraform"
 }
+
+resource "cloudflare_dns_record" "wiki_aaaa" {
+  zone_id = var.cloudflare_zone_id
+  name    = "wiki.hetzner.${var.dns_domain}"
+  content = hcloud_server.nova.ipv6_address
+  type    = "AAAA"
+  ttl     = 300
+
+  comment = "Psuite Wiki hetzner IPv6 address - managed by Terraform"
+}
