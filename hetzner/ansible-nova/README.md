@@ -7,7 +7,11 @@ IPv6-only networking with Podman
 ## Setup
 
 1. Edit `inventory/group_vars/nova.yml` - set your email
-2. Set API token: `export CLOUDFLARE_API_TOKEN="your-token"`
+2. Set environment variables:
+   ```bash
+   export CLOUDFLARE_API_TOKEN="your-token"
+   export WIKI_PASSWORD="your-wiki-password"  # Optional, defaults to 'changeme123'
+   ```
 3. Deploy: `./deploy.sh`
 
 Or use direnv: `cp .envrc.example .envrc && direnv allow`
@@ -22,9 +26,14 @@ Or use direnv: `cp .envrc.example .envrc && direnv allow`
 
 - **Syncthing**: https://psuite.hetzner.cboxlab.com (personal sync)
   - Ports: 8384 (web), 22000 (sync)  
-  - Host directories: `/opt/podman-compose/mounts/syncthing/data` and `/opt/podman-compose/mounts/syncthing/config` (PUID/PGID: 1000)
-  - Networking: IPv6-only (IPv4 disabled in containers)
-  - DNS: 2001:4860:4860::8888
+  - Host directories: `/opt/podman-compose/mounts/syncthing/` (PUID/PGID: 1000)
+
+- **SilverBullet Wiki**: https://wiki.hetzner.cboxlab.com (personal wiki)
+  - Port: 3000
+  - Host directories: `/opt/podman-compose/mounts/psuite-data/psuite-wiki/` (PUID/PGID: 1000)
+  - Auth: admin:${WIKI_PASSWORD} (set via environment variable)
+
+**Networking**: IPv6-only (IPv4 disabled in containers)
 
 ## Troubleshooting
 

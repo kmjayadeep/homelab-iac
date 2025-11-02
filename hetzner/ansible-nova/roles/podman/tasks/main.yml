@@ -30,13 +30,21 @@
     - /opt/podman-compose/mounts/syncthing/config
     - /opt/podman-compose/mounts/syncthing/data
 
-- name: Copy compose.yml
+- name: Copy compose.yml to podman-compose directory
   copy:
     src: compose.yml
     dest: /opt/podman-compose/compose.yml
     owner: root
     group: root
     mode: '0644'
+
+- name: Copy environment file to podman-compose directory
+  copy:
+    src: "secret-env"
+    dest: /opt/podman-compose/.env
+    owner: root
+    group: root
+    mode: '0600'
 
 - name: Start services with podman-compose
   command: podman-compose up -d

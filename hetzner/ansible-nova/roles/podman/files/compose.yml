@@ -26,6 +26,31 @@ services:
       retries: 3
       start_period: 10s
 
+  psuite-wiki:
+    image: docker.io/zefhemel/silverbullet:2.1.9
+    container_name: psuite-wiki
+    hostname: psuite-wiki
+    restart: always
+    environment:
+      - SB_FOLDER=/psuite-data/psuite-wiki/data
+      - SB_NAME=Wiki
+      - SB_DESCRIPTION=Jayadeep's personal Wiki
+      - GUID=1000
+      - PUID=1000
+      - SB_USER=admin:${WIKI_PASSWORD}
+    volumes:
+      - /opt/podman-compose/mounts/syncthing/data:/psuite-data
+    ports:
+      - "3000:3000"
+    networks:
+      - psuite-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
 networks:
   psuite-network:
     driver: bridge

@@ -14,4 +14,10 @@ podman-compose pull
 podman-compose up -d --force-recreate
 
 echo "✅ Update complete!"
+echo ""
+echo "Services:"
+echo "- Syncthing: https://psuite.hetzner.cboxlab.com"
+echo "- Wiki:      https://wiki.hetzner.cboxlab.com"
+echo ""
+podman ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 EOF
