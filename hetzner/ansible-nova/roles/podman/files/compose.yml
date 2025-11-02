@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Make sure to chown the data and config directories to 1000:1000
   psuite-syncthing:
     image: docker.io/linuxserver/syncthing:2.0.10
     container_name: psuite-syncthing
@@ -12,8 +11,8 @@ services:
       - PGID=1000
       - TZ=Europe/Zurich
     volumes:
-      - psuite-data:/data
-      - psuite-config:/config
+      - /opt/podman-compose/mounts/syncthing/data:/data
+      - /opt/podman-compose/mounts/syncthing/config:/config
     ports:
       - "8384:8384"  # Web UI
       - "22000:22000/tcp"  # Sync protocol (TCP)
@@ -26,12 +25,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-
-volumes:
-  psuite-data:
-    driver: local
-  psuite-config:
-    driver: local
 
 networks:
   psuite-network:

@@ -22,7 +22,7 @@ Or use direnv: `cp .envrc.example .envrc && direnv allow`
 
 - **Syncthing**: https://psuite.hetzner.cboxlab.com (personal sync)
   - Ports: 8384 (web), 22000 (sync)  
-  - Volumes: `psuite-data` and `psuite-config` (persistent)
+  - Host directories: `/opt/podman-compose/mounts/syncthing/data` and `/opt/podman-compose/mounts/syncthing/config` (PUID/PGID: 1000)
   - Networking: IPv6-only (IPv4 disabled in containers)
   - DNS: 2001:4860:4860::8888
 

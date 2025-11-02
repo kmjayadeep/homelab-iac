@@ -17,6 +17,19 @@
     group: root
     mode: '0755'
 
+- name: Create syncthing host directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "1000"  # PUID
+    group: "1000"  # PGID  
+    mode: '0755'
+    recurse: yes
+  loop:
+    - /opt/podman-compose/mounts/syncthing
+    - /opt/podman-compose/mounts/syncthing/config
+    - /opt/podman-compose/mounts/syncthing/data
+
 - name: Copy compose.yml
   copy:
     src: compose.yml
