@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   psuite-syncthing:
-    image: docker.io/linuxserver/syncthing:2.0.10
+    image: docker.io/linuxserver/syncthing:2.0.11
     container_name: psuite-syncthing
     hostname: psuite-hetzner
     restart: always
