@@ -27,7 +27,7 @@ services:
       start_period: 10s
 
   psuite-wiki:
-    image: docker.io/zefhemel/silverbullet:2.1.9
+    image: docker.io/zefhemel/silverbullet:2.2.1
     container_name: psuite-wiki
     hostname: psuite-wiki
     restart: always
