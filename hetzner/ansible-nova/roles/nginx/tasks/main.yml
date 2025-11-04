@@ -23,7 +23,7 @@
     dest: /etc/nginx/.fava-htpasswd
     owner: root
     group: root
-    mode: '0600'
+    mode: '0644'
 
 - name: Enable site
   file:
