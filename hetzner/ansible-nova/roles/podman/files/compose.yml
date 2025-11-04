@@ -51,6 +51,28 @@ services:
       retries: 3
       start_period: 15s
 
+  psuite-fava:
+    image: docker.io/yegle/fava:latest
+    container_name: psuite-fava
+    hostname: psuite-fava
+    restart: always
+    environment:
+      - BEANCOUNT_FILE=/psuite-data/psuite-beancount/journal.beancount
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /opt/podman-compose/mounts/syncthing/data:/psuite-data
+    ports:
+      - "5000:5000"
+    networks:
+      - psuite-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
 networks:
   psuite-network:
     driver: bridge

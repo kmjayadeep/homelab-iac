@@ -16,6 +16,15 @@
     group: root
     mode: '0644'
 
+
+- name: Copy fava htpasswd
+  copy:
+    src: secret-fava-htpasswd
+    dest: /etc/nginx/.fava-htpasswd
+    owner: root
+    group: root
+    mode: '0600'
+
 - name: Enable site
   file:
     src: /etc/nginx/sites-available/nova
