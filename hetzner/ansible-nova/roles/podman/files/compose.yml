@@ -37,7 +37,7 @@ services:
       - SB_DESCRIPTION=Jayadeep's personal Wiki
       - GUID=1000
       - PUID=1000
-      - SB_USER=admin:${WIKI_PASSWORD}
+      - SB_USER=wiki:${WIKI_PASSWORD}
     volumes:
       - /opt/podman-compose/mounts/syncthing/data:/psuite-data
     ports:
