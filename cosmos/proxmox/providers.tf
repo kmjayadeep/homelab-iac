@@ -31,6 +31,16 @@ provider "proxmox" {
 }
 
 provider "proxmox-bpg" {
+  alias    = "jupiter-bpg"
+  endpoint = "https://jupiter.cosmos.cboxlab.com:8006/"
+  insecure = true
+  ssh {
+    agent    = true
+    username = "root"
+  }
+}
+
+provider "proxmox-bpg" {
   alias    = "mars-bpg"
   endpoint = "https://mars.cosmos.cboxlab.com:8006/"
   insecure = true
