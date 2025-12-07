@@ -46,6 +46,8 @@ resource "proxmox_virtual_environment_vm" "debian_13" {
   agent {
     enabled = true
   }
+
+  on_boot = false
 }
 
 resource "proxmox_virtual_environment_download_file" "latest_debian_13_qcow2_img" {
