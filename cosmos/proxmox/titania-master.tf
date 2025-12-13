@@ -68,11 +68,6 @@ resource "proxmox_virtual_environment_file" "titania_master_user_data" {
         sudo: ALL=(ALL) NOPASSWD:ALL
         plain_text_passwd: "${var.cloudinit_password}"
         lock_passwd: false
-      - name: operator
-        shell: /bin/bash
-        create_home: true
-        home: /home/operator
-        system: false
       - name: ansible
         gecos: Ansible User
         groups: users,admin,wheel
