@@ -1,0 +1,10 @@
+---
+- name: Setup K3s Worker Nodes
+  hosts: k3s_workers
+  become: true
+  
+  tasks:
+    - name: Include k3s-worker role
+      include_role:
+        name: k3s-worker
+

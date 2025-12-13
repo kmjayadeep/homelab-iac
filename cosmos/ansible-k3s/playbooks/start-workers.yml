@@ -1,0 +1,11 @@
+---
+- name: Start K3s Worker Nodes
+  hosts: k3s_workers
+  become: true
+  
+  tasks:
+    - name: Start K3s agent service
+      ansible.builtin.systemd:
+        name: k3s-agent
+        state: started
+

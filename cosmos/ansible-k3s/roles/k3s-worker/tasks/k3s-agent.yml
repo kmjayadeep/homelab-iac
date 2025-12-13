@@ -1,0 +1,45 @@
+---
+- name: Check if K3s is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s
+  register: k3s_binary
+
+- name: Get installed K3s version
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s --version
+  register: k3s_installed_version
+  when: k3s_binary.stat.exists
+  changed_when: false
+  failed_when: false
+
+- name: Download K3s binary
+  ansible.builtin.get_url:
+    url: "https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s"
+    dest: /usr/local/bin/k3s
+    mode: '0755'
+    owner: root
+    group: root
+  when: not k3s_binary.stat.exists or k3s_version not in k3s_installed_version.stdout
+
+- name: Fetch node token from master
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: k3s_token
+  delegate_to: "{{ groups['k3s_masters'][0] }}"
+  run_once: true
+
+- name: Create K3s configuration directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    mode: '0755'
+
+- name: Create K3s agent config file
+  ansible.builtin.copy:
+    dest: /etc/rancher/k3s/config.yaml
+    mode: '0644'
+    content: |
+      server: https://{{ k3s_master_host }}:{{ k3s_master_port }}
+      token: {{ k3s_token.content | b64decode | trim }}
+  notify: restart k3s-agent
+

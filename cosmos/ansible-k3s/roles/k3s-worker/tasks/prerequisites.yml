@@ -1,0 +1,47 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install required system packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - git
+      - vim
+      - nfs-common
+      - iptables
+      - ca-certificates
+      - ufw
+    state: present
+
+- name: Load kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+    persistent: present
+  loop: "{{ kernel_modules }}"
+
+- name: Set sysctl parameters
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_set: yes
+    reload: yes
+  loop: "{{ sysctl_settings | dict2items }}"
+
+- name: Ensure cosmos user exists
+  ansible.builtin.user:
+    name: "{{ k3s_user }}"
+    home: "/home/{{ k3s_user }}"
+    shell: /bin/bash
+    state: present
+
+- name: Enable and start rpcbind for NFS
+  ansible.builtin.systemd:
+    name: rpcbind
+    enabled: yes
+    state: started
+

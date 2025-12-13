@@ -1,0 +1,31 @@
+---
+# K3s Worker Node Configuration
+
+# K3s Version (should match master)
+k3s_version: "v1.33.0+k3s1"
+
+# Master node details
+k3s_master_host: "titania.cosmos.cboxlab.com"
+k3s_master_port: "6443"
+
+# Kubeconfig Configuration
+k3s_user: "cosmos"
+
+# System Configuration
+# Sysctl settings
+sysctl_settings:
+  fs.inotify.max_user_instances: 1024
+  vm.dirty_ratio: 10
+  vm.dirty_background_ratio: 5
+  net.ipv4.ip_forward: 1
+  net.ipv6.conf.all.forwarding: 1
+
+# Kernel Modules
+kernel_modules:
+  - br_netfilter
+  - overlay
+  - ip6_tables
+  - ip6table_mangle
+  - ip6table_raw
+  - ip6table_filter
+
