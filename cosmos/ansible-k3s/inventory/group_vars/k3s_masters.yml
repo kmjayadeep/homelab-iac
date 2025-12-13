@@ -1,0 +1,50 @@
+---
+# K3s Master Node Configuration
+
+# K3s Version
+k3s_version: "v1.33.0+k3s1"
+
+# Node Network Configuration
+k3s_node_ip_v4: "192.168.1.70"
+k3s_node_ip_v6: "fe80::be24:11ff:fe25:7a53"
+k3s_tls_san: "titania.cosmos.cboxlab.com"
+
+# Network CIDRs
+k3s_cluster_cidr_v4: "10.42.0.0/16"
+k3s_cluster_cidr_v6: "2001:cafe:42::/96"
+k3s_service_cidr_v4: "10.43.0.0/16"
+k3s_service_cidr_v6: "2001:cafe:43::/112"
+
+# Kubeconfig Configuration
+k3s_kubeconfig_path: "/home/cosmos/.kube/config"
+k3s_kubeconfig_mode: "644"
+k3s_user: "cosmos"
+
+# Disabled Components
+k3s_disable_components:
+  - traefik
+  - servicelb
+  - metrics-server
+  - local-storage
+  - helm-controller
+
+# System Configuration
+# Sysctl settings
+sysctl_settings:
+  fs.inotify.max_user_instances: 1024
+  vm.dirty_ratio: 10
+  vm.dirty_background_ratio: 5
+  net.ipv4.ip_forward: 1
+  net.ipv6.conf.all.forwarding: 1
+
+# Kernel Modules
+kernel_modules:
+  - br_netfilter
+  - overlay
+  - ip6_tables
+  - ip6table_mangle
+  - ip6table_raw
+  - ip6table_filter
+
+# Tailscale Configuration
+tailscale_accept_dns: false

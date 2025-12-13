@@ -1,0 +1,50 @@
+---
+- name: Create K3s systemd service
+  ansible.builtin.template:
+    src: k3s.service.j2
+    dest: /etc/systemd/system/k3s.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload systemd
+
+- name: Ensure systemd is reloaded
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Enable and start K3s service
+  ansible.builtin.systemd:
+    name: k3s
+    enabled: yes
+    state: started
+
+- name: Wait for K3s API server to be ready
+  ansible.builtin.wait_for:
+    port: 6443
+    delay: 10
+    timeout: 300
+  ignore_errors: yes
+
+- name: Wait for kubeconfig to be created
+  ansible.builtin.wait_for:
+    path: /etc/rancher/k3s/k3s.yaml
+    timeout: 120
+
+- name: Copy kubeconfig to cosmos user home
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "{{ k3s_kubeconfig_path }}"
+    remote_src: yes
+    owner: "{{ k3s_user }}"
+    group: "{{ k3s_user }}"
+    mode: "{{ k3s_kubeconfig_mode }}"
+
+- name: Update kubeconfig to use DNS hostname
+  ansible.builtin.replace:
+    path: "{{ k3s_kubeconfig_path }}"
+    regexp: 'https://127\.0\.0\.1:6443'
+    replace: "https://{{ k3s_tls_san }}:6443"
+
+- name: Display node token location
+  ansible.builtin.debug:
+    msg: "K3s node token for worker nodes can be found at /var/lib/rancher/k3s/server/node-token"

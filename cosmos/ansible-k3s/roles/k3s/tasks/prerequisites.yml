@@ -1,0 +1,84 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install required system packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - git
+      - vim
+      - nfs-common
+      - iptables
+      - ca-certificates
+      - ufw
+    state: present
+
+- name: Load kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+    persistent: present
+  loop: "{{ kernel_modules }}"
+
+- name: Set sysctl parameters
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_set: yes
+    reload: yes
+  loop: "{{ sysctl_settings | dict2items }}"
+
+- name: Ensure cosmos user exists
+  ansible.builtin.user:
+    name: "{{ k3s_user }}"
+    home: "/home/{{ k3s_user }}"
+    shell: /bin/bash
+    state: present
+
+- name: Create .kube directory for cosmos user
+  ansible.builtin.file:
+    path: "/home/{{ k3s_user }}/.kube"
+    state: directory
+    owner: "{{ k3s_user }}"
+    group: "{{ k3s_user }}"
+    mode: '0755'
+
+- name: Enable and start rpcbind for NFS
+  ansible.builtin.systemd:
+    name: rpcbind
+    enabled: yes
+    state: started
+
+- name: Check if Tailscale is installed
+  ansible.builtin.stat:
+    path: /usr/bin/tailscale
+  register: tailscale_installed
+
+- name: Download Tailscale install script
+  ansible.builtin.get_url:
+    url: https://tailscale.com/install.sh
+    dest: /tmp/tailscale-install.sh
+    mode: '0755'
+  when: not tailscale_installed.stat.exists
+
+- name: Install Tailscale
+  ansible.builtin.command:
+    cmd: sh /tmp/tailscale-install.sh
+  when: not tailscale_installed.stat.exists
+
+- name: Enable Tailscale service
+  ansible.builtin.systemd:
+    name: tailscaled
+    enabled: yes
+    state: started
+
+- name: Configure Tailscale (if not already connected)
+  ansible.builtin.command:
+    cmd: tailscale up --accept-dns={{ tailscale_accept_dns | lower }}
+  register: tailscale_up
+  changed_when: "'Success' in tailscale_up.stdout or 'already logged in' not in tailscale_up.stderr"
+  failed_when: false

@@ -1,0 +1,36 @@
+---
+- name: Update K3s
+  hosts: k3s_masters
+  become: true
+  
+  tasks:
+    - name: Stop K3s service
+      ansible.builtin.systemd:
+        name: k3s
+        state: stopped
+    
+    - name: Download latest K3s binary
+      ansible.builtin.get_url:
+        url: "https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s"
+        dest: /usr/local/bin/k3s
+        mode: '0755'
+        owner: root
+        group: root
+        force: yes
+      register: k3s_update
+    
+    - name: Display update result
+      ansible.builtin.debug:
+        msg: "K3s binary updated to {{ k3s_version }}"
+      when: k3s_update.changed
+    
+    - name: Start K3s service
+      ansible.builtin.systemd:
+        name: k3s
+        state: started
+    
+    - name: Wait for K3s API to be ready
+      ansible.builtin.wait_for:
+        port: 6443
+        delay: 10
+        timeout: 120

@@ -1,0 +1,12 @@
+---
+- name: Include prerequisite tasks
+  include_tasks: prerequisites.yml
+
+- name: Include K3s installation tasks
+  include_tasks: k3s.yml
+
+- name: Include systemd service tasks
+  include_tasks: systemd.yml
+
+- name: Include firewall configuration tasks
+  include_tasks: firewall.yml

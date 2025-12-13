@@ -1,0 +1,64 @@
+---
+- name: Check if K3s is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s
+  register: k3s_binary
+
+- name: Get installed K3s version
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s --version
+  register: k3s_installed_version
+  when: k3s_binary.stat.exists
+  changed_when: false
+  failed_when: false
+
+- name: Download K3s binary
+  ansible.builtin.get_url:
+    url: "https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s"
+    dest: /usr/local/bin/k3s
+    mode: '0755'
+    owner: root
+    group: root
+  when: not k3s_binary.stat.exists or k3s_version not in k3s_installed_version.stdout
+
+- name: Create K3s configuration directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    mode: '0755'
+
+- name: Create K3s config file
+  ansible.builtin.copy:
+    dest: /etc/rancher/k3s/config.yaml
+    mode: '0644'
+    content: |
+      cluster-init: true
+      disable:
+      {% for component in k3s_disable_components %}
+        - {{ component }}
+      {% endfor %}
+      disable-cloud-controller: true
+      disable-network-policy: true
+      kube-controller-manager-arg:
+        - "node-cidr-mask-size-ipv6=112"
+      kube-proxy-arg:
+        - "proxy-mode=ipvs"
+      cluster-cidr:
+        - "{{ k3s_cluster_cidr_v4 }}"
+        - "{{ k3s_cluster_cidr_v6 }}"
+      service-cidr:
+        - "{{ k3s_service_cidr_v4 }}"
+        - "{{ k3s_service_cidr_v6 }}"
+      snapshotter: native
+      node-ip:
+        - "{{ k3s_node_ip_v4 }}"
+        - "{{ k3s_node_ip_v6 }}"
+      flannel-backend: none
+      write-kubeconfig: {{ k3s_kubeconfig_path }}
+      write-kubeconfig-mode: "{{ k3s_kubeconfig_mode }}"
+      tls-san:
+        - "{{ k3s_tls_san }}"
+      kubelet-arg:
+        - "allowed-unsafe-sysctls=net.ipv6.*,net.ipv4.*"
+  notify: restart k3s
+
