@@ -13,7 +13,7 @@
       - nfs-common
       - iptables
       - ca-certificates
-      - ufw
+      - open-iscsi
     state: present
 
 - name: Load kernel modules

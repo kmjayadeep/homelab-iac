@@ -7,6 +7,3 @@
 
 - name: Include systemd service tasks
   include_tasks: systemd.yml
-
-- name: Include firewall configuration tasks
-  include_tasks: firewall.yml
