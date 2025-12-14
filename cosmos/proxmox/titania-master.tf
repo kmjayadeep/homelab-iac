@@ -14,7 +14,7 @@ resource "proxmox_virtual_environment_vm" "titania-master" {
   }
 
   memory {
-    dedicated = 8192
+    dedicated = 16384
   }
 
   efi_disk {
