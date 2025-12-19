@@ -23,7 +23,7 @@ resource "proxmox_virtual_environment_vm" "valheim_rivers" {
   }
 
   disk {
-    datastore_id = "ssd-lvm"
+    datastore_id = "local-lvm"
     import_from  = proxmox_virtual_environment_download_file.latest_debian_13_qcow2_img.id
     interface    = "virtio0"
     size         = 100
