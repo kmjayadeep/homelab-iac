@@ -37,7 +37,7 @@
       {% for component in k3s_disable_components %}
         - {{ component }}
       {% endfor %}
-      disable-cloud-controller: true
+      disable-cloud-controller: false
       disable-network-policy: true
       kube-controller-manager-arg:
         - "node-cidr-mask-size-ipv6=112"
