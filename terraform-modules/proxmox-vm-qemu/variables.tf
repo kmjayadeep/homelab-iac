@@ -30,7 +30,7 @@ variable "balloon" {
   default = null
 }
 
-variable "onboot" {
+variable "start_at_node_boot" {
   description = "Start the VM on Proxmox host boot"
   type        = bool
   default     = true
