@@ -50,4 +50,9 @@ resource "proxmox_vm_qemu" "this" {
     bridge = "vmbr0"
     model  = "virtio"
   }
+  startup_shutdown {
+    order            = var.startup_shutdown.order
+    shutdown_timeout = var.startup_shutdown.shutdown_timeout
+    startup_delay    = var.startup_shutdown.startup_delay
+  }
 }

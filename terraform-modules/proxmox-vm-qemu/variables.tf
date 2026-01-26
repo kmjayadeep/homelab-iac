@@ -57,6 +57,20 @@ variable "vm_state" {
   default = "running"
 }
 
+variable "startup_shutdown" {
+  description = "Startup/shutdown behavior for the VM"
+  type = object({
+    order            = number
+    shutdown_timeout = number
+    startup_delay    = number
+  })
+  default = {
+    order            = -1
+    shutdown_timeout = -1
+    startup_delay    = -1
+  }
+}
+
 variable "disk_size" {
   type        = string
   description = "Disk size. Eg: 30G"
