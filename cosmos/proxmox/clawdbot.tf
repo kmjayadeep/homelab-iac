@@ -94,3 +94,13 @@ resource "proxmox_virtual_environment_file" "clawdbot_user_data" {
     file_name = "clawdbot_cloudinit.yaml"
   }
 }
+
+resource "cloudflare_dns_record" "clawdbot" {
+  zone_id = var.cloudflare_zone_id
+  name    = "clawdbot.cosmos.cboxlab.com"
+  type    = "A"
+  comment = "Clawdbot VM"
+  content = proxmox_virtual_environment_vm.clawdbot.ipv4_addresses[1][0]
+  proxied = false
+  ttl     = 300
+}
