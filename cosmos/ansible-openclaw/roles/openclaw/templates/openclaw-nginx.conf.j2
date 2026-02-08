@@ -3,6 +3,18 @@ server {
   server_name {{ openclaw_nginx_server_name }};
 
   location / {
+    return 301 https://$host$request_uri;
+  }
+}
+
+server {
+  listen 443 ssl;
+  server_name {{ openclaw_nginx_server_name }};
+
+  ssl_certificate /etc/letsencrypt/live/{{ openclaw_cert_domain }}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ openclaw_cert_domain }}/privkey.pem;
+
+  location / {
     proxy_pass http://{{ openclaw_dashboard_host }}:{{ openclaw_dashboard_port }};
     proxy_http_version 1.1;
     proxy_set_header Host $host;

@@ -96,6 +96,51 @@
     name: nginx
     state: present
 
+- name: Install Certbot and Cloudflare plugin
+  ansible.builtin.apt:
+    name:
+      - certbot
+      - python3-certbot-dns-cloudflare
+    state: present
+
+- name: Ensure Cloudflare token and email are set
+  ansible.builtin.assert:
+    that:
+      - cloudflare_api_token | length > 0
+      - letsencrypt_email | length > 0
+    fail_msg: "CLOUDFLARE_API_TOKEN and LETSENCRYPT_EMAIL must be set in the environment."
+
+- name: Install Cloudflare credentials for Certbot
+  ansible.builtin.template:
+    src: cloudflare.ini.j2
+    dest: /etc/letsencrypt/cloudflare.ini
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Obtain Let's Encrypt certificate via DNS challenge
+  ansible.builtin.command: >-
+    certbot certonly
+    --dns-cloudflare
+    --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini
+    --non-interactive
+    --agree-tos
+    -m {{ letsencrypt_email }}
+    -d {{ openclaw_cert_domain }}
+  args:
+    creates: "/etc/letsencrypt/live/{{ openclaw_cert_domain }}/fullchain.pem"
+
+- name: Install Certbot deploy hook to reload Nginx
+  ansible.builtin.copy:
+    dest: /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+    mode: "0755"
+    owner: root
+    group: root
+    content: |-
+      #!/usr/bin/env bash
+      set -e
+      systemctl reload nginx
+
 - name: Configure Nginx for OpenClaw dashboard
   ansible.builtin.template:
     src: openclaw-nginx.conf.j2

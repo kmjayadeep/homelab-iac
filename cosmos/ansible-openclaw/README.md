@@ -28,6 +28,10 @@ ansible all -m ping
 ansible-playbook playbooks/setup.yml
 ```
 
+Ensure the environment variables are set (see `.envrc`):
+- `CLOUDFLARE_API_TOKEN`
+- `LETSENCRYPT_EMAIL`
+
 ## Manual onboarding (required)
 
 OpenClaw onboarding is manual by design:
@@ -43,7 +47,7 @@ openclaw onboard --install-daemon
 The playbook installs Nginx and proxies the OpenClaw dashboard.
 
 ```bash
-http://openclaw.cosmos.cboxlab.com
+https://openclaw.cosmos.cboxlab.com
 ```
 
 To access the dashboard, run `openclaw dashboard` on the VM to generate a token, then use that token when opening the URL above.
