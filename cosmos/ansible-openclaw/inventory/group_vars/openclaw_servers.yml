@@ -25,4 +25,7 @@ openclaw_nginx_server_name: "openclaw.cosmos.cboxlab.com"
 openclaw_cert_domain: "{{ openclaw_nginx_server_name }}"
 
 cloudflare_api_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
-letsencrypt_email: "{{ lookup('env', 'LETSENCRYPT_EMAIL') }}"
+letsencrypt_email: "{{ lookup('env', 'OPENCLAW_EMAIL') }}"
+
+openclaw_git_user_name: "Openclaw"
+openclaw_git_user_email: "{{ letsencrypt_email }}"

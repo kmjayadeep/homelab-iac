@@ -52,6 +52,20 @@
     state: present
   loop: "{{ openclaw_authorized_keys }}"
 
+- name: Configure git user name for OpenClaw
+  ansible.builtin.git_config:
+    name: user.name
+    scope: global
+    value: "{{ openclaw_git_user_name }}"
+  become_user: "{{ openclaw_user }}"
+
+- name: Configure git user email for OpenClaw
+  ansible.builtin.git_config:
+    name: user.email
+    scope: global
+    value: "{{ openclaw_git_user_email }}"
+  become_user: "{{ openclaw_user }}"
+
 - name: Install OpenClaw via npm
   block:
     - name: Get npm global root

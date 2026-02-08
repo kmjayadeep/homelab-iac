@@ -30,7 +30,7 @@ ansible-playbook playbooks/setup.yml
 
 Ensure the environment variables are set (see `.envrc`):
 - `CLOUDFLARE_API_TOKEN`
-- `LETSENCRYPT_EMAIL`
+- `OPENCLAW_EMAIL`
 
 ## Manual onboarding (required)
 
@@ -86,3 +86,4 @@ See `inventory/group_vars/openclaw_servers.yml` for tunables like:
 - OpenClaw user and service name
 - Node.js version
 - OpenClaw npm package/version
+- Git user name/email for the openclaw user
