@@ -1,0 +1,66 @@
+---
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - git
+      - gnupg
+    state: present
+    update_cache: true
+
+- name: Download NodeSource GPG key
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    dest: /usr/share/keyrings/nodesource.gpg.key
+    mode: "0644"
+
+- name: Dearmor NodeSource GPG key
+  ansible.builtin.command: >-
+    gpg --dearmor -o /usr/share/keyrings/nodesource.gpg /usr/share/keyrings/nodesource.gpg.key
+  args:
+    creates: /usr/share/keyrings/nodesource.gpg
+
+- name: Add NodeSource repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_{{ nodejs_version }} nodistro main"
+    filename: nodesource
+    state: present
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+- name: Ensure OpenClaw group exists
+  ansible.builtin.group:
+    name: "{{ openclaw_group }}"
+    state: present
+
+- name: Ensure OpenClaw user exists
+  ansible.builtin.user:
+    name: "{{ openclaw_user }}"
+    group: "{{ openclaw_group }}"
+    shell: /bin/bash
+    create_home: true
+
+- name: Install SSH authorized keys for OpenClaw user
+  ansible.builtin.authorized_key:
+    user: "{{ openclaw_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ openclaw_authorized_keys }}"
+
+- name: Install OpenClaw via npm
+  ansible.builtin.npm:
+    name: "{{ openclaw_npm_package }}"
+    global: true
+    state: latest
+
+- name: Print manual onboarding steps
+  ansible.builtin.debug:
+    msg:
+      - "OpenClaw installed. Run onboarding manually:"
+      - "sudo -i -u {{ openclaw_user }}"
+      - "openclaw onboard --install-daemon"

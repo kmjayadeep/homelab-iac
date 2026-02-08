@@ -1,0 +1,5 @@
+---
+- name: Setup OpenClaw
+  hosts: openclaw_servers
+  roles:
+    - openclaw

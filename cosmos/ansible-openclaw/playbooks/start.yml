@@ -1,0 +1,9 @@
+---
+- name: Start OpenClaw service
+  hosts: openclaw_servers
+  tasks:
+    - name: Start OpenClaw
+      ansible.builtin.systemd:
+        name: "{{ openclaw_service_name }}"
+        state: started
+        enabled: true

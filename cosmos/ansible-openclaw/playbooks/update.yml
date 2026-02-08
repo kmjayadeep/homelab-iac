@@ -1,0 +1,18 @@
+---
+- name: Update OpenClaw
+  hosts: openclaw_servers
+  tasks:
+    - name: Update OpenClaw via npm
+      ansible.builtin.npm:
+        name: "{{ openclaw_npm_package }}"
+        global: true
+        state: latest
+
+    - name: Run OpenClaw doctor
+      ansible.builtin.command: openclaw doctor
+      become_user: "{{ openclaw_user }}"
+
+    - name: Restart OpenClaw service
+      ansible.builtin.systemd:
+        name: "{{ openclaw_service_name }}"
+        state: restarted

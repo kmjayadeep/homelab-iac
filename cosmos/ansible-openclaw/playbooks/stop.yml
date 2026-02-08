@@ -1,0 +1,8 @@
+---
+- name: Stop OpenClaw service
+  hosts: openclaw_servers
+  tasks:
+    - name: Stop OpenClaw
+      ansible.builtin.systemd:
+        name: "{{ openclaw_service_name }}"
+        state: stopped
