@@ -10,13 +10,19 @@ This Ansible project installs and manages OpenClaw on the `openclaw` VM.
 
 ## Installation
 
-### 1. Verify connectivity
+### 1. Install Ansible collections
+
+```bash
+ansible-galaxy collection install -r requirements.yml
+```
+
+### 2. Verify connectivity
 
 ```bash
 ansible all -m ping
 ```
 
-### 2. Run setup
+### 3. Run setup
 
 ```bash
 ansible-playbook playbooks/setup.yml
@@ -31,6 +37,16 @@ ssh ansible@openclaw.cosmos.cboxlab.com
 sudo -i -u openclaw
 openclaw onboard --install-daemon
 ```
+
+## Dashboard via Nginx
+
+The playbook installs Nginx and proxies the OpenClaw dashboard.
+
+```bash
+http://openclaw.cosmos.cboxlab.com
+```
+
+To access the dashboard, run `openclaw dashboard` on the VM to generate a token, then use that token when opening the URL above.
 
 ## Service management
 
@@ -55,8 +71,9 @@ This runs:
 
 ```bash
 ssh ansible@openclaw.cosmos.cboxlab.com
-sudo systemctl status openclaw
-sudo journalctl -u openclaw -f
+sudo -i -u openclaw
+systemctl --user status openclaw-gateway
+journalctl --user -u openclaw-gateway -f
 ```
 
 ## Configuration

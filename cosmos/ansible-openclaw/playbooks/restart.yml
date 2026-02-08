@@ -6,3 +6,5 @@
       ansible.builtin.systemd:
         name: "{{ openclaw_service_name }}"
         state: restarted
+        scope: user
+      become_user: "{{ openclaw_user }}"

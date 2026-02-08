@@ -2,11 +2,33 @@
 - name: Update OpenClaw
   hosts: openclaw_servers
   tasks:
+    - name: Get npm global root
+      ansible.builtin.command: npm root -g
+      register: openclaw_npm_root
+      changed_when: false
+
     - name: Update OpenClaw via npm
-      ansible.builtin.npm:
-        name: "{{ openclaw_npm_package }}"
-        global: true
-        state: latest
+      block:
+        - name: Update OpenClaw via npm
+          community.general.npm:
+            name: "{{ openclaw_npm_name }}"
+            version: "{{ openclaw_npm_version }}"
+            global: true
+            state: latest
+          environment: "{{ openclaw_npm_env }}"
+      rescue:
+        - name: Clean OpenClaw npm directory after update failure
+          ansible.builtin.file:
+            path: "{{ openclaw_npm_root.stdout }}/openclaw"
+            state: absent
+
+        - name: Retry OpenClaw update via npm
+          community.general.npm:
+            name: "{{ openclaw_npm_name }}"
+            version: "{{ openclaw_npm_version }}"
+            global: true
+            state: latest
+          environment: "{{ openclaw_npm_env }}"
 
     - name: Run OpenClaw doctor
       ansible.builtin.command: openclaw doctor
@@ -16,3 +38,5 @@
       ansible.builtin.systemd:
         name: "{{ openclaw_service_name }}"
         state: restarted
+        scope: user
+      become_user: "{{ openclaw_user }}"

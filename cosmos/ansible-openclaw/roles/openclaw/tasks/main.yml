@@ -53,10 +53,68 @@
   loop: "{{ openclaw_authorized_keys }}"
 
 - name: Install OpenClaw via npm
-  ansible.builtin.npm:
-    name: "{{ openclaw_npm_package }}"
-    global: true
-    state: latest
+  block:
+    - name: Get npm global root
+      ansible.builtin.command: npm root -g
+      register: openclaw_npm_root
+      changed_when: false
+
+    - name: Check if OpenClaw is installed
+      ansible.builtin.command: command -v openclaw
+      register: openclaw_binary
+      changed_when: false
+      failed_when: false
+
+    - name: Remove existing OpenClaw install when forced
+      ansible.builtin.file:
+        path: "{{ openclaw_npm_root.stdout }}/openclaw"
+        state: absent
+      when: openclaw_force_reinstall
+
+    - name: Install OpenClaw via npm
+      community.general.npm:
+        name: "{{ openclaw_npm_name }}"
+        global: true
+        state: present
+      environment: "{{ openclaw_npm_env }}"
+      when: openclaw_binary.rc != 0 or openclaw_force_reinstall
+  rescue:
+    - name: Clean OpenClaw npm directory after failure
+      ansible.builtin.file:
+        path: "{{ openclaw_npm_root.stdout }}/openclaw"
+        state: absent
+
+    - name: Retry OpenClaw install via npm
+      community.general.npm:
+        name: "{{ openclaw_npm_name }}"
+        global: true
+        state: present
+      environment: "{{ openclaw_npm_env }}"
+
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Configure Nginx for OpenClaw dashboard
+  ansible.builtin.template:
+    src: openclaw-nginx.conf.j2
+    dest: /etc/nginx/sites-available/openclaw.conf
+    mode: "0644"
+  notify: Reload Nginx
+
+- name: Enable OpenClaw Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/openclaw.conf
+    dest: /etc/nginx/sites-enabled/openclaw.conf
+    state: link
+  notify: Reload Nginx
+
+- name: Ensure Nginx is running
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true
 
 - name: Print manual onboarding steps
   ansible.builtin.debug:
