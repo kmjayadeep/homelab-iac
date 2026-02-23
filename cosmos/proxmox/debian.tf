@@ -8,6 +8,7 @@ resource "proxmox_virtual_environment_download_file" "latest_debian_13_qcow2_img
   node_name    = "mars"
   # need to rename the file to *.qcow2 to indicate the actual file format for import
   file_name = "debian-13-genericcloud-amd64.qcow2"
+  overwrite = false
 }
 
 resource "proxmox_virtual_environment_file" "debian_13_user_data" {
