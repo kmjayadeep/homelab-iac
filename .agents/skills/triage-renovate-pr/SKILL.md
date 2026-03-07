@@ -54,6 +54,25 @@ gh run list --branch <default_branch> --limit 1
 gh run watch <run_id>
 ```
 
+```bash
+# Verify merged commit SHA and map to the matching default-branch run
+gh pr view <pr_number> --json mergeCommit,mergedAt
+gh run list --branch <default_branch> --limit 10 --json databaseId,headSha,status,conclusion,createdAt,url
+```
+
+```bash
+# Optional: retry helper for transient GitHub API/network errors
+for i in 1 2 3; do gh <command> && break || sleep $((i * 2)); done
+```
+
+## Risk Ordering Guidance
+
+Prefer this order when multiple Renovate PRs are open:
+
+1. Container image tag bumps (single-service tag updates).
+2. Terraform provider/module patch or minor updates with clear lockfile diffs.
+3. CI/action updates, especially majors, after reviewing diff scope.
+
 ## Merge Decision Rules
 
 Merge only when all are true:
@@ -71,14 +90,21 @@ Skip and report when any are true:
 - Large dependency fan-out or lockfile churn that obscures review.
 - Security or runtime implications requiring human approval.
 
+Major bump exception:
+
+- A major bump may still be merged when the diff is trivially scoped (for example, a one-line GitHub Action version bump), checks are green, and the merge rationale is explicitly documented in the report.
+
 ## Sequential Safety Gate
 
 After each merge:
 
-1. Detect the newest run for the default branch.
-2. Wait until completion.
-3. Continue only if conclusion is `success`.
-4. Stop loop on `failure` or `cancelled` and mark remaining PRs as blocked.
+1. Read the PR `mergeCommit.oid`.
+2. Find the newest default-branch run whose `headSha` matches that merge commit (or wait briefly until it appears).
+3. Wait until completion with `gh run watch <run_id>`.
+4. Continue only if conclusion is `success`.
+5. Stop loop on `failure` or `cancelled` and mark remaining PRs as blocked.
+
+If GitHub API calls fail transiently (for example, `error connecting to api.github.com`), retry with short exponential backoff before treating the step as failed.
 
 ## Reporting Format
 
