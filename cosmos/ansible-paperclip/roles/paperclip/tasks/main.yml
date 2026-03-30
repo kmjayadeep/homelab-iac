@@ -1,0 +1,234 @@
+---
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - git
+      - gnupg
+    state: present
+    update_cache: true
+
+- name: Download NodeSource GPG key
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    dest: /usr/share/keyrings/nodesource.gpg.key
+    mode: "0644"
+
+- name: Dearmor NodeSource GPG key
+  ansible.builtin.command: >-
+    gpg --dearmor -o /usr/share/keyrings/nodesource.gpg /usr/share/keyrings/nodesource.gpg.key
+  args:
+    creates: /usr/share/keyrings/nodesource.gpg
+
+- name: Add NodeSource repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_{{ nodejs_version }} nodistro main"
+    filename: nodesource
+    state: present
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+- name: Ensure Paperclip group exists
+  ansible.builtin.group:
+    name: "{{ paperclip_group }}"
+    state: present
+
+- name: Ensure Paperclip user exists
+  ansible.builtin.user:
+    name: "{{ paperclip_user }}"
+    group: "{{ paperclip_group }}"
+    shell: /bin/bash
+    create_home: true
+
+- name: Install SSH authorized keys for Paperclip user
+  ansible.builtin.authorized_key:
+    user: "{{ paperclip_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ paperclip_authorized_keys }}"
+
+- name: Configure git user name for Paperclip
+  ansible.builtin.git_config:
+    name: user.name
+    scope: global
+    value: "{{ paperclip_git_user_name }}"
+  become_user: "{{ paperclip_user }}"
+
+- name: Configure git user email for Paperclip
+  ansible.builtin.git_config:
+    name: user.email
+    scope: global
+    value: "{{ paperclip_git_user_email }}"
+  become_user: "{{ paperclip_user }}"
+
+- name: Install Paperclip and Codex CLIs via npm
+  block:
+    - name: Get npm global root
+      ansible.builtin.command: npm root -g
+      register: paperclip_npm_root
+      changed_when: false
+
+    - name: Check if Paperclip CLI is installed
+      ansible.builtin.command: which paperclipai
+      register: paperclip_binary
+      changed_when: false
+      failed_when: false
+
+    - name: Remove existing Paperclip install when forced
+      ansible.builtin.file:
+        path: "{{ paperclip_npm_root.stdout }}/paperclipai"
+        state: absent
+      when: paperclip_force_reinstall
+
+    - name: Install Paperclip CLI via npm
+      community.general.npm:
+        name: "{{ paperclip_npm_name }}"
+        version: "{{ paperclip_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ paperclip_npm_env }}"
+      when: paperclip_binary.rc != 0 or paperclip_force_reinstall
+
+    - name: Install Codex CLI via npm
+      community.general.npm:
+        name: "{{ codex_npm_name }}"
+        version: "{{ codex_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ paperclip_npm_env }}"
+
+    - name: Resolve Paperclip CLI binary path
+      ansible.builtin.command: which paperclipai
+      register: paperclip_binary_path
+      changed_when: false
+  rescue:
+    - name: Clean Paperclip npm directory after failure
+      ansible.builtin.file:
+        path: "{{ paperclip_npm_root.stdout }}/paperclipai"
+        state: absent
+
+    - name: Retry Paperclip CLI install via npm
+      community.general.npm:
+        name: "{{ paperclip_npm_name }}"
+        version: "{{ paperclip_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ paperclip_npm_env }}"
+
+    - name: Retry Codex CLI install via npm
+      community.general.npm:
+        name: "{{ codex_npm_name }}"
+        version: "{{ codex_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ paperclip_npm_env }}"
+
+    - name: Resolve Paperclip CLI binary path after retry
+      ansible.builtin.command: which paperclipai
+      register: paperclip_binary_path
+      changed_when: false
+
+- name: Enable lingering for Paperclip user services
+  ansible.builtin.command: "loginctl enable-linger {{ paperclip_user }}"
+  args:
+    creates: "/var/lib/systemd/linger/{{ paperclip_user }}"
+
+- name: Ensure Paperclip user systemd directory exists
+  ansible.builtin.file:
+    path: "/home/{{ paperclip_user }}/.config/systemd/user"
+    state: directory
+    owner: "{{ paperclip_user }}"
+    group: "{{ paperclip_group }}"
+    mode: "0755"
+
+- name: Install Paperclip systemd unit
+  ansible.builtin.template:
+    src: paperclip.service.j2
+    dest: "/home/{{ paperclip_user }}/.config/systemd/user/{{ paperclip_service_name }}.service"
+    owner: "{{ paperclip_user }}"
+    group: "{{ paperclip_group }}"
+    mode: "0644"
+
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Install Certbot and Cloudflare plugin
+  ansible.builtin.apt:
+    name:
+      - certbot
+      - python3-certbot-dns-cloudflare
+    state: present
+
+- name: Ensure Cloudflare token and email are set
+  ansible.builtin.assert:
+    that:
+      - cloudflare_api_token | length > 0
+      - letsencrypt_email | length > 0
+    fail_msg: "CLOUDFLARE_API_TOKEN and LETSENCRYPT_EMAIL must be set in the environment."
+
+- name: Install Cloudflare credentials for Certbot
+  ansible.builtin.template:
+    src: cloudflare.ini.j2
+    dest: /etc/letsencrypt/cloudflare.ini
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Obtain Let's Encrypt certificate via DNS challenge
+  ansible.builtin.command: >-
+    certbot certonly
+    --dns-cloudflare
+    --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini
+    --non-interactive
+    --agree-tos
+    -m {{ letsencrypt_email }}
+    -d {{ paperclip_cert_domain }}
+  args:
+    creates: "/etc/letsencrypt/live/{{ paperclip_cert_domain }}/fullchain.pem"
+
+- name: Install Certbot deploy hook to reload Nginx
+  ansible.builtin.copy:
+    dest: /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+    mode: "0755"
+    owner: root
+    group: root
+    content: |-
+      #!/usr/bin/env bash
+      set -e
+      systemctl reload nginx
+
+- name: Configure Nginx for Paperclip UI
+  ansible.builtin.template:
+    src: paperclip-nginx.conf.j2
+    dest: /etc/nginx/sites-available/paperclip.conf
+    mode: "0644"
+  notify: Reload Nginx
+
+- name: Enable Paperclip Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/paperclip.conf
+    dest: /etc/nginx/sites-enabled/paperclip.conf
+    state: link
+  notify: Reload Nginx
+
+- name: Ensure Nginx is running
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Print manual Paperclip onboarding steps
+  ansible.builtin.debug:
+    msg:
+      - "Paperclip and Codex are installed. Run onboarding manually before starting the service:"
+      - "sudo -i -u {{ paperclip_user }}"
+      - "paperclipai onboard"
+      - "systemctl --user daemon-reload"
+      - "systemctl --user enable --now {{ paperclip_service_name }}"

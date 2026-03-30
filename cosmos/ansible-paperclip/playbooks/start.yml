@@ -1,0 +1,11 @@
+---
+- name: Start Paperclip service
+  hosts: paperclip_servers
+  tasks:
+    - name: Start Paperclip
+      ansible.builtin.systemd:
+        name: "{{ paperclip_service_name }}"
+        state: started
+        scope: user
+        daemon_reload: true
+      become_user: "{{ paperclip_user }}"

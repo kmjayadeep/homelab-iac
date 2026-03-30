@@ -1,0 +1,33 @@
+---
+paperclip_user: "paperclip"
+paperclip_group: "paperclip"
+paperclip_service_name: "paperclip"
+
+paperclip_authorized_keys:
+  - "{{ lookup('file', ansible_ssh_private_key_file + '.pub') }}"
+
+nodejs_version: "22.x"
+paperclip_npm_name: "paperclipai"
+paperclip_npm_version: "latest"
+paperclip_force_reinstall: false
+codex_npm_name: "@openai/codex"
+codex_npm_version: "latest"
+
+paperclip_npm_env:
+  NPM_CONFIG_JOBS: "1"
+  NPM_CONFIG_PROGRESS: "false"
+  NPM_CONFIG_AUDIT: "false"
+  NPM_CONFIG_FUND: "false"
+  NPM_CONFIG_LOGLEVEL: "warn"
+
+paperclip_ui_host: "127.0.0.1"
+paperclip_ui_port: 3100
+paperclip_nginx_listen_port: 80
+paperclip_nginx_server_name: "paperclip.cosmos.cboxlab.com"
+paperclip_cert_domain: "{{ paperclip_nginx_server_name }}"
+
+cloudflare_api_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
+letsencrypt_email: "{{ lookup('env', 'PAPERCLIP_EMAIL') | default(lookup('env', 'OPENCLAW_EMAIL'), true) }}"
+
+paperclip_git_user_name: "Paperclip"
+paperclip_git_user_email: "{{ letsencrypt_email }}"

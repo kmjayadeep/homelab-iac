@@ -1,0 +1,15 @@
+[Unit]
+Description=Paperclip control plane
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/{{ paperclip_user }}
+ExecStart={{ paperclip_binary_path.stdout }} run
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

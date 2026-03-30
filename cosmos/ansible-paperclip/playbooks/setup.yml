@@ -1,0 +1,5 @@
+---
+- name: Setup Paperclip
+  hosts: paperclip_servers
+  roles:
+    - paperclip

@@ -1,0 +1,10 @@
+---
+- name: Stop Paperclip service
+  hosts: paperclip_servers
+  tasks:
+    - name: Stop Paperclip
+      ansible.builtin.systemd:
+        name: "{{ paperclip_service_name }}"
+        state: stopped
+        scope: user
+      become_user: "{{ paperclip_user }}"
