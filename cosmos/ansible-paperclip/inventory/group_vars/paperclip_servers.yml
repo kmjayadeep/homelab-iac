@@ -12,6 +12,8 @@ paperclip_npm_version: "latest"
 paperclip_force_reinstall: false
 codex_npm_name: "@openai/codex"
 codex_npm_version: "latest"
+paperclip_kubectl_version: "v1.35.0"
+paperclip_kind_version: "v0.31.0"
 
 paperclip_npm_env:
   NPM_CONFIG_JOBS: "1"

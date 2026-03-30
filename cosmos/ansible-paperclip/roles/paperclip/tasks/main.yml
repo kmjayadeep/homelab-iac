@@ -33,6 +33,66 @@
     state: present
     update_cache: true
 
+- name: Remove conflicting Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose
+      - docker-compose-v2
+      - docker-doc
+      - podman-docker
+      - containerd
+      - runc
+    state: absent
+    purge: true
+
+- name: Ensure apt keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Set Docker repository parameters
+  ansible.builtin.set_fact:
+    paperclip_docker_repo_os: "{{ 'ubuntu' if ansible_distribution == 'Ubuntu' else 'debian' if ansible_distribution == 'Debian' else '' }}"
+
+- name: Ensure Docker repository OS is supported
+  ansible.builtin.assert:
+    that:
+      - paperclip_docker_repo_os | length > 0
+    fail_msg: "Unsupported distribution for Docker apt repository: {{ ansible_distribution }}"
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ paperclip_docker_repo_os }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ paperclip_docker_repo_os }} {{ ansible_distribution_release }} stable
+    filename: docker
+    state: present
+
+- name: Install Docker Engine packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Ensure Docker is running
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+
 - name: Ensure Paperclip group exists
   ansible.builtin.group:
     name: "{{ paperclip_group }}"
@@ -42,8 +102,32 @@
   ansible.builtin.user:
     name: "{{ paperclip_user }}"
     group: "{{ paperclip_group }}"
+    groups: docker
+    append: true
     shell: /bin/bash
     create_home: true
+
+- name: Set Kubernetes binary architecture
+  ansible.builtin.set_fact:
+    paperclip_binary_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else '' }}"
+
+- name: Ensure Kubernetes binary architecture is supported
+  ansible.builtin.assert:
+    that:
+      - paperclip_binary_arch | length > 0
+    fail_msg: "Unsupported architecture for kubectl/kind install: {{ ansible_architecture }}"
+
+- name: Install kubectl
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/{{ paperclip_kubectl_version }}/bin/linux/{{ paperclip_binary_arch }}/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: "0755"
+
+- name: Install kind
+  ansible.builtin.get_url:
+    url: "https://kind.sigs.k8s.io/dl/{{ paperclip_kind_version }}/kind-linux-{{ paperclip_binary_arch }}"
+    dest: /usr/local/bin/kind
+    mode: "0755"
 
 - name: Install SSH authorized keys for Paperclip user
   ansible.builtin.authorized_key:
@@ -227,8 +311,10 @@
 - name: Print manual Paperclip onboarding steps
   ansible.builtin.debug:
     msg:
-      - "Paperclip and Codex are installed. Run onboarding manually before starting the service:"
+      - "Paperclip, Codex, Docker, kubectl, and kind are installed. Run onboarding manually before starting the service:"
       - "sudo -i -u {{ paperclip_user }}"
+      - "docker info"
+      - "codex --login"
       - "paperclipai onboard"
       - "systemctl --user daemon-reload"
       - "systemctl --user enable --now {{ paperclip_service_name }}"
