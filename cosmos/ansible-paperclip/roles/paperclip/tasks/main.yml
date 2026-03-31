@@ -5,6 +5,7 @@
       - ca-certificates
       - curl
       - git
+      - gh
       - gnupg
     state: present
     update_cache: true
@@ -128,6 +129,17 @@
     url: "https://kind.sigs.k8s.io/dl/{{ paperclip_kind_version }}/kind-linux-{{ paperclip_binary_arch }}"
     dest: /usr/local/bin/kind
     mode: "0755"
+
+- name: Install uv
+  ansible.builtin.shell: |
+    set -e
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    creates: /usr/local/bin/uv
+  environment:
+    UV_INSTALL_DIR: /usr/local/bin
+    UV_UNMANAGED_INSTALL: /usr/local/bin
+    INSTALLER_NO_MODIFY_PATH: "1"
 
 - name: Install SSH authorized keys for Paperclip user
   ansible.builtin.authorized_key:
@@ -311,7 +323,7 @@
 - name: Print manual Paperclip onboarding steps
   ansible.builtin.debug:
     msg:
-      - "Paperclip, Codex, Docker, kubectl, and kind are installed. Run onboarding manually before starting the service:"
+      - "Paperclip, Codex, Docker, kubectl, kind, gh, and uv are installed. Run onboarding manually before starting the service:"
       - "sudo -i -u {{ paperclip_user }}"
       - "docker info"
       - "codex --login"
