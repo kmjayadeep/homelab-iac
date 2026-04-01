@@ -1,6 +1,6 @@
 # Paperclip Ansible Setup
 
-This Ansible project installs and manages Paperclip on the target VM, and also installs the OpenAI Codex CLI, `qmd`, Docker, `kubectl`, `kind`, `gh`, `jq`, `rg`, and `uv` so Paperclip can use the `codex_local` adapter and the `paperclip` user can manage local Kind clusters.
+This Ansible project installs and manages Paperclip on the target VM, and also installs the OpenAI Codex CLI, `qmd`, Docker, `kubectl`, `kind`, `gh`, `jq`, `rg`, `uv`, and Hermes prerequisites so Paperclip can use the `codex_local` adapter and the `paperclip` user can manage local Kind clusters.
 
 ## Prerequisites
 
@@ -43,6 +43,9 @@ ssh ansible@paperclip.cosmos.cboxlab.com
 sudo -i -u paperclip
 docker info
 codex --login
+curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+source ~/.bashrc  # or ~/.zshrc
+hermes version
 paperclipai onboard
 systemctl --user daemon-reload
 systemctl --user enable --now paperclip
@@ -50,7 +53,7 @@ systemctl --user enable --now paperclip
 
 Paperclip's current quickstart documents `npx paperclipai onboard --yes` as the recommended bootstrap path, and `paperclipai run` as the long-running process.
 Codex can be authenticated interactively with OAuth from the CLI itself, so no manual `OPENAI_API_KEY` is required when using that flow.
-Docker, `kubectl`, `kind`, `gh`, `jq`, `qmd`, `rg`, and `uv` are installed during setup; the `paperclip` user is added to the `docker` group so it can create and manage local Kind clusters. If your current shell predates the group change, reconnect before running `kind create cluster`.
+Hermes Agent should be installed manually after setup with the official installer from `https://hermes-agent.nousresearch.com/docs/getting-started/installation/`, since its installer is interactive. Docker, `kubectl`, `kind`, `gh`, `jq`, `qmd`, `rg`, `uv`, and `ffmpeg` are installed during setup; the `paperclip` user is added to the `docker` group so it can create and manage local Kind clusters. If your current shell predates the group change, reconnect before running `kind create cluster`.
 
 ## UI via Nginx
 
@@ -94,6 +97,7 @@ docker ps
 kubectl version --client
 kind version
 gh --version
+hermes version
 jq --version
 qmd --version
 rg --version

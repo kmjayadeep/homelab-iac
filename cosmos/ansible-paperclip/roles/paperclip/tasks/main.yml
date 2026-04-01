@@ -4,6 +4,7 @@
     name:
       - ca-certificates
       - curl
+      - ffmpeg
       - git
       - gh
       - gnupg
@@ -341,10 +342,13 @@
 - name: Print manual Paperclip onboarding steps
   ansible.builtin.debug:
     msg:
-      - "Paperclip, Codex, qmd, Docker, kubectl, kind, gh, jq, rg, and uv are installed. Run onboarding manually before starting the service:"
+      - "Paperclip, Codex, qmd, Docker, kubectl, kind, gh, jq, rg, uv, and Hermes prerequisites are installed. Run onboarding manually before starting the service:"
       - "sudo -i -u {{ paperclip_user }}"
       - "docker info"
       - "codex --login"
+      - "curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash"
+      - "source ~/.bashrc  # or ~/.zshrc"
+      - "hermes version"
       - "paperclipai onboard"
       - "systemctl --user daemon-reload"
       - "systemctl --user enable --now {{ paperclip_service_name }}"
