@@ -7,6 +7,8 @@
       - git
       - gh
       - gnupg
+      - jq
+      - ripgrep
     state: present
     update_cache: true
 
@@ -198,6 +200,14 @@
         state: present
       environment: "{{ paperclip_npm_env }}"
 
+    - name: Install qmd via npm
+      community.general.npm:
+        name: "{{ qmd_npm_name }}"
+        version: "{{ qmd_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ paperclip_npm_env }}"
+
     - name: Resolve Paperclip CLI binary path
       ansible.builtin.command: which paperclipai
       register: paperclip_binary_path
@@ -220,6 +230,14 @@
       community.general.npm:
         name: "{{ codex_npm_name }}"
         version: "{{ codex_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ paperclip_npm_env }}"
+
+    - name: Retry qmd install via npm
+      community.general.npm:
+        name: "{{ qmd_npm_name }}"
+        version: "{{ qmd_npm_version }}"
         global: true
         state: present
       environment: "{{ paperclip_npm_env }}"
@@ -323,7 +341,7 @@
 - name: Print manual Paperclip onboarding steps
   ansible.builtin.debug:
     msg:
-      - "Paperclip, Codex, Docker, kubectl, kind, gh, and uv are installed. Run onboarding manually before starting the service:"
+      - "Paperclip, Codex, qmd, Docker, kubectl, kind, gh, jq, rg, and uv are installed. Run onboarding manually before starting the service:"
       - "sudo -i -u {{ paperclip_user }}"
       - "docker info"
       - "codex --login"

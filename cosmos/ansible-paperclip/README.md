@@ -1,6 +1,6 @@
 # Paperclip Ansible Setup
 
-This Ansible project installs and manages Paperclip on the target VM, and also installs the OpenAI Codex CLI, Docker, `kubectl`, `kind`, `gh`, and `uv` so Paperclip can use the `codex_local` adapter and the `paperclip` user can manage local Kind clusters.
+This Ansible project installs and manages Paperclip on the target VM, and also installs the OpenAI Codex CLI, `qmd`, Docker, `kubectl`, `kind`, `gh`, `jq`, `rg`, and `uv` so Paperclip can use the `codex_local` adapter and the `paperclip` user can manage local Kind clusters.
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ systemctl --user enable --now paperclip
 
 Paperclip's current quickstart documents `npx paperclipai onboard --yes` as the recommended bootstrap path, and `paperclipai run` as the long-running process.
 Codex can be authenticated interactively with OAuth from the CLI itself, so no manual `OPENAI_API_KEY` is required when using that flow.
-Docker, `kubectl`, `kind`, `gh`, and `uv` are installed during setup; the `paperclip` user is added to the `docker` group so it can create and manage local Kind clusters. If your current shell predates the group change, reconnect before running `kind create cluster`.
+Docker, `kubectl`, `kind`, `gh`, `jq`, `qmd`, `rg`, and `uv` are installed during setup; the `paperclip` user is added to the `docker` group so it can create and manage local Kind clusters. If your current shell predates the group change, reconnect before running `kind create cluster`.
 
 ## UI via Nginx
 
@@ -79,6 +79,7 @@ ansible-playbook playbooks/update.yml
 This runs:
 - `npm install -g paperclipai@latest`
 - `npm install -g @openai/codex@latest`
+- `npm install -g @tobilu/qmd@2.0.1`
 - `paperclipai doctor --repair`
 - service restart
 
@@ -93,6 +94,9 @@ docker ps
 kubectl version --client
 kind version
 gh --version
+jq --version
+qmd --version
+rg --version
 uv --version
 codex --help
 ```
@@ -103,6 +107,6 @@ See `inventory/group_vars/paperclip_servers.yml` for tunables like:
 - Paperclip user and service name
 - Pinned `kubectl` and `kind` versions
 - Node.js version
-- Paperclip and Codex npm package versions
+- Paperclip, Codex, and qmd npm package versions
 - Nginx hostname and upstream port
 - Git user name and email for the Paperclip user
