@@ -9,12 +9,12 @@ resource "proxmox_virtual_environment_vm" "paperclip" {
   tags        = ["paperclip", "AI"]
 
   cpu {
-    cores = 4
+    cores = 8
     type  = "host"
   }
 
   memory {
-    dedicated = 4096
+    dedicated = 8192
   }
 
   efi_disk {
