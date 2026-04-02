@@ -3,13 +3,24 @@
   ansible.builtin.apt:
     name:
       - ca-certificates
+      - clang
+      - cmake
       - curl
       - ffmpeg
+      - fzf
       - git
       - gh
       - gnupg
       - jq
+      - kubectx
+      - libglu1-mesa
+      - ninja-build
+      - pkg-config
       - ripgrep
+      - unzip
+      - xz-utils
+      - zip
+      - zsh
     state: present
     update_cache: true
 
@@ -115,11 +126,21 @@
   ansible.builtin.set_fact:
     paperclip_binary_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else '' }}"
 
+- name: Set Flutter binary architecture
+  ansible.builtin.set_fact:
+    paperclip_flutter_arch: "{{ 'x64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else '' }}"
+
 - name: Ensure Kubernetes binary architecture is supported
   ansible.builtin.assert:
     that:
       - paperclip_binary_arch | length > 0
-    fail_msg: "Unsupported architecture for kubectl/kind install: {{ ansible_architecture }}"
+    fail_msg: "Unsupported architecture for kubectl/kind/kustomize install: {{ ansible_architecture }}"
+
+- name: Ensure Flutter binary architecture is supported
+  ansible.builtin.assert:
+    that:
+      - paperclip_flutter_arch | length > 0
+    fail_msg: "Unsupported architecture for Flutter install: {{ ansible_architecture }}"
 
 - name: Install kubectl
   ansible.builtin.get_url:
@@ -133,6 +154,13 @@
     dest: /usr/local/bin/kind
     mode: "0755"
 
+- name: Install kustomize
+  ansible.builtin.unarchive:
+    src: "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F{{ paperclip_kustomize_version }}/kustomize_{{ paperclip_kustomize_version }}_linux_{{ paperclip_binary_arch }}.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    mode: "0755"
+
 - name: Install uv
   ansible.builtin.shell: |
     set -e
@@ -143,6 +171,81 @@
     UV_INSTALL_DIR: /usr/local/bin
     UV_UNMANAGED_INSTALL: /usr/local/bin
     INSTALLER_NO_MODIFY_PATH: "1"
+
+- name: Ensure Flutter install directory exists
+  ansible.builtin.file:
+    path: /opt/flutter
+    state: directory
+    mode: "0755"
+
+- name: Read installed Flutter version marker
+  ansible.builtin.slurp:
+    src: /opt/flutter/.paperclip_flutter_version
+  register: paperclip_flutter_version_marker
+  failed_when: false
+
+- name: Remove Flutter SDK when version changes
+  ansible.builtin.file:
+    path: /opt/flutter
+    state: absent
+  when: >-
+    paperclip_flutter_version_marker.content is defined and
+    (paperclip_flutter_version_marker.content | b64decode | trim) != paperclip_flutter_version
+
+- name: Fetch Flutter Linux release index
+  ansible.builtin.uri:
+    url: https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json
+    return_content: true
+  register: paperclip_flutter_releases
+
+- name: Select Flutter release archive
+  ansible.builtin.set_fact:
+    paperclip_flutter_release: >-
+      {{
+        (
+          paperclip_flutter_releases.json.releases
+          | selectattr('channel', 'equalto', 'stable')
+          | selectattr('version', 'equalto', paperclip_flutter_version)
+          | selectattr('dart_sdk_arch', 'equalto', paperclip_flutter_arch)
+          | list
+          | first
+        )
+      }}
+
+- name: Ensure requested Flutter release exists
+  ansible.builtin.assert:
+    that:
+      - paperclip_flutter_release is mapping
+      - paperclip_flutter_release.archive is defined
+    fail_msg: >-
+      Flutter {{ paperclip_flutter_version }} for linux/{{ paperclip_flutter_arch }} was not found in the official release index.
+
+- name: Install Flutter SDK
+  ansible.builtin.unarchive:
+    src: "{{ paperclip_flutter_releases.json.base_url }}/{{ paperclip_flutter_release.archive }}"
+    dest: /opt
+    remote_src: true
+    owner: root
+    group: root
+    creates: /opt/flutter/bin/flutter
+
+- name: Ensure Flutter SDK version marker is current
+  ansible.builtin.copy:
+    dest: /opt/flutter/.paperclip_flutter_version
+    content: "{{ paperclip_flutter_version }}\n"
+    mode: "0644"
+
+- name: Install Flutter CLI symlink
+  ansible.builtin.file:
+    src: /opt/flutter/bin/flutter
+    dest: /usr/local/bin/flutter
+    state: link
+
+- name: Install Dart CLI symlink
+  ansible.builtin.file:
+    src: /opt/flutter/bin/dart
+    dest: /usr/local/bin/dart
+    state: link
 
 - name: Install SSH authorized keys for Paperclip user
   ansible.builtin.authorized_key:

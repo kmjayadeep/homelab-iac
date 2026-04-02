@@ -1,6 +1,6 @@
 # Paperclip Ansible Setup
 
-This Ansible project installs and manages Paperclip on the target VM, and also installs the OpenAI Codex CLI, `qmd`, Docker, `kubectl`, `kind`, `gh`, `jq`, `rg`, `uv`, and Hermes prerequisites so Paperclip can use the `codex_local` adapter and the `paperclip` user can manage local Kind clusters.
+This Ansible project installs and manages Paperclip on the target VM, and also installs the OpenAI Codex CLI, `qmd`, Docker, `kubectl`, `kubectx`, `kustomize`, `kind`, `flutter`, `fzf`, `gh`, `jq`, `rg`, `uv`, `zsh`, and Hermes prerequisites so Paperclip can use the `codex_local` adapter and the `paperclip` user can manage local Kind clusters.
 
 ## Prerequisites
 
@@ -53,7 +53,7 @@ systemctl --user enable --now paperclip
 
 Paperclip's current quickstart documents `npx paperclipai onboard --yes` as the recommended bootstrap path, and `paperclipai run` as the long-running process.
 Codex can be authenticated interactively with OAuth from the CLI itself, so no manual `OPENAI_API_KEY` is required when using that flow.
-Hermes Agent should be installed manually after setup with the official installer from `https://hermes-agent.nousresearch.com/docs/getting-started/installation/`, since its installer is interactive. Docker, `kubectl`, `kind`, `gh`, `jq`, `qmd`, `rg`, `uv`, and `ffmpeg` are installed during setup; the `paperclip` user is added to the `docker` group so it can create and manage local Kind clusters. If your current shell predates the group change, reconnect before running `kind create cluster`.
+Hermes Agent should be installed manually after setup with the official installer from `https://hermes-agent.nousresearch.com/docs/getting-started/installation/`, since its installer is interactive. Docker, `kubectl`, `kubectx`, `kustomize`, `kind`, `flutter`, `fzf`, `gh`, `jq`, `qmd`, `rg`, `uv`, `zsh`, and `ffmpeg` are installed during setup; the `paperclip` user is added to the `docker` group so it can create and manage local Kind clusters. If your current shell predates the group change, reconnect before running `kind create cluster`.
 
 ## UI via Nginx
 
@@ -95,13 +95,18 @@ systemctl --user status paperclip
 journalctl --user -u paperclip -f
 docker ps
 kubectl version --client
+kubectx --help
+kustomize version
 kind version
+flutter --version
+fzf --version
 gh --version
 hermes version
 jq --version
 qmd --version
 rg --version
 uv --version
+zsh --version
 codex --help
 ```
 
@@ -109,7 +114,7 @@ codex --help
 
 See `inventory/group_vars/paperclip_servers.yml` for tunables like:
 - Paperclip user and service name
-- Pinned `kubectl` and `kind` versions
+- Pinned `kubectl`, `kind`, `kustomize`, and `flutter` versions
 - Node.js version
 - Paperclip, Codex, and qmd npm package versions
 - Nginx hostname and upstream port
