@@ -304,6 +304,14 @@
         state: present
       environment: "{{ paperclip_npm_env }}"
 
+    - name: Install opencode CLI via npm
+      community.general.npm:
+        name: "{{ opencode_npm_name }}"
+        version: "{{ opencode_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ paperclip_npm_env }}"
+
     - name: Install qmd via npm
       community.general.npm:
         name: "{{ qmd_npm_name }}"
@@ -334,6 +342,14 @@
       community.general.npm:
         name: "{{ codex_npm_name }}"
         version: "{{ codex_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ paperclip_npm_env }}"
+
+    - name: Retry opencode CLI install via npm
+      community.general.npm:
+        name: "{{ opencode_npm_name }}"
+        version: "{{ opencode_npm_version }}"
         global: true
         state: present
       environment: "{{ paperclip_npm_env }}"
@@ -445,7 +461,7 @@
 - name: Print manual Paperclip onboarding steps
   ansible.builtin.debug:
     msg:
-      - "Paperclip, Codex, qmd, Docker, kubectl, kind, gh, jq, rg, uv, and Hermes prerequisites are installed. Run onboarding manually before starting the service:"
+      - "Paperclip, Codex, opencode, qmd, Docker, kubectl, kind, gh, jq, rg, uv, and Hermes prerequisites are installed. Run onboarding manually before starting the service:"
       - "sudo -i -u {{ paperclip_user }}"
       - "docker info"
       - "codex --login"
