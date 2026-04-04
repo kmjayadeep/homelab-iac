@@ -1,13 +1,12 @@
-resource "proxmox_virtual_environment_vm" "openclaw" {
+resource "proxmox_virtual_environment_vm" "hermes" {
   provider  = proxmox-bpg.jupiter-bpg
-  name      = "openclaw"
+  name      = "hermes"
   node_name = "jupiter"
-  started   = false
 
   machine     = "q35"
   bios        = "ovmf"
-  description = "OpenClaw - personal AI assistant that actually does things"
-  tags        = ["ai", "openclaw"]
+  description = "Hermes - AI Agent"
+  tags        = ["hermes", "AI"]
 
   cpu {
     cores = 2
@@ -36,7 +35,7 @@ resource "proxmox_virtual_environment_vm" "openclaw" {
         address = "dhcp"
       }
     }
-    user_data_file_id = proxmox_virtual_environment_file.openclaw_user_data.id
+    user_data_file_id = proxmox_virtual_environment_file.hermes_user_data.id
   }
 
   network_device {
@@ -49,7 +48,7 @@ resource "proxmox_virtual_environment_vm" "openclaw" {
 
 }
 
-resource "proxmox_virtual_environment_file" "openclaw_user_data" {
+resource "proxmox_virtual_environment_file" "hermes_user_data" {
   provider     = proxmox-bpg.jupiter-bpg
   content_type = "snippets"
   datastore_id = "nfs-templates"
@@ -58,7 +57,7 @@ resource "proxmox_virtual_environment_file" "openclaw_user_data" {
   source_raw {
     data = <<-EOF
     #cloud-config
-    hostname: openclaw
+    hostname: hermes
     timezone: Europe/Berlin
     users:
       - name: "${var.cloudinit_username}"
@@ -92,16 +91,16 @@ resource "proxmox_virtual_environment_file" "openclaw_user_data" {
       - echo "done" > /tmp/cloud-config.done
     EOF
 
-    file_name = "openclaw_cloudinit.yaml"
+    file_name = "hermes_cloudinit.yaml"
   }
 }
 
-resource "cloudflare_dns_record" "openclaw" {
+resource "cloudflare_dns_record" "hermes" {
   zone_id = var.cloudflare_zone_id
-  name    = "openclaw.cosmos.cboxlab.com"
+  name    = "hermes.cosmos.cboxlab.com"
   type    = "A"
-  comment = "Openclaw VM"
-  content = proxmox_virtual_environment_vm.openclaw.ipv4_addresses[1][0]
+  comment = "Hermes VM"
+  content = proxmox_virtual_environment_vm.hermes.ipv4_addresses[1][0]
   proxied = false
   ttl     = 300
 }
