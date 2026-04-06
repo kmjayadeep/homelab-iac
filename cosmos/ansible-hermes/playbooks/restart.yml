@@ -1,0 +1,11 @@
+---
+- name: Restart Hermes service
+  hosts: hermes_servers
+  tasks:
+    - name: Restart Hermes
+      ansible.builtin.systemd:
+        name: "{{ hermes_service_name }}"
+        state: restarted
+        scope: user
+        daemon_reload: true
+      become_user: "{{ hermes_user }}"

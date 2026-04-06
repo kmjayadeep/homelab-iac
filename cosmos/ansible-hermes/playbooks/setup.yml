@@ -1,0 +1,5 @@
+---
+- name: Setup Hermes
+  hosts: hermes_servers
+  roles:
+    - hermes

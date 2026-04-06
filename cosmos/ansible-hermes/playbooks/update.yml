@@ -1,0 +1,14 @@
+---
+- name: Update Hermes
+  hosts: hermes_servers
+  tasks:
+    - name: Print update instructions
+      ansible.builtin.debug:
+        msg:
+          - "To update Hermes, run the installer manually:"
+          - "sudo -i -u {{ hermes_user }}"
+          - "curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash"
+          - "source ~/.bashrc"
+          - "hermes doctor"
+          - "systemctl --user daemon-reload"
+          - "systemctl --user restart {{ hermes_service_name }}"

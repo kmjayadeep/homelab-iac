@@ -1,0 +1,10 @@
+---
+- name: Stop Hermes service
+  hosts: hermes_servers
+  tasks:
+    - name: Stop Hermes
+      ansible.builtin.systemd:
+        name: "{{ hermes_service_name }}"
+        state: stopped
+        scope: user
+      become_user: "{{ hermes_user }}"

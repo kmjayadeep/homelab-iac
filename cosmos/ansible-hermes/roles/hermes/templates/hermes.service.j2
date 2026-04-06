@@ -1,0 +1,15 @@
+[Unit]
+Description=Hermes agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/{{ hermes_user }}
+ExecStart=/home/{{ hermes_user }}/.local/bin/hermes run
+Environment=PATH=/home/{{ hermes_user }}/.local/bin:/usr/local/bin:/usr/bin:/bin
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

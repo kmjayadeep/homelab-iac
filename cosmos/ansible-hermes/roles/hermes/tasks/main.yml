@@ -1,0 +1,189 @@
+---
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - git
+      - gnupg
+      - unzip
+      - xz-utils
+      - zip
+    state: present
+    update_cache: true
+
+- name: Remove conflicting Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose
+      - docker-compose-v2
+      - docker-doc
+      - podman-docker
+      - containerd
+      - runc
+    state: absent
+    purge: true
+
+- name: Ensure apt keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Set Docker repository parameters
+  ansible.builtin.set_fact:
+    hermes_docker_repo_os: "{{ 'ubuntu' if ansible_distribution == 'Ubuntu' else 'debian' if ansible_distribution == 'Debian' else '' }}"
+
+- name: Ensure Docker repository OS is supported
+  ansible.builtin.assert:
+    that:
+      - hermes_docker_repo_os | length > 0
+    fail_msg: "Unsupported distribution for Docker apt repository: {{ ansible_distribution }}"
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ hermes_docker_repo_os }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ hermes_docker_repo_os }} {{ ansible_distribution_release }} stable
+    filename: docker
+    state: present
+
+- name: Install Docker Engine packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Ensure hermes group exists
+  ansible.builtin.group:
+    name: "{{ hermes_group }}"
+    state: present
+
+- name: Ensure hermes user exists
+  ansible.builtin.user:
+    name: "{{ hermes_user }}"
+    group: "{{ hermes_group }}"
+    groups: docker, sudo
+    append: true
+    shell: /bin/bash
+    create_home: true
+
+- name: Add hermes to sudoers
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/hermes
+    line: "{{ hermes_user }} ALL=(ALL:ALL) ALL"
+    state: present
+    mode: "0440"
+    create: true
+    validate: "visudo -cf %s"
+
+- name: Install SSH authorized keys for hermes user
+  ansible.builtin.authorized_key:
+    user: "{{ hermes_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ hermes_authorized_keys }}"
+
+- name: Configure git user name for hermes
+  ansible.builtin.command: git config --global user.name "{{ hermes_git_user_name }}"
+  become_user: "{{ hermes_user }}"
+
+- name: Configure git user email for hermes
+  ansible.builtin.command: git config --global user.email "{{ hermes_git_user_email }}"
+  become_user: "{{ hermes_user }}"
+
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Install Certbot and Cloudflare plugin
+  ansible.builtin.apt:
+    name:
+      - certbot
+      - python3-certbot-dns-cloudflare
+    state: present
+
+- name: Ensure Cloudflare token and email are set
+  ansible.builtin.assert:
+    that:
+      - cloudflare_api_token | length > 0
+      - letsencrypt_email | length > 0
+    fail_msg: "CLOUDFLARE_API_TOKEN and LETSENCRYPT_EMAIL must be set in the environment."
+
+- name: Install Cloudflare credentials for Certbot
+  ansible.builtin.template:
+    src: cloudflare.ini.j2
+    dest: /etc/letsencrypt/cloudflare.ini
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Obtain Let's Encrypt certificate via DNS challenge
+  ansible.builtin.command: >-
+    certbot certonly
+    --dns-cloudflare
+    --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini
+    --non-interactive
+    --agree-tos
+    -m {{ letsencrypt_email }}
+    -d {{ hermes_cert_domain }}
+  args:
+    creates: "/etc/letsencrypt/live/{{ hermes_cert_domain }}/fullchain.pem"
+
+- name: Install Certbot deploy hook to reload Nginx
+  ansible.builtin.copy:
+    dest: /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+    mode: "0755"
+    owner: root
+    group: root
+    content: |-
+      #!/usr/bin/env bash
+      set -e
+      systemctl reload nginx
+
+- name: Configure Nginx for hermes UI
+  ansible.builtin.template:
+    src: hermes-nginx.conf.j2
+    dest: /etc/nginx/sites-available/hermes.conf
+    mode: "0644"
+  notify: Reload Nginx
+
+- name: Enable hermes Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/hermes.conf
+    dest: /etc/nginx/sites-enabled/hermes.conf
+    state: link
+  notify: Reload Nginx
+
+- name: Ensure Nginx is running
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Print manual hermes onboarding steps
+  ansible.builtin.debug:
+    msg:
+      - "Hermes prerequisites are installed. Run onboarding manually before starting the service:"
+      - "sudo -i -u {{ hermes_user }}"
+      - "docker info"
+      - "curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash"
+      - "source ~/.bashrc"
+      - "hermes model          # Configure your LLM provider"
+      - "hermes config set OPENROUTER_API_KEY your-key"
+      - "hermes doctor"
+      - "systemctl --user daemon-reload"
+      - "systemctl --user enable --now {{ hermes_service_name }}"
