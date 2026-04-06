@@ -7,6 +7,8 @@
       - git
       - gnupg
       - htop
+      - jq
+      - kubectx
       - unzip
       - xz-utils
       - zip
