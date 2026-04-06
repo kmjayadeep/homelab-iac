@@ -151,6 +151,18 @@
     name: nginx
     state: present
 
+- name: Download kind
+  ansible.builtin.get_url:
+    url: https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+    dest: /usr/local/bin/kind
+    mode: "0755"
+
+- name: Download kubectl
+  ansible.builtin.get_url:
+    url: https://dl.k8s.io/release/v1.35.3/bin/linux/amd64/kubectl
+    dest: /usr/local/bin/kubectl
+    mode: "0755"
+
 - name: Install Certbot and Cloudflare plugin
   ansible.builtin.apt:
     name:
