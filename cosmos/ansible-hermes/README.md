@@ -1,6 +1,6 @@
 # Hermes Ansible Setup
 
-This Ansible project installs and manages Hermes agent on the target VM, along with Docker and other prerequisites.
+This Ansible project installs and manages Hermes agent on the target VM, along with Docker and Open WebUI.
 
 ## Prerequisites
 
@@ -31,39 +31,44 @@ ansible-playbook playbooks/setup.yml
 Ensure the environment variables are set:
 - `CLOUDFLARE_API_TOKEN`
 - `HERMES_EMAIL`
+- `HERMES_API_KEY` (optional, defaults to `hermes-secret-key`)
 
 `OPENCLAW_EMAIL` is still accepted as a legacy fallback for certificate issuance.
 
 ## Manual onboarding
 
-Install Hermes and configure it:
+Install Hermes, start Open WebUI, and configure:
 
 ```bash
 ssh ansible@hermes.cosmos.cboxlab.com
 sudo -i -u hermes
-docker info
+cd ~/open-webui && docker compose up -d
 curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
 source ~/.bashrc
 hermes model          # Choose your LLM provider and model
 hermes config set OPENROUTER_API_KEY your-key
+hermes config set API_SERVER_ENABLED true
+hermes config set API_SERVER_KEY your-api-key
 hermes doctor
 systemctl --user daemon-reload
 systemctl --user enable --now hermes
 ```
 
-## UI via Nginx
+## Open WebUI
 
-The playbook installs Nginx and proxies the Hermes UI to:
+Open WebUI runs via Docker and is served via Nginx with SSL.
 
-```bash
-https://hermes.cosmos.cboxlab.com
-```
-
-Default upstream port is `3100`.
+- Open WebUI: https://hermes.cosmos.cboxlab.com
+- Open WebUI (local): http://localhost:3000
+- Hermes API: https://hermes.cosmos.cboxlab.com/api/v1
 
 ## Service management
 
 ```bash
+# Start Open WebUI
+cd ~/open-webui && docker compose up -d
+
+# Hermes service
 ansible-playbook playbooks/start.yml
 ansible-playbook playbooks/stop.yml
 ansible-playbook playbooks/restart.yml
@@ -76,7 +81,7 @@ ssh ansible@hermes.cosmos.cboxlab.com
 sudo -i -u hermes
 systemctl --user status hermes
 journalctl --user -u hermes -f
-docker ps
+docker logs -f open-webui
 hermes version
 ```
 
@@ -84,4 +89,5 @@ hermes version
 
 See `inventory/group_vars/hermes_servers.yml` for tunables like:
 - Hermes user and service name
-- Nginx hostname and upstream port
+- API key for Hermes agent and Open WebUI
+- Nginx hostname

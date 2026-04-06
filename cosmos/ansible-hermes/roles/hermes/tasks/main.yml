@@ -6,6 +6,7 @@
       - curl
       - git
       - gnupg
+      - htop
       - unzip
       - xz-utils
       - zip
@@ -66,6 +67,11 @@
     state: present
     update_cache: true
 
+- name: Ensure Docker is running
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+
 - name: Ensure hermes group exists
   ansible.builtin.group:
     name: "{{ hermes_group }}"
@@ -103,6 +109,37 @@
 - name: Configure git user email for hermes
   ansible.builtin.command: git config --global user.email "{{ hermes_git_user_email }}"
   become_user: "{{ hermes_user }}"
+
+- name: Create Open WebUI directory
+  ansible.builtin.file:
+    path: "/home/{{ hermes_user }}/open-webui"
+    state: directory
+    owner: "{{ hermes_user }}"
+    group: "{{ hermes_group }}"
+    mode: "0755"
+
+- name: Create Open WebUI docker-compose
+  ansible.builtin.copy:
+    dest: "/home/{{ hermes_user }}/open-webui/docker-compose.yml"
+    content: |
+      services:
+        open-webui:
+          image: ghcr.io/open-webui/open-webui:main
+          ports:
+            - "3000:8080"
+          volumes:
+            - open-webui:/app/backend/data
+          environment:
+            - OPENAI_API_BASE_URL=http://host.docker.internal:8642/v1
+            - OPENAI_API_KEY={{ hermes_api_key }}
+          extra_hosts:
+            - "host.docker.internal:host-gateway"
+          restart: always
+      volumes:
+        open-webui:
+    owner: "{{ hermes_user }}"
+    group: "{{ hermes_group }}"
+    mode: "0644"
 
 - name: Install Nginx
   ansible.builtin.apt:
@@ -179,11 +216,15 @@
     msg:
       - "Hermes prerequisites are installed. Run onboarding manually before starting the service:"
       - "sudo -i -u {{ hermes_user }}"
-      - "docker info"
+      - "cd ~/open-webui && docker compose up -d"
       - "curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash"
       - "source ~/.bashrc"
       - "hermes model          # Configure your LLM provider"
       - "hermes config set OPENROUTER_API_KEY your-key"
+      - "hermes config set API_SERVER_ENABLED true"
+      - "hermes config set API_SERVER_KEY {{ hermes_api_key }}"
       - "hermes doctor"
       - "systemctl --user daemon-reload"
       - "systemctl --user enable --now {{ hermes_service_name }}"
+      - ""
+      - "Open WebUI will be available at https://hermes.cosmos.cboxlab.com after starting."

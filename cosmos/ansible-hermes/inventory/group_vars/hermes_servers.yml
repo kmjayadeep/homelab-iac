@@ -6,13 +6,12 @@ hermes_service_name: "hermes"
 hermes_authorized_keys:
   - "{{ lookup('file', ansible_ssh_private_key_file + '.pub') }}"
 
-hermes_ui_host: "127.0.0.1"
-hermes_ui_port: 3100
 hermes_nginx_listen_port: 80
 hermes_nginx_server_name: "hermes.cosmos.cboxlab.com"
 hermes_cert_domain: "{{ hermes_nginx_server_name }}"
 
 cloudflare_api_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
 letsencrypt_email: "{{ lookup('env', 'HERMES_EMAIL') | default(lookup('env', 'OPENCLAW_EMAIL'), true) }}"
+hermes_api_key: "{{ lookup('env', 'HERMES_API_KEY') | default('hermes-secret-key', true) }}"
 hermes_git_user_name: "Hermes"
 hermes_git_user_email: "{{ lookup('env', 'HERMES_EMAIL') }}"
