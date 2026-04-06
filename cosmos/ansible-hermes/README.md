@@ -46,9 +46,12 @@ cd ~/open-webui && docker compose up -d
 curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
 source ~/.bashrc
 hermes model          # Choose your LLM provider and model
-hermes config set OPENROUTER_API_KEY your-key
-hermes config set API_SERVER_ENABLED true
-hermes config set API_SERVER_KEY your-api-key
+
+# Set the following env vars in ~/.hermes/env
+API_SERVER_ENABLED true
+API_SERVER_KEY your-api-key
+
+# Run
 hermes doctor
 systemctl --user daemon-reload
 systemctl --user enable --now hermes

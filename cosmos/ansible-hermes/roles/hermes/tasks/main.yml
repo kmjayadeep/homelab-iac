@@ -10,6 +10,7 @@
       - unzip
       - xz-utils
       - zip
+      - gh
     state: present
     update_cache: true
 
@@ -130,16 +131,20 @@
           volumes:
             - open-webui:/app/backend/data
           environment:
-            - OPENAI_API_BASE_URL=http://host.docker.internal:8642/v1
+            - OPENAI_API_BASE_URL=https://hermes.cosmos.cboxlab.com/v1
             - OPENAI_API_KEY={{ hermes_api_key }}
-          extra_hosts:
-            - "host.docker.internal:host-gateway"
+            - CORS_ALLOW_ORIGIN=https://hermes.cosmos.cboxlab.com
           restart: always
       volumes:
         open-webui:
     owner: "{{ hermes_user }}"
     group: "{{ hermes_group }}"
     mode: "0644"
+
+- name: Start Open WebUI via docker compose
+  community.docker.docker_compose_v2:
+    project_src: "/home/{{ hermes_user }}/open-webui"
+    state: present
 
 - name: Install Nginx
   ansible.builtin.apt:
