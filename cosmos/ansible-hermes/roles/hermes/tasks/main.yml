@@ -146,10 +146,34 @@
     project_src: "/home/{{ hermes_user }}/open-webui"
     state: present
 
-- name: Install Nginx
+- name: Install Nginx and UFW
   ansible.builtin.apt:
-    name: nginx
+    name:
+      - nginx
+      - ufw
     state: present
+
+- name: Configure UFW default policies
+  community.general.ufw:
+    direction: "{{ item.direction }}"
+    default: "{{ item.default }}"
+  loop:
+    - { direction: 'incoming', default: 'deny' }
+    - { direction: 'outgoing', default: 'allow' }
+
+- name: Allow SSH and Nginx through UFW
+  community.general.ufw:
+    rule: "{{ item.rule }}"
+    port: "{{ item.port }}"
+    proto: "{{ item.proto | default('tcp') }}"
+  loop:
+    - { rule: 'allow', port: '22' }
+    - { rule: 'allow', port: '80' }
+    - { rule: 'allow', port: '443' }
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
 
 - name: Install Certbot and Cloudflare plugin
   ansible.builtin.apt:
