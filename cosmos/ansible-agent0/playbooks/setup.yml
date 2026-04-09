@@ -1,0 +1,5 @@
+---
+- name: Setup Agent0
+  hosts: agent0_servers
+  roles:
+    - agent0

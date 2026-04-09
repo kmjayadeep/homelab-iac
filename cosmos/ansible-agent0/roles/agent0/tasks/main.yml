@@ -1,0 +1,458 @@
+---
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - clang
+      - cmake
+      - curl
+      - ffmpeg
+      - fzf
+      - git
+      - gh
+      - gnupg
+      - jq
+      - kubectx
+      - libglu1-mesa
+      - ninja-build
+      - pkg-config
+      - ripgrep
+      - unzip
+      - xz-utils
+      - zip
+      - zsh
+    state: present
+    update_cache: true
+
+- name: Download NodeSource GPG key
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    dest: /usr/share/keyrings/nodesource.gpg.key
+    mode: "0644"
+
+- name: Dearmor NodeSource GPG key
+  ansible.builtin.command: >-
+    gpg --dearmor -o /usr/share/keyrings/nodesource.gpg /usr/share/keyrings/nodesource.gpg.key
+  args:
+    creates: /usr/share/keyrings/nodesource.gpg
+
+- name: Add NodeSource repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_{{ nodejs_version }} nodistro main"
+    filename: nodesource
+    state: present
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+- name: Remove conflicting Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose
+      - docker-compose-v2
+      - docker-doc
+      - podman-docker
+      - containerd
+      - runc
+    state: absent
+    purge: true
+
+- name: Ensure apt keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Set Docker repository parameters
+  ansible.builtin.set_fact:
+    agent0_docker_repo_os: "{{ 'ubuntu' if ansible_distribution == 'Ubuntu' else 'debian' if ansible_distribution == 'Debian' else '' }}"
+
+- name: Ensure Docker repository OS is supported
+  ansible.builtin.assert:
+    that:
+      - agent0_docker_repo_os | length > 0
+    fail_msg: "Unsupported distribution for Docker apt repository: {{ ansible_distribution }}"
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ agent0_docker_repo_os }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ agent0_docker_repo_os }} {{ ansible_distribution_release }} stable
+    filename: docker
+    state: present
+
+- name: Install Docker Engine packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Ensure Docker is running
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Ensure Agent0 group exists
+  ansible.builtin.group:
+    name: "{{ agent0_group }}"
+    state: present
+
+- name: Ensure Agent0 user exists
+  ansible.builtin.user:
+    name: "{{ agent0_user }}"
+    group: "{{ agent0_group }}"
+    groups: docker
+    append: true
+    shell: /bin/bash
+    create_home: true
+
+- name: Set Kubernetes binary architecture
+  ansible.builtin.set_fact:
+    agent0_binary_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else '' }}"
+
+- name: Set Flutter binary architecture
+  ansible.builtin.set_fact:
+    agent0_flutter_arch: "{{ 'x64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else '' }}"
+
+- name: Ensure Kubernetes binary architecture is supported
+  ansible.builtin.assert:
+    that:
+      - agent0_binary_arch | length > 0
+    fail_msg: "Unsupported architecture for kubectl/kind/kustomize install: {{ ansible_architecture }}"
+
+- name: Ensure Flutter binary architecture is supported
+  ansible.builtin.assert:
+    that:
+      - agent0_flutter_arch | length > 0
+    fail_msg: "Unsupported architecture for Flutter install: {{ ansible_architecture }}"
+
+- name: Install kubectl
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/{{ agent0_kubectl_version }}/bin/linux/{{ agent0_binary_arch }}/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: "0755"
+
+- name: Install kind
+  ansible.builtin.get_url:
+    url: "https://kind.sigs.k8s.io/dl/{{ agent0_kind_version }}/kind-linux-{{ agent0_binary_arch }}"
+    dest: /usr/local/bin/kind
+    mode: "0755"
+
+- name: Install kustomize
+  ansible.builtin.unarchive:
+    src: "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F{{ agent0_kustomize_version }}/kustomize_{{ agent0_kustomize_version }}_linux_{{ agent0_binary_arch }}.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    mode: "0755"
+
+- name: Install uv
+  ansible.builtin.unarchive:
+    src: "https://releases.astral.sh/github/uv/releases/download/{{ agent0_uv_version }}/uv-x86_64-unknown-linux-gnu.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    mode: "0755"
+  args:
+    creates: /usr/local/bin/uv
+
+- name: Ensure Flutter install directory exists
+  ansible.builtin.file:
+    path: /opt/flutter
+    state: directory
+    mode: "0755"
+
+- name: Read installed Flutter version marker
+  ansible.builtin.slurp:
+    src: /opt/flutter/.agent0_flutter_version
+  register: agent0_flutter_version_marker
+  failed_when: false
+
+- name: Remove Flutter SDK when version changes
+  ansible.builtin.file:
+    path: /opt/flutter
+    state: absent
+  when: >-
+    agent0_flutter_version_marker.content is defined and
+    (agent0_flutter_version_marker.content | b64decode | trim) != agent0_flutter_version
+
+- name: Fetch Flutter Linux release index
+  ansible.builtin.uri:
+    url: https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json
+    return_content: true
+  register: agent0_flutter_releases
+
+- name: Select Flutter release archive
+  ansible.builtin.set_fact:
+    agent0_flutter_release: >-
+      {{
+        (
+          agent0_flutter_releases.json.releases
+          | selectattr('channel', 'equalto', 'stable')
+          | selectattr('version', 'equalto', agent0_flutter_version)
+          | selectattr('dart_sdk_arch', 'equalto', agent0_flutter_arch)
+          | list
+          | first
+        )
+      }}
+
+- name: Ensure requested Flutter release exists
+  ansible.builtin.assert:
+    that:
+      - agent0_flutter_release is mapping
+      - agent0_flutter_release.archive is defined
+    fail_msg: >-
+      Flutter {{ agent0_flutter_version }} for linux/{{ agent0_flutter_arch }} was not found in the official release index.
+
+- name: Install Flutter SDK
+  ansible.builtin.unarchive:
+    src: "{{ agent0_flutter_releases.json.base_url }}/{{ agent0_flutter_release.archive }}"
+    dest: /opt
+    remote_src: true
+    owner: root
+    group: root
+    creates: /opt/flutter/bin/flutter
+
+- name: Ensure Flutter SDK version marker is current
+  ansible.builtin.copy:
+    dest: /opt/flutter/.agent0_flutter_version
+    content: "{{ agent0_flutter_version }}\n"
+    mode: "0644"
+
+- name: Install Flutter CLI symlink
+  ansible.builtin.file:
+    src: /opt/flutter/bin/flutter
+    dest: /usr/local/bin/flutter
+    state: link
+
+- name: Install Dart CLI symlink
+  ansible.builtin.file:
+    src: /opt/flutter/bin/dart
+    dest: /usr/local/bin/dart
+    state: link
+
+- name: Install SSH authorized keys for Agent0 user
+  ansible.builtin.authorized_key:
+    user: "{{ agent0_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ agent0_authorized_keys }}"
+
+- name: Configure git user name for Agent0
+  ansible.builtin.git_config:
+    name: user.name
+    scope: global
+    value: "{{ agent0_git_user_name }}"
+  become_user: "{{ agent0_user }}"
+
+- name: Configure git user email for Agent0
+  ansible.builtin.git_config:
+    name: user.email
+    scope: global
+    value: "{{ agent0_git_user_email }}"
+  become_user: "{{ agent0_user }}"
+
+- name: Install Agent0 and Codex CLIs via npm
+  block:
+    - name: Get npm global root
+      ansible.builtin.command: npm root -g
+      register: agent0_npm_root
+      changed_when: false
+
+    - name: Check if Agent0 CLI is installed
+      ansible.builtin.command: which paperclipai
+      register: agent0_binary
+      changed_when: false
+      failed_when: false
+
+    - name: Remove existing Agent0 install when forced
+      ansible.builtin.file:
+        path: "{{ agent0_npm_root.stdout }}/paperclipai"
+        state: absent
+      when: agent0_force_reinstall
+
+    - name: Install Agent0 CLI via npm
+      community.general.npm:
+        name: "{{ agent0_npm_name }}"
+        version: "{{ agent0_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ agent0_npm_env }}"
+      when: agent0_binary.rc != 0 or agent0_force_reinstall
+
+    - name: Install Codex CLI via npm
+      community.general.npm:
+        name: "{{ codex_npm_name }}"
+        version: "{{ codex_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ agent0_npm_env }}"
+
+    - name: Install pi-agent via npm
+      community.general.npm:
+        name: "{{ pi_agent_npm_name }}"
+        version: "{{ pi_agent_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ agent0_npm_env }}"
+
+    - name: Resolve Agent0 CLI binary path
+      ansible.builtin.command: which paperclipai
+      register: agent0_binary_path
+      changed_when: false
+  rescue:
+    - name: Clean Agent0 npm directory after failure
+      ansible.builtin.file:
+        path: "{{ agent0_npm_root.stdout }}/paperclipai"
+        state: absent
+
+    - name: Retry Agent0 CLI install via npm
+      community.general.npm:
+        name: "{{ agent0_npm_name }}"
+        version: "{{ agent0_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ agent0_npm_env }}"
+
+    - name: Retry Codex CLI install via npm
+      community.general.npm:
+        name: "{{ codex_npm_name }}"
+        version: "{{ codex_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ agent0_npm_env }}"
+
+    - name: Retry pi-agent install via npm
+      community.general.npm:
+        name: "{{ pi_agent_npm_name }}"
+        version: "{{ pi_agent_npm_version }}"
+        global: true
+        state: present
+      environment: "{{ agent0_npm_env }}"
+
+    - name: Resolve Agent0 CLI binary path after retry
+      ansible.builtin.command: which paperclipai
+      register: agent0_binary_path
+      changed_when: false
+
+- name: Enable lingering for Agent0 user services
+  ansible.builtin.command: "loginctl enable-linger {{ agent0_user }}"
+  args:
+    creates: "/var/lib/systemd/linger/{{ agent0_user }}"
+
+- name: Ensure Agent0 user systemd directory exists
+  ansible.builtin.file:
+    path: "/home/{{ agent0_user }}/.config/systemd/user"
+    state: directory
+    owner: "{{ agent0_user }}"
+    group: "{{ agent0_group }}"
+    mode: "0755"
+
+- name: Install Agent0 systemd unit
+  ansible.builtin.template:
+    src: agent0.service.j2
+    dest: "/home/{{ agent0_user }}/.config/systemd/user/{{ agent0_service_name }}.service"
+    owner: "{{ agent0_user }}"
+    group: "{{ agent0_group }}"
+    mode: "0644"
+
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Install Certbot and Cloudflare plugin
+  ansible.builtin.apt:
+    name:
+      - certbot
+      - python3-certbot-dns-cloudflare
+    state: present
+
+- name: Ensure Cloudflare token and email are set
+  ansible.builtin.assert:
+    that:
+      - cloudflare_api_token | length > 0
+      - letsencrypt_email | length > 0
+    fail_msg: "CLOUDFLARE_API_TOKEN and LETSENCRYPT_EMAIL must be set in the environment."
+
+- name: Install Cloudflare credentials for Certbot
+  ansible.builtin.template:
+    src: cloudflare.ini.j2
+    dest: /etc/letsencrypt/cloudflare.ini
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Obtain Let's Encrypt certificate via DNS challenge
+  ansible.builtin.command: >-
+    certbot certonly
+    --dns-cloudflare
+    --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini
+    --non-interactive
+    --agree-tos
+    -m {{ letsencrypt_email }}
+    -d {{ agent0_cert_domain }}
+  args:
+    creates: "/etc/letsencrypt/live/{{ agent0_cert_domain }}/fullchain.pem"
+
+- name: Install Certbot deploy hook to reload Nginx
+  ansible.builtin.copy:
+    dest: /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+    mode: "0755"
+    owner: root
+    group: root
+    content: |-
+      #!/usr/bin/env bash
+      set -e
+      systemctl reload nginx
+
+- name: Configure Nginx for Agent0 UI
+  ansible.builtin.template:
+    src: agent0-nginx.conf.j2
+    dest: /etc/nginx/sites-available/agent0.conf
+    mode: "0644"
+  notify: Reload Nginx
+
+- name: Enable Agent0 Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/agent0.conf
+    dest: /etc/nginx/sites-enabled/agent0.conf
+    state: link
+  notify: Reload Nginx
+
+- name: Disable default Nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload Nginx
+
+- name: Ensure Nginx is running
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Print manual Agent0 onboarding steps
+  ansible.builtin.debug:
+    msg:
+      - "Agent0, Codex, pi-agent, Docker, kubectl, kind, gh, jq, rg, uv, and toolchain prerequisites are installed. Run onboarding manually before starting the service:"
+      - "sudo -i -u {{ agent0_user }}"
+      - "docker info"
+      - "codex --login"
+      - "paperclipai onboard"
+      - "systemctl --user daemon-reload"
+      - "systemctl --user enable --now {{ agent0_service_name }}"

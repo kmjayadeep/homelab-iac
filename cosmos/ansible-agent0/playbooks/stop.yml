@@ -1,0 +1,10 @@
+---
+- name: Stop Agent0 service
+  hosts: agent0_servers
+  tasks:
+    - name: Stop Agent0
+      ansible.builtin.systemd:
+        name: "{{ agent0_service_name }}"
+        state: stopped
+        scope: user
+      become_user: "{{ agent0_user }}"

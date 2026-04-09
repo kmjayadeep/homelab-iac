@@ -1,0 +1,11 @@
+---
+- name: Restart Agent0 service
+  hosts: agent0_servers
+  tasks:
+    - name: Restart Agent0
+      ansible.builtin.systemd:
+        name: "{{ agent0_service_name }}"
+        state: restarted
+        scope: user
+        daemon_reload: true
+      become_user: "{{ agent0_user }}"

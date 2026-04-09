@@ -1,0 +1,40 @@
+---
+agent0_user: "agent0"
+agent0_group: "agent0"
+agent0_service_name: "agent0"
+
+agent0_authorized_keys:
+  - "{{ lookup('file', ansible_ssh_private_key_file + '.pub') }}"
+
+nodejs_version: "22.x"
+agent0_npm_name: "paperclipai"
+agent0_npm_version: "latest"
+agent0_force_reinstall: false
+codex_npm_name: "@openai/codex"
+codex_npm_version: "latest"
+pi_agent_npm_name: "@mariozechner/pi-coding-agent"
+pi_agent_npm_version: "latest"
+agent0_kubectl_version: "v1.35.0"
+agent0_kind_version: "v0.31.0"
+agent0_kustomize_version: "v5.7.1"
+agent0_flutter_version: "3.32.8"
+agent0_uv_version: "0.7.13"
+
+agent0_npm_env:
+  NPM_CONFIG_JOBS: "1"
+  NPM_CONFIG_PROGRESS: "false"
+  NPM_CONFIG_AUDIT: "false"
+  NPM_CONFIG_FUND: "false"
+  NPM_CONFIG_LOGLEVEL: "warn"
+
+agent0_ui_host: "127.0.0.1"
+agent0_ui_port: 3100
+agent0_nginx_listen_port: 80
+agent0_nginx_server_name: "agent0.cosmos.cboxlab.com"
+agent0_cert_domain: "{{ agent0_nginx_server_name }}"
+
+cloudflare_api_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
+letsencrypt_email: "{{ lookup('env', 'AGENT0_EMAIL') }}"
+
+agent0_git_user_name: "Agent0"
+agent0_git_user_email: "{{ letsencrypt_email }}"

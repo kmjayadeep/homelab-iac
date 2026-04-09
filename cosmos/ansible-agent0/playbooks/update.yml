@@ -1,0 +1,77 @@
+---
+- name: Update Agent0
+  hosts: agent0_servers
+  tasks:
+    - name: Get npm global root
+      ansible.builtin.command: npm root -g
+      register: agent0_npm_root
+      changed_when: false
+
+    - name: Update Agent0 via npm
+      block:
+        - name: Update Agent0 via npm
+          community.general.npm:
+            name: "{{ agent0_npm_name }}"
+            version: "{{ agent0_npm_version }}"
+            global: true
+            state: latest
+          environment: "{{ agent0_npm_env }}"
+
+        - name: Update Codex via npm
+          community.general.npm:
+            name: "{{ codex_npm_name }}"
+            version: "{{ codex_npm_version }}"
+            global: true
+            state: latest
+          environment: "{{ agent0_npm_env }}"
+
+        - name: Update pi-agent via npm
+          community.general.npm:
+            name: "{{ pi_agent_npm_name }}"
+            version: "{{ pi_agent_npm_version }}"
+            global: true
+            state: latest
+          environment: "{{ agent0_npm_env }}"
+
+      rescue:
+        - name: Clean Agent0 npm directory after update failure
+          ansible.builtin.file:
+            path: "{{ agent0_npm_root.stdout }}/paperclipai"
+            state: absent
+
+        - name: Retry Agent0 update via npm
+          community.general.npm:
+            name: "{{ agent0_npm_name }}"
+            version: "{{ agent0_npm_version }}"
+            global: true
+            state: latest
+          environment: "{{ agent0_npm_env }}"
+
+        - name: Retry Codex update via npm
+          community.general.npm:
+            name: "{{ codex_npm_name }}"
+            version: "{{ codex_npm_version }}"
+            global: true
+            state: latest
+          environment: "{{ agent0_npm_env }}"
+
+        - name: Retry pi-agent update via npm
+          community.general.npm:
+            name: "{{ pi_agent_npm_name }}"
+            version: "{{ pi_agent_npm_version }}"
+            global: true
+            state: latest
+          environment: "{{ agent0_npm_env }}"
+
+
+    - name: Run Agent0 doctor with repair
+      ansible.builtin.command: paperclipai doctor --repair
+      become_user: "{{ agent0_user }}"
+
+    - name: Restart Agent0 service
+      ansible.builtin.systemd:
+        name: "{{ agent0_service_name }}"
+        state: restarted
+        scope: user
+        daemon_reload: true
+      become_user: "{{ agent0_user }}"

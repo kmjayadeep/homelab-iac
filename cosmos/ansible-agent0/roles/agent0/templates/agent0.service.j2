@@ -1,0 +1,15 @@
+[Unit]
+Description=Agent0 control plane
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/{{ agent0_user }}
+ExecStart={{ agent0_binary_path.stdout }} run
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
