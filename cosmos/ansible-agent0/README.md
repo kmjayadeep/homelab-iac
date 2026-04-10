@@ -33,18 +33,19 @@ ansible-playbook playbooks/setup.yml
 Ensure the environment variables are set:
 - `CLOUDFLARE_API_TOKEN`
 - `AGENT0_EMAIL`
+- `MINIMAX_API_KEY`
+
+The setup playbook renders `roles/agent0/templates/pi-auth.json` to:
+- `/home/agent0/.pi/agent/auth.json`
 
 ## Manual onboarding
 
 Onboarding is interactive by design:
 
 ```bash
-ssh ansible@agent0.cosmos.cboxlab.com
-sudo -i -u agent0
-docker info
+ssh agent0@agent0.cosmos.cboxlab.com
 codex --login
 paperclipai onboard
-systemctl --user daemon-reload
 systemctl --user enable --now agent0
 ```
 
@@ -56,8 +57,6 @@ The playbook installs Nginx and proxies the UI to:
 https://agent0.cosmos.cboxlab.com
 ```
 
-Default upstream port is `3100`.
-
 ## Service management
 
 ```bash
@@ -66,7 +65,7 @@ ansible-playbook playbooks/stop.yml
 ansible-playbook playbooks/restart.yml
 ```
 
-## Update Agent0 and Codex
+## Update Packages
 
 ```bash
 ansible-playbook playbooks/update.yml
@@ -78,27 +77,6 @@ This runs:
 - `paperclipai doctor --repair`
 - service restart
 
-## Logs and status
-
-```bash
-ssh ansible@agent0.cosmos.cboxlab.com
-sudo -i -u agent0
-systemctl --user status agent0
-journalctl --user -u agent0 -f
-docker ps
-kubectl version --client
-kubectx --help
-kustomize version
-kind version
-flutter --version
-fzf --version
-gh --version
-jq --version
-rg --version
-uv --version
-zsh --version
-codex --help
-```
 
 ## Configuration
 
@@ -109,3 +87,4 @@ See `inventory/group_vars/agent0_servers.yml` for tunables like:
 - Agent0 and Codex npm package versions
 - Nginx hostname and upstream port
 - Git user name and email for the Agent0 user
+- `minimax_api_key` for `~/.pi/agent/auth.json`

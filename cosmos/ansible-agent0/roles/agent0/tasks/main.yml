@@ -119,8 +119,24 @@
     group: "{{ agent0_group }}"
     groups: docker
     append: true
-    shell: /bin/bash
+    shell: /bin/zsh
     create_home: true
+
+- name: Ensure pi-agent auth directory exists
+  ansible.builtin.file:
+    path: "/home/{{ agent0_user }}/.pi/agent"
+    state: directory
+    owner: "{{ agent0_user }}"
+    group: "{{ agent0_group }}"
+    mode: "0700"
+
+- name: Install pi-agent auth config
+  ansible.builtin.template:
+    src: pi-auth.json
+    dest: "/home/{{ agent0_user }}/.pi/agent/auth.json"
+    owner: "{{ agent0_user }}"
+    group: "{{ agent0_group }}"
+    mode: "0600"
 
 - name: Set Kubernetes binary architecture
   ansible.builtin.set_fact:

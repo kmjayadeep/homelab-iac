@@ -38,3 +38,5 @@ letsencrypt_email: "{{ lookup('env', 'AGENT0_EMAIL') }}"
 
 agent0_git_user_name: "Agent0"
 agent0_git_user_email: "{{ letsencrypt_email }}"
+
+minimax_api_key: "{{ lookup('env', 'MINIMAX_API_KEY') }}"
