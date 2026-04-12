@@ -21,6 +21,7 @@
       - xz-utils
       - zip
       - zsh
+      - tree
     state: present
     update_cache: true
 
@@ -177,14 +178,25 @@
     remote_src: true
     mode: "0755"
 
-- name: Install uv
-  ansible.builtin.unarchive:
-    src: "https://releases.astral.sh/github/uv/releases/download/{{ agent0_uv_version }}/uv-x86_64-unknown-linux-gnu.tar.gz"
-    dest: /usr/local/bin
-    remote_src: true
-    mode: "0755"
+- name: Download uv archive
+  ansible.builtin.get_url:
+    url: "https://releases.astral.sh/github/uv/releases/download/{{ agent0_uv_version }}/uv-x86_64-unknown-linux-gnu.tar.gz"
+    dest: /tmp/uv.tar.gz
+    mode: "0644"
+  register: agent0_uv_download
+
+- name: Extract uv binary
+  ansible.builtin.command: >-
+    tar -xzf /tmp/uv.tar.gz -C /usr/local/bin uv-x86_64-unknown-linux-gnu/uv --strip-components=1
+  when: agent0_uv_download is changed
   args:
     creates: /usr/local/bin/uv
+
+- name: Clean up uv archive
+  ansible.builtin.file:
+    path: /tmp/uv.tar.gz
+    state: absent
+  when: agent0_uv_download is changed
 
 - name: Ensure Flutter install directory exists
   ansible.builtin.file:
