@@ -20,6 +20,7 @@ paperclip_kubectl_version: "v1.35.0"
 paperclip_kind_version: "v0.31.0"
 paperclip_kustomize_version: "v5.7.1"
 paperclip_flutter_version: "3.32.8"
+paperclip_uv_version: "0.7.13"
 
 paperclip_npm_env:
   NPM_CONFIG_JOBS: "1"

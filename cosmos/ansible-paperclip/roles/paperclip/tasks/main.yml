@@ -161,16 +161,26 @@
     remote_src: true
     mode: "0755"
 
+- name: Set uv binary architecture
+  ansible.builtin.set_fact:
+    paperclip_uv_arch: "{{ 'x86_64' if ansible_architecture == 'x86_64' else 'aarch64' if ansible_architecture == 'aarch64' else '' }}"
+
+- name: Ensure uv binary architecture is supported
+  ansible.builtin.assert:
+    that:
+      - paperclip_uv_arch | length > 0
+    fail_msg: "Unsupported architecture for uv install: {{ ansible_architecture }}"
+
 - name: Install uv
-  ansible.builtin.shell: |
-    set -e
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+  ansible.builtin.unarchive:
+    src: "https://github.com/astral-sh/uv/releases/download/{{ paperclip_uv_version }}/uv-{{ paperclip_uv_version }}-{{ paperclip_uv_arch }}-unknown-linux-gnu.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    mode: "0755"
+    extra_opts:
+      - --strip-components=2
   args:
     creates: /usr/local/bin/uv
-  environment:
-    UV_INSTALL_DIR: /usr/local/bin
-    UV_UNMANAGED_INSTALL: /usr/local/bin
-    INSTALLER_NO_MODIFY_PATH: "1"
 
 - name: Ensure Flutter install directory exists
   ansible.builtin.file:
@@ -281,6 +291,24 @@
       changed_when: false
       failed_when: false
 
+    - name: Check if Codex CLI is installed
+      ansible.builtin.command: which codex
+      register: codex_binary
+      changed_when: false
+      failed_when: false
+
+    - name: Check if opencode CLI is installed
+      ansible.builtin.command: which opencode
+      register: opencode_binary
+      changed_when: false
+      failed_when: false
+
+    - name: Check if pi-agent CLI is installed
+      ansible.builtin.command: which pi-agent
+      register: pi_agent_binary
+      changed_when: false
+      failed_when: false
+
     - name: Remove existing Paperclip install when forced
       ansible.builtin.file:
         path: "{{ paperclip_npm_root.stdout }}/paperclipai"
@@ -303,6 +331,7 @@
         global: true
         state: present
       environment: "{{ paperclip_npm_env }}"
+      when: codex_binary.rc != 0 or paperclip_force_reinstall
 
     - name: Install opencode CLI via npm
       community.general.npm:
@@ -311,6 +340,7 @@
         global: true
         state: present
       environment: "{{ paperclip_npm_env }}"
+      when: opencode_binary.rc != 0 or paperclip_force_reinstall
 
     - name: Install pi-agent via npm
       community.general.npm:
@@ -319,6 +349,7 @@
         global: true
         state: present
       environment: "{{ paperclip_npm_env }}"
+      when: pi_agent_binary.rc != 0 or paperclip_force_reinstall
 
     - name: Resolve Paperclip CLI binary path
       ansible.builtin.command: which paperclipai

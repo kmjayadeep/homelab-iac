@@ -114,7 +114,7 @@ codex --help
 
 See `inventory/group_vars/paperclip_servers.yml` for tunables like:
 - Paperclip user and service name
-- Pinned `kubectl`, `kind`, `kustomize`, and `flutter` versions
+- Pinned `kubectl`, `kind`, `kustomize`, `flutter`, and `uv` versions
 - Node.js version
 - Paperclip, Codex, and qmd npm package versions
 - Nginx hostname and upstream port
