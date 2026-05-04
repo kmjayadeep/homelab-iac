@@ -1,22 +1,116 @@
-module "chillyfries" {
-  source = "../../terraform-modules/proxmox-vm-qemu"
-  providers = {
-    proxmox = proxmox.mars
+resource "proxmox_virtual_environment_vm" "chillyfries" {
+  provider  = proxmox-bpg.mars-bpg
+  name      = "chillyfries"
+  node_name = "mars"
+  started   = true
+  vm_id     = 207
+
+  machine     = "q35"
+  bios        = "ovmf"
+  description = "Chillyfries valheim server"
+  tags        = ["game", "valheim"]
+
+  cpu {
+    cores = 4
+    type  = "host"
   }
 
-  vmid        = 207
-  target_node = "mars"
-  name        = "chillyfries"
-  cores       = 4
-  memory      = 6192
-  desc        = "Chillyfries valheim server"
-  sshkeys     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDVFwMXBBljf+W5diHw9sz+A5AQhojFh8xXHCvznJkebVimhPU18dP7aL6K91tMdx+1rDbW3XyqWlAcuJY55j/G1JMyMGGTSCWkUlovZArqFAWxyadQ9s7Ev13bSF+h2qaL1x8tFAYK/L/LR4OOHSKXzqdeS2WeZgIFEuBW6HDnlGGV0aVVLo6f7wTIt4QK48IiUxKDo+giN5vmXtcBg0F88DhbDtLip3Yab6Sqm4v5PCIM4XiKkULqMLGqfQoUItFi0MGEq1P2qvQ/pVdHEjMoPjXfnwI0Jr4T6NN/QO8lsEfyYlI8qtZ2MvTYdqmOvrY37cYx2BJsIQvwC1wzERgqboEUk0qsRwNqIUcAbOaBIADDn11FUQyvYZ2S8QeIqiwkdyE+jJuPTTgzh5RtuFoqyKuIQohzPDIhAmr65xygcYUyM7vRji5F20dVxc92fNc7ec1FCsbPoSHdW41PkimO2+plyhMFkYrbRo2Hzi6pW+LkmPDbZTMWDo6RM07G+1DIGoDUmSxCQDgkoHHG+x6U0mKh2YSX9zwIxr/9h/dvEyWYCG09XNmxFlGHNNlb0Us52UJ4Ax53WnNoxECH0RDojRQkn3m3v0xxFU9C/RaER48N7ppEDjL9dtcM0lF714TbpBQYBM2oJYJIoCX0Cj/fyrSxofHTYARsnBzblDZA9Q== kmjayadeep@gmail.com"
-  ipv4_addr   = "192.168.1.76/24"
-  ipv4_gw     = "192.168.1.1"
-  storage     = "local-lvm"
-  disk_size   = "200G"
-  tags        = "game,valheim"
-  vm_state    = "running"
+  memory {
+    dedicated = 6192
+  }
+
+  efi_disk {
+    datastore_id = "local-lvm"
+    type         = "4m"
+  }
+
+  disk {
+    datastore_id = "local-lvm"
+    import_from  = proxmox_download_file.latest_debian_13_qcow2_img.id
+    interface    = "virtio0"
+    size         = 200
+  }
+
+  initialization {
+    ip_config {
+      ipv4 {
+        address = "dhcp"
+      }
+    }
+    user_data_file_id = proxmox_virtual_environment_file.chillyfries_user_data.id
+  }
+
+  network_device {
+    bridge = "vmbr0"
+  }
+
+  agent {
+    enabled = true
+  }
+}
+
+resource "proxmox_virtual_environment_file" "chillyfries_user_data" {
+  provider     = proxmox-bpg.mars-bpg
+  content_type = "snippets"
+  datastore_id = "nfs-templates"
+  node_name    = "mars"
+
+  source_raw {
+    data = <<-EOF
+    #cloud-config
+    hostname: chillyfries
+    timezone: Europe/Berlin
+    users:
+      - name: "${var.cloudinit_username}"
+        groups:
+          - sudo
+        shell: /bin/bash
+        ssh_authorized_keys:
+          - "${var.cloudinit_ssh_public_key}"
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        plain_text_passwd: "${var.cloudinit_password}"
+        lock_passwd: false
+      - name: valheim
+        groups:
+          - games
+        shell: /bin/bash
+        create_home: true
+        home: /home/valheim
+        system: false
+      - name: ansible
+        gecos: Ansible User
+        groups: users,admin,wheel
+        sudo: "ALL=(ALL) NOPASSWD:ALL"
+        shell: /bin/bash
+        lock_passwd: true
+        ssh_authorized_keys:
+          - "${var.cloudinit_ssh_public_key}"
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - net-tools
+      - curl
+    runcmd:
+      - systemctl enable qemu-guest-agent
+      - systemctl start qemu-guest-agent
+      
+      
+      # Final setup indicator
+      - echo "done" > /tmp/cloud-config.done
+    EOF
+
+    file_name = "chillyfries_cloudinit.yaml"
+  }
+}
+
+resource "cloudflare_dns_record" "chillyfries" {
+  zone_id = var.cloudflare_zone_id
+  name    = "chillyfries.cosmos.cboxlab.com"
+  type    = "A"
+  comment = "Chillyfries valheim server"
+  content = proxmox_virtual_environment_vm.chillyfries.ipv4_addresses[1][0]
+  proxied = false
+  ttl     = 300
 }
 
 module "chillyfries_s3" {

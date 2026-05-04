@@ -15,7 +15,7 @@ resource "proxmox_virtual_environment_vm" "windrose" {
   }
 
   memory {
-    dedicated = 16384
+    dedicated = 8192
   }
 
   efi_disk {
