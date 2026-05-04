@@ -1,4 +1,4 @@
-resource "proxmox_virtual_environment_acme_account" "jd-jupiter" {
+resource "proxmox_acme_account" "jd-jupiter" {
   provider  = proxmox-bpg.jupiter-bpg
   name      = "jd-mars"
   contact   = var.acme_email
@@ -6,7 +6,7 @@ resource "proxmox_virtual_environment_acme_account" "jd-jupiter" {
   tos       = "https://letsencrypt.org/documents/LE-SA-v1.5-February-24-2025.pdf"
 }
 
-resource "proxmox_virtual_environment_acme_dns_plugin" "jd-cloudflare-jupiter" {
+resource "proxmox_acme_dns_plugin" "jd-cloudflare-jupiter" {
   provider = proxmox-bpg.jupiter-bpg
   plugin   = "cloudflare"
   api      = "cf"

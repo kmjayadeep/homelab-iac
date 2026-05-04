@@ -1,4 +1,4 @@
-resource "proxmox_virtual_environment_acme_account" "jd-pluto" {
+resource "proxmox_acme_account" "jd-pluto" {
   provider  = proxmox-bpg.pluto-bpg
   name      = "jd-pluto"
   contact   = var.acme_email
@@ -6,7 +6,7 @@ resource "proxmox_virtual_environment_acme_account" "jd-pluto" {
   tos       = "https://letsencrypt.org/documents/LE-SA-v1.5-February-24-2025.pdf"
 }
 
-resource "proxmox_virtual_environment_acme_dns_plugin" "jd-cloudflare-pluto" {
+resource "proxmox_acme_dns_plugin" "jd-cloudflare-pluto" {
   provider = proxmox-bpg.pluto-bpg
   plugin   = "cloudflare"
   api      = "cf"

@@ -1,4 +1,4 @@
-data "proxmox_virtual_environment_file" "haos_img" {
+data "proxmox_file" "haos_img" {
   provider = proxmox-bpg.jupiter-bpg
 
   node_name    = "jupiter"
@@ -74,7 +74,7 @@ resource "proxmox_virtual_environment_vm" "home-assistant" {
 
   disk {
     datastore_id = "local-lvm"
-    import_from  = data.proxmox_virtual_environment_file.haos_img.id
+    import_from  = data.proxmox_file.haos_img.id
     interface    = "virtio0"
     size         = 100
   }

@@ -1,4 +1,4 @@
-resource "proxmox_virtual_environment_acme_account" "jd-mars" {
+resource "proxmox_acme_account" "jd-mars" {
   provider  = proxmox-bpg.mars-bpg
   name      = "jd-mars"
   contact   = var.acme_email
@@ -6,7 +6,7 @@ resource "proxmox_virtual_environment_acme_account" "jd-mars" {
   tos       = "https://letsencrypt.org/documents/LE-SA-v1.5-February-24-2025.pdf"
 }
 
-resource "proxmox_virtual_environment_acme_dns_plugin" "jd-cloudflare" {
+resource "proxmox_acme_dns_plugin" "jd-cloudflare" {
   provider = proxmox-bpg.mars-bpg
   plugin   = "cloudflare"
   api      = "cf"
