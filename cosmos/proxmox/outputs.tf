@@ -43,6 +43,11 @@ output "valheim_rivers_ip" {
   description = "IP address of the Valheim Rivers server"
 }
 
+output "windrose_ip" {
+  value       = proxmox_virtual_environment_vm.windrose.ipv4_addresses[1][0]
+  description = "IP address of the Windrose dedicated server"
+}
+
 output "valheim_rivers_bucket_access_key" {
   value = module.valheim_rivers_s3.access_key
 }

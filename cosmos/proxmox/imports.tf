@@ -15,10 +15,6 @@ import {
   id = "mars/qemu/207"
 }
 import {
-  to = module.fireland.proxmox_vm_qemu.this
-  id = "mars/qemu/201"
-}
-import {
   to = module.jd-vm.proxmox_vm_qemu.this
   id = "mars/qemu/204"
 }
