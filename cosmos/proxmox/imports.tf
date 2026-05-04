@@ -18,11 +18,3 @@ import {
   to = module.jd-vm.proxmox_vm_qemu.this
   id = "mars/qemu/204"
 }
-import {
-  to = module.odin.proxmox_vm_qemu.this
-  id = "mars/qemu/205"
-}
-import {
-  to = module.valkyrie.proxmox_vm_qemu.this
-  id = "mars/qemu/209"
-}

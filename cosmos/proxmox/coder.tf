@@ -16,5 +16,5 @@ module "coder" {
   storage     = "ssd-lvm"
   disk_size   = "100G"
   tags        = "coder,development"
-  vm_state    = "running"
+  vm_state    = "stopped"
 }
