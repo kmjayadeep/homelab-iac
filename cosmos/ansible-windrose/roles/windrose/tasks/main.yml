@@ -1,0 +1,9 @@
+---
+- name: Include prerequisite tasks
+  ansible.builtin.include_tasks: prerequisites.yml
+
+- name: Include Windrose compose tasks
+  ansible.builtin.include_tasks: windrose.yml
+
+- name: Include firewall configuration tasks
+  ansible.builtin.include_tasks: firewall.yml

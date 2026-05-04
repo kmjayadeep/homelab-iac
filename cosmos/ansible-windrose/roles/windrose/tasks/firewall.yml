@@ -1,0 +1,31 @@
+---
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+    policy: deny
+
+- name: Allow SSH
+  community.general.ufw:
+    rule: allow
+    port: "22"
+    proto: tcp
+
+- name: Allow Windrose UDP ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: udp
+  loop:
+    - "{{ windrose_port }}"
+    - "{{ windrose_query_port }}"
+
+- name: Allow Windrose direct connection TCP port
+  community.general.ufw:
+    rule: allow
+    port: "{{ windrose_direct_connection_server_port }}"
+    proto: tcp
+  when: windrose_use_direct_connection | bool
+
+- name: Reload UFW
+  community.general.ufw:
+    state: reloaded

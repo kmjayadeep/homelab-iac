@@ -1,0 +1,62 @@
+---
+# Shared Windrose server configuration
+windrose_user: windrose
+windrose_group: windrose
+windrose_home: /home/windrose
+windrose_project_dir: /home/windrose/windrose-server
+windrose_authorized_keys:
+  - "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_rsa.pub') }}"
+
+# Container image
+windrose_image_repository: ghcr.io/uberdudepl/windrose-dedicated-server-docker
+windrose_image_tag: v1.6.2
+windrose_container_name: windrose
+windrose_container_hostname: localhost
+windrose_seccomp_unconfined: true
+
+# Steam / game
+windrose_app_id: "4129620"
+windrose_steam_login: anonymous
+windrose_steam_pass: ""
+windrose_update_on_start: true
+windrose_generate_settings: true
+
+# ServerDescription.json patching
+windrose_invite_code: ""
+windrose_server_name: Cosmos Windrose Server
+windrose_server_note: Friends and family co-op server
+windrose_server_password: ""
+windrose_max_players: 4
+
+# Networking
+windrose_port: 7777
+windrose_query_port: 7778
+windrose_multihome: 0.0.0.0
+windrose_p2p_proxy_address: 127.0.0.1
+
+# Direct connection is optional. Invite-code based joining is the default.
+windrose_use_direct_connection: false
+windrose_direct_connection_server_port: 7777
+windrose_direct_connection_proxy_address: 0.0.0.0
+windrose_user_selected_region: ""
+
+# Host permissions for the container process. Leave empty to use the actual
+# UID/GID assigned to the windrose user on the target host.
+windrose_puid: ""
+windrose_pgid: ""
+
+# Backup helper settings used by the upstream image scripts.
+windrose_backup_dir: backups
+windrose_backup_retention_days: 7
+windrose_backup_scope: full
+windrose_backup_format: tar.gz
+windrose_backup_notify_success: false
+windrose_backup_notify_fail: true
+windrose_backup_discord_upload: false
+
+# Notifications
+windrose_notify_provider: auto
+windrose_discord_webhook_url: ""
+windrose_gotify_url: ""
+windrose_gotify_token: ""
+windrose_gotify_priority: 5

@@ -1,0 +1,5 @@
+---
+- name: restart windrose
+  community.docker.docker_compose_v2:
+    project_src: "{{ windrose_project_dir }}"
+    state: restarted

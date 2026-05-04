@@ -1,0 +1,119 @@
+---
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - python3-docker
+      - ufw
+    state: present
+    update_cache: true
+
+- name: Remove conflicting Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose
+      - docker-compose-v2
+      - docker-doc
+      - podman-docker
+      - containerd
+      - runc
+    state: absent
+    purge: true
+
+- name: Ensure apt keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Set Docker repository parameters
+  ansible.builtin.set_fact:
+    windrose_docker_repo_os: "{{ 'ubuntu' if ansible_distribution == 'Ubuntu' else 'debian' if ansible_distribution == 'Debian' else '' }}"
+
+- name: Ensure Docker repository OS is supported
+  ansible.builtin.assert:
+    that:
+      - windrose_docker_repo_os | length > 0
+    fail_msg: "Unsupported distribution for Docker apt repository: {{ ansible_distribution }}"
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ windrose_docker_repo_os }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ windrose_docker_repo_os }} {{ ansible_distribution_release }} stable
+    filename: docker
+    state: present
+
+- name: Install Docker Engine packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Ensure Docker is running
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Ensure windrose group exists
+  ansible.builtin.group:
+    name: "{{ windrose_group }}"
+    state: present
+
+- name: Ensure windrose user exists
+  ansible.builtin.user:
+    name: "{{ windrose_user }}"
+    group: "{{ windrose_group }}"
+    groups: docker
+    append: true
+    home: "{{ windrose_home }}"
+    shell: /bin/bash
+    state: present
+
+- name: Add authorized SSH keys for windrose user
+  ansible.builtin.authorized_key:
+    user: "{{ windrose_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ windrose_authorized_keys }}"
+  when: windrose_authorized_keys | default([]) | length > 0
+
+- name: Get windrose user UID
+  ansible.builtin.command: "id -u {{ windrose_user }}"
+  register: windrose_user_uid
+  changed_when: false
+
+- name: Get windrose group GID
+  ansible.builtin.command: "id -g {{ windrose_user }}"
+  register: windrose_user_gid
+  changed_when: false
+
+- name: Set Windrose container permission facts
+  ansible.builtin.set_fact:
+    windrose_container_puid: "{{ windrose_puid if (windrose_puid | string | length > 0) else windrose_user_uid.stdout }}"
+    windrose_container_pgid: "{{ windrose_pgid if (windrose_pgid | string | length > 0) else windrose_user_gid.stdout }}"
+
+- name: Check whether IPv6 is disabled at kernel boot
+  ansible.builtin.command: cat /proc/cmdline
+  register: windrose_kernel_cmdline
+  changed_when: false
+
+- name: Warn when IPv6 is disabled at kernel boot
+  ansible.builtin.debug:
+    msg: "Windrose can crashloop when the host boots with ipv6.disable=1. Remove that kernel flag and reboot before running the server."
+  when: "'ipv6.disable=1' in windrose_kernel_cmdline.stdout"

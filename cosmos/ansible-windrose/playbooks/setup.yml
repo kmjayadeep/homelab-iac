@@ -1,0 +1,9 @@
+---
+- name: Setup Windrose Server
+  hosts: windrose_servers
+  become: true
+
+  tasks:
+    - name: Include windrose role
+      ansible.builtin.include_role:
+        name: windrose

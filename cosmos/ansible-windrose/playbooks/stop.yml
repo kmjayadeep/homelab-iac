@@ -1,0 +1,10 @@
+---
+- name: Stop Windrose Server
+  hosts: windrose_servers
+  become: true
+
+  tasks:
+    - name: Stop Windrose compose project
+      community.docker.docker_compose_v2:
+        project_src: "{{ windrose_project_dir }}"
+        state: stopped

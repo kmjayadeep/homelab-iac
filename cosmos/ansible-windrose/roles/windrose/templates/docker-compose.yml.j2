@@ -1,0 +1,59 @@
+services:
+  windrose:
+    image: ${IMAGE_REPOSITORY:-{{ windrose_image_repository }}}:${IMAGE_TAG:-{{ windrose_image_tag }}}
+    pull_policy: always
+    container_name: ${CONTAINER_NAME:-{{ windrose_container_name }}}
+    hostname: ${HOSTNAME:-{{ windrose_container_hostname }}}
+    restart: unless-stopped
+    stop_grace_period: 90s
+    network_mode: host
+{% if windrose_seccomp_unconfined | bool %}
+    security_opt:
+      - seccomp=unconfined
+{% endif %}
+    env_file:
+      - .env
+    environment:
+      PUID: ${PUID:-{{ windrose_container_puid }}}
+      PGID: ${PGID:-{{ windrose_container_pgid }}}
+      WINDROSE_APP_ID: ${WINDROSE_APP_ID:-{{ windrose_app_id }}}
+      STEAM_LOGIN: ${STEAM_LOGIN:-anonymous}
+      STEAM_PASS: ${STEAM_PASS:-}
+      UPDATE_ON_START: ${UPDATE_ON_START:-true}
+      GENERATE_SETTINGS: ${GENERATE_SETTINGS:-true}
+      INVITE_CODE: ${INVITE_CODE:-}
+      SERVER_NAME: ${SERVER_NAME:-}
+      SERVER_NOTE: ${SERVER_NOTE:-}
+      SERVER_PASSWORD: ${SERVER_PASSWORD:-}
+      MAX_PLAYERS: ${MAX_PLAYERS:-4}
+      P2P_PROXY_ADDRESS: ${P2P_PROXY_ADDRESS:-127.0.0.1}
+      MULTIHOME: ${MULTIHOME:-0.0.0.0}
+      WINEARCH: ${WINEARCH:-win64}
+      WINEPREFIX: ${WINEPREFIX:-/home/steam/.wine}
+      WINEDEBUG: -all
+      DISPLAY: :99
+      PORT: ${PORT:-7777}
+      QUERYPORT: ${QUERYPORT:-7778}
+      USE_DIRECT_CONNECTION: ${USE_DIRECT_CONNECTION:-false}
+      DIRECT_CONNECTION_SERVER_PORT: ${DIRECT_CONNECTION_SERVER_PORT:-7777}
+      DIRECT_CONNECTION_PROXY_ADDRESS: ${DIRECT_CONNECTION_PROXY_ADDRESS:-0.0.0.0}
+      USER_SELECTED_REGION: ${USER_SELECTED_REGION:-}
+      NOTIFY_PROVIDER: ${NOTIFY_PROVIDER:-auto}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      GOTIFY_URL: ${GOTIFY_URL:-}
+      GOTIFY_TOKEN: ${GOTIFY_TOKEN:-}
+      GOTIFY_PRIORITY: ${GOTIFY_PRIORITY:-5}
+    volumes:
+      - ./data:/data
+      - ./steam-home:/home/steam
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/windrose/scripts/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
