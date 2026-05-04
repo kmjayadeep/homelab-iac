@@ -105,3 +105,9 @@ resource "cloudflare_dns_record" "windrose" {
   proxied = false
   ttl     = 300
 }
+
+module "windrose_s3" {
+  source      = "../../terraform-modules/minio_s3_bucket"
+  name        = "windrose-backup"
+  create_user = true
+}

@@ -48,6 +48,15 @@ output "windrose_ip" {
   description = "IP address of the Windrose dedicated server"
 }
 
+output "windrose_bucket_access_key" {
+  value = module.windrose_s3.access_key
+}
+
+output "windrose_bucket_secret_key" {
+  value     = module.windrose_s3.secret_key
+  sensitive = true
+}
+
 output "valheim_rivers_bucket_access_key" {
   value = module.valheim_rivers_s3.access_key
 }
