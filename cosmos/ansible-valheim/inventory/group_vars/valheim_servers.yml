@@ -1,7 +1,5 @@
 ---
-# Valheim Server Configuration
-valheim_server_name: "valheim-rivers"
-valheim_world_name: "Rivers"
+# Shared Valheim Server Configuration
 valheim_server_password: "12345"
 
 # Server settings
@@ -24,6 +22,8 @@ valheim_app_id: "896660"  # Valheim Dedicated Server App ID
 steam_user: "valheim"
 steam_group: "valheim"
 steam_home: "/home/valheim"
+valheim_authorized_keys:
+  - "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_rsa.pub') }}"
 
 # Server mods (optional, requires manual setup)
 valheim_mods_enabled: false
