@@ -1,4 +1,4 @@
-resource "proxmox_virtual_environment_download_file" "latest_debian_13_qcow2_img" {
+resource "proxmox_download_file" "latest_debian_13_qcow2_img" {
   provider = proxmox-bpg.mars-bpg
 
   url = "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"

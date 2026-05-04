@@ -24,7 +24,7 @@ resource "proxmox_virtual_environment_vm" "titania-master" {
 
   disk {
     datastore_id = "local-lvm"
-    import_from  = proxmox_virtual_environment_download_file.latest_debian_13_qcow2_img.id
+    import_from  = proxmox_download_file.latest_debian_13_qcow2_img.id
     interface    = "virtio0"
     size         = 300
   }
