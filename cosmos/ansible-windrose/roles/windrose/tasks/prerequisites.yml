@@ -31,13 +31,13 @@
 
 - name: Set Docker repository parameters
   ansible.builtin.set_fact:
-    windrose_docker_repo_os: "{{ 'ubuntu' if ansible_distribution == 'Ubuntu' else 'debian' if ansible_distribution == 'Debian' else '' }}"
+    windrose_docker_repo_os: "{{ 'ubuntu' if ansible_facts['distribution'] == 'Ubuntu' else 'debian' if ansible_facts['distribution'] == 'Debian' else '' }}"
 
 - name: Ensure Docker repository OS is supported
   ansible.builtin.assert:
     that:
       - windrose_docker_repo_os | length > 0
-    fail_msg: "Unsupported distribution for Docker apt repository: {{ ansible_distribution }}"
+    fail_msg: "Unsupported distribution for Docker apt repository: {{ ansible_facts['distribution'] }}"
 
 - name: Download Docker GPG key
   ansible.builtin.get_url:
@@ -48,8 +48,8 @@
 - name: Add Docker repository
   ansible.builtin.apt_repository:
     repo: >-
-      deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }} signed-by=/etc/apt/keyrings/docker.asc]
-      https://download.docker.com/linux/{{ windrose_docker_repo_os }} {{ ansible_distribution_release }} stable
+      deb [arch={{ 'amd64' if ansible_facts['architecture'] == 'x86_64' else 'arm64' }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ windrose_docker_repo_os }} {{ ansible_facts['distribution_release'] }} stable
     filename: docker
     state: present
 

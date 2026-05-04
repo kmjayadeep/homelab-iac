@@ -1,0 +1,16 @@
+[Unit]
+Description=Backup Windrose data using restic
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User={{ windrose_user }}
+ExecStart=/usr/local/bin/backup-windrose.sh
+
+WorkingDirectory={{ windrose_home }}
+
+IOSchedulingClass=2
+IOSchedulingPriority=6
+CPUSchedulingPolicy=2
+CPUSchedulingPriority=19

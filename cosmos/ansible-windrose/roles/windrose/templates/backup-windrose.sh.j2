@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -e
+
+source /etc/restic-env
+
+if [ -z "$RESTIC_REPOSITORY" ]; then
+    echo "ERROR: RESTIC_REPOSITORY not set in /etc/restic-env"
+    exit 1
+fi
+
+if [ -z "$RESTIC_PASSWORD" ]; then
+    echo "ERROR: RESTIC_PASSWORD not set in /etc/restic-env"
+    exit 1
+fi
+
+if ! restic snapshots > /dev/null 2>&1; then
+    echo "Initializing restic repository..."
+    restic init
+fi
+
+echo "Starting Windrose backup..."
+
+{% for path in backup_paths %}
+if [ -d "{{ path }}" ]; then
+    echo "Backing up {{ path }}..."
+    restic backup "{{ path }}" --retry-lock 10m
+else
+    echo "Warning: {{ path }} does not exist, skipping..."
+fi
+{% endfor %}
+
+echo "Cleaning up old backups..."
+restic forget \
+    --keep-last {{ backup_retention.keep_last | default(10) }} \
+    --keep-daily {{ backup_retention.keep_daily | default(10) }} \
+    --keep-monthly {{ backup_retention.keep_monthly | default(12) }} \
+    --prune
+
+echo "Listing current snapshots..."
+restic snapshots
+
+if [ -n "$UPTIME_URL" ]; then
+    if docker ps --format '{{ "{{" }}.Names{{ "}}" }}' | grep -qx '{{ windrose_container_name }}'; then
+        echo "Posting to uptime service..."
+        curl -fsS -m 10 --retry 5 "$UPTIME_URL" > /dev/null
+        echo "Backup completed successfully and posted uptime status"
+    else
+        echo "Windrose container is not running, skipping uptime ping"
+    fi
+else
+    echo "Backup completed successfully (no uptime URL configured)"
+fi

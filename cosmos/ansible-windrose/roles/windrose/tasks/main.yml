@@ -7,3 +7,7 @@
 
 - name: Include firewall configuration tasks
   ansible.builtin.include_tasks: firewall.yml
+
+- name: Include backup configuration tasks
+  ansible.builtin.include_tasks: backup.yml
+  when: backup_enabled | default(false)

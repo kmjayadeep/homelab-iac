@@ -60,6 +60,49 @@ Persistent data is stored in:
 /home/windrose/windrose-server/steam-home
 ```
 
+## Restic Backups
+
+Backups are enabled by default with a systemd timer matching the Valheim setup. The default backup path is the Windrose `RocksDB_v2` profile data directory, which includes world folders for the current and future game versions:
+
+```text
+/home/windrose/windrose-server/data/R5/Saved/SaveProfiles/Default/RocksDB_v2
+```
+
+Set the restic credentials in Ansible vault or host/group vars before running setup:
+
+```yaml
+restic_repository: s3:https://s3.example.com/bucket/path
+restic_password: your-restic-password
+restic_s3_access_key: your-access-key
+restic_s3_secret_key: your-secret-key
+uptime_url: ""
+```
+
+This project loads `inventory/vault.yml` from `playbooks/setup.yml` and `playbooks/backup.yml`. The vault password file path is configured in `ansible.cfg` as `.ansible_vault_pass`, which is intentionally ignored by git.
+
+Useful commands:
+
+```bash
+# Install or refresh restic service/timer files
+ansible-playbook playbooks/backup.yml -e backup_operation=setup
+
+# Run a manual backup
+ansible-playbook playbooks/backup.yml -e backup_operation=backup
+
+# List snapshots
+ansible-playbook playbooks/backup.yml -e backup_operation=list
+
+# Restore interactively
+ansible-playbook playbooks/backup.yml -e backup_operation=restore
+```
+
+On the server, the timer and service are named:
+
+```text
+backup-windrose.timer
+backup-windrose.service
+```
+
 ## Usage
 
 Start:
@@ -84,6 +127,12 @@ Update image and recreate:
 
 ```bash
 ansible-playbook playbooks/update.yml
+```
+
+Run backup operations:
+
+```bash
+ansible-playbook playbooks/backup.yml
 ```
 
 View logs:
@@ -131,7 +180,7 @@ ssh windrose \
 Copy your local world folder to the server:
 
 ```bash
-rsync -avh --progress \
+scp -r \
   /home/jayadeep/.steam/root/steamapps/compatdata/3041230/pfx/drive_c/users/steamuser/AppData/Local/R5/Saved/SaveProfiles/76561198379968698/RocksDB/0.10.0/Worlds/<WorldIslandId>/ \
   windrose:/tmp/<WorldIslandId>/
 ```
@@ -141,7 +190,7 @@ Move the world into the persistent data directory:
 ```bash
 ssh windrose
 mkdir -p /home/windrose/windrose-server/data/R5/Saved/SaveProfiles/Default/RocksDB_v2/0.10.0/Worlds/<WorldIslandId>
-rsync -avh /tmp/<WorldIslandId>/ /home/windrose/windrose-server/data/R5/Saved/SaveProfiles/Default/RocksDB_v2/0.10.0/Worlds/<WorldIslandId>/
+cp -a /tmp/<WorldIslandId>/. /home/windrose/windrose-server/data/R5/Saved/SaveProfiles/Default/RocksDB_v2/0.10.0/Worlds/<WorldIslandId>/
 ```
 
 Edit `/home/windrose/windrose-server/data/R5/ServerDescription.json` and set the persistent world ID to the copied folder name:

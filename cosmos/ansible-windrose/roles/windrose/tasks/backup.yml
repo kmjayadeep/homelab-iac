@@ -1,0 +1,76 @@
+---
+- name: Verify restic credentials are configured
+  ansible.builtin.assert:
+    that:
+      - restic_repository is defined
+      - restic_repository | length > 0
+      - restic_password is defined
+      - restic_password | length > 0
+      - restic_s3_access_key is defined
+      - restic_s3_access_key | length > 0
+      - restic_s3_secret_key is defined
+      - restic_s3_secret_key | length > 0
+    fail_msg: "Restic credentials are missing. Set restic_repository, restic_password, restic_s3_access_key, and restic_s3_secret_key in inventory/vault.yml."
+    quiet: true
+
+- name: Install restic backup tool
+  ansible.builtin.apt:
+    name: restic
+    state: present
+    update_cache: true
+
+- name: Create restic environment file
+  ansible.builtin.template:
+    src: restic-env.j2
+    dest: /etc/restic-env
+    owner: "{{ windrose_user }}"
+    group: "{{ windrose_group }}"
+    mode: "0600"
+
+- name: Create backup script
+  ansible.builtin.template:
+    src: backup-windrose.sh.j2
+    dest: /usr/local/bin/backup-windrose.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create systemd service for Windrose backup
+  ansible.builtin.template:
+    src: backup-windrose.service.j2
+    dest: /etc/systemd/system/backup-windrose.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload systemd
+
+- name: Create systemd timer for Windrose backup
+  ansible.builtin.template:
+    src: backup-windrose.timer.j2
+    dest: /etc/systemd/system/backup-windrose.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload systemd
+
+- name: Enable and start backup timer
+  ansible.builtin.systemd:
+    name: backup-windrose.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Display backup configuration
+  ansible.builtin.debug:
+    msg:
+      - "Backup configuration:"
+      - "  Enabled: {{ backup_enabled | default(false) }}"
+      - "  Schedule: {{ backup_schedule | default('hourly') }}"
+      - "  Backup paths: {{ backup_paths | default([]) }}"
+      - "  Retention: last {{ backup_retention.keep_last | default(10) }}, daily {{ backup_retention.keep_daily | default(10) }}, monthly {{ backup_retention.keep_monthly | default(12) }}"
+      - "  Repository: {{ restic_repository | default('NOT SET') }}"
+      - ""
+      - "Manual backup commands:"
+      - "  Test backup: sudo systemctl start backup-windrose.service"
+      - "  Check backup logs: sudo journalctl -u backup-windrose.service -f"
+      - "  List snapshots: sudo -u {{ windrose_user }} bash -lc 'source /etc/restic-env && restic snapshots'"

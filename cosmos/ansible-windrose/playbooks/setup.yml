@@ -2,6 +2,8 @@
 - name: Setup Windrose Server
   hosts: windrose_servers
   become: true
+  vars_files:
+    - ../inventory/vault.yml
 
   tasks:
     - name: Include windrose role

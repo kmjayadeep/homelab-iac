@@ -1,4 +1,8 @@
 ---
+- name: reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
 - name: restart windrose
   community.docker.docker_compose_v2:
     project_src: "{{ windrose_project_dir }}"

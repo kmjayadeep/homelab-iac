@@ -54,6 +54,17 @@ windrose_backup_notify_success: false
 windrose_backup_notify_fail: true
 windrose_backup_discord_upload: false
 
+# Restic backup configuration. Repository credentials should come from vault or
+# host/group vars and must not be committed in plain text.
+backup_enabled: true
+backup_schedule: hourly
+backup_retention:
+  keep_last: 10
+  keep_daily: 10
+  keep_monthly: 12
+backup_paths:
+  - "{{ windrose_project_dir }}/data/R5/Saved/SaveProfiles/Default/RocksDB_v2"
+
 # Notifications
 windrose_notify_provider: auto
 windrose_discord_webhook_url: ""
