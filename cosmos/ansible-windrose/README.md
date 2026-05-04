@@ -4,6 +4,8 @@ This Ansible project deploys a Windrose dedicated server on `windrose.cosmos.cbo
 
 Windrose does not currently provide a native Linux server. This project uses the community Wine-in-Docker approach and the `ghcr.io/uberdudepl/windrose-dedicated-server-docker` image because it provides pinned releases, health checks, persistent volumes, diagnostics, backups, and helper-oriented configuration.
 
+Upstream image and documentation: https://github.com/UberDudePL/windrose-dedicated-server-docker
+
 ## Prerequisites
 
 - Ansible installed locally
