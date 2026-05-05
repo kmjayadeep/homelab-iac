@@ -86,10 +86,11 @@
             prompt: "Enter the snapshot ID to restore from (or 'latest' for most recent)"
           register: snapshot_choice
 
-        - name: Stop Windrose compose project before restore
-          community.docker.docker_compose_v2:
-            project_src: "{{ windrose_project_dir }}"
-            state: stopped
+        - name: Stop Windrose server before restore
+          ansible.builtin.command:
+            cmd: ./windrose stop
+            chdir: "{{ windrose_project_dir }}"
+          become_user: "{{ windrose_user }}"
 
         - name: Create backup of current configured paths
           ansible.builtin.shell: |
@@ -130,10 +131,11 @@
             state: absent
           become_user: "{{ windrose_user }}"
 
-        - name: Start Windrose compose project after restore
-          community.docker.docker_compose_v2:
-            project_src: "{{ windrose_project_dir }}"
-            state: present
+        - name: Start Windrose server after restore
+          ansible.builtin.command:
+            cmd: ./windrose start
+            chdir: "{{ windrose_project_dir }}"
+          become_user: "{{ windrose_user }}"
 
         - name: Display restore completion
           ansible.builtin.debug:
