@@ -4,12 +4,8 @@
   become: true
 
   tasks:
-    - name: Pull Windrose image
-      community.docker.docker_compose_v2_pull:
-        project_src: "{{ windrose_project_dir }}"
-
-    - name: Recreate Windrose compose project
-      community.docker.docker_compose_v2:
-        project_src: "{{ windrose_project_dir }}"
-        state: present
-        recreate: always
+    - name: Update Windrose server with helper CLI
+      ansible.builtin.command:
+        cmd: ./windrose update
+        chdir: "{{ windrose_project_dir }}"
+      become_user: "{{ windrose_user }}"

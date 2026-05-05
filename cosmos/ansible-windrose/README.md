@@ -29,6 +29,13 @@ Or run:
 ./deploy.sh
 ```
 
+Setup installs Docker as a host prerequisite, writes the Windrose `.env` and compose files, installs the upstream helper CLI, then starts the game through:
+
+```bash
+cd /home/windrose/windrose-server
+./windrose start
+```
+
 ## Configuration
 
 Edit `inventory/group_vars/windrose_servers.yml` before deploying.
@@ -38,6 +45,7 @@ Key variables:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `windrose_image_tag` | `v1.6.2` | Docker image tag to deploy |
+| `windrose_helper_ref` | `v1.6.2` | Git ref used to install upstream `./windrose` helper scripts |
 | `windrose_seccomp_unconfined` | `true` | Allows Wine to initialize when Docker's default seccomp profile blocks `AF_ALG` sockets |
 | `windrose_server_name` | `Cosmos Windrose Server` | Server name patched into `ServerDescription.json` |
 | `windrose_invite_code` | empty | Optional invite code. Empty lets the server generate one |
@@ -51,6 +59,13 @@ The server files live on the host under:
 
 ```text
 /home/windrose/windrose-server
+```
+
+The upstream helper CLI is installed into the same directory:
+
+```text
+/home/windrose/windrose-server/windrose
+/home/windrose/windrose-server/serverctl.sh
 ```
 
 Persistent data is stored in:
@@ -138,8 +153,19 @@ ansible-playbook playbooks/backup.yml
 View logs:
 
 ```bash
-ssh ansible@windrose.cosmos.cboxlab.com
-sudo docker compose --project-directory /home/windrose/windrose-server logs -f windrose
+ssh windrose
+cd /home/windrose/windrose-server
+./windrose logs
+```
+
+Check status and diagnostics:
+
+```bash
+ssh windrose
+cd /home/windrose/windrose-server
+./windrose status
+./windrose doctor
+./windrose diagnostics
 ```
 
 Players normally join with the generated invite code from:
@@ -150,7 +176,7 @@ Players normally join with the generated invite code from:
 
 ## Import a Local World
 
-Use a stop, backup, copy, edit, start workflow. Replace `<WorldIslandId>` with the folder name of the world you want to import.
+Use a backup, stop, copy, validate, switch, start workflow. Replace `<WorldIslandId>` with the folder name of the world you want to import.
 
 Local Steam worlds live under:
 
@@ -180,28 +206,33 @@ ssh windrose \
 Copy your local world folder to the server:
 
 ```bash
+export WORLD_ISLAND_ID=YourWorldIslandIdHere
+ssh windrose "mkdir -p /tmp/$WORLD_ISLAND_ID"
 scp -r \
-  /home/jayadeep/.steam/root/steamapps/compatdata/3041230/pfx/drive_c/users/steamuser/AppData/Local/R5/Saved/SaveProfiles/76561198379968698/RocksDB/0.10.0/Worlds/<WorldIslandId>/ \
-  windrose:/tmp/<WorldIslandId>/
+  /home/jayadeep/.steam/root/steamapps/compatdata/3041230/pfx/drive_c/users/steamuser/AppData/Local/R5/Saved/SaveProfiles/76561198379968698/RocksDB/0.10.0/Worlds/$WORLD_ISLAND_ID/ \
+  windrose:/tmp/$WORLD_ISLAND_ID/
 ```
 
 Move the world into the persistent data directory:
 
 ```bash
 ssh windrose
-mkdir -p /home/windrose/windrose-server/data/R5/Saved/SaveProfiles/Default/RocksDB_v2/0.10.0/Worlds/<WorldIslandId>
-cp -a /tmp/<WorldIslandId>/. /home/windrose/windrose-server/data/R5/Saved/SaveProfiles/Default/RocksDB_v2/0.10.0/Worlds/<WorldIslandId>/
+cd /home/windrose/windrose-server/data/R5/Saved/SaveProfiles/Default/RocksDB_v2/0.10.0/Worlds
+cp /tmp/<WorldIslandId>/<WorldIslandId> . -r
 ```
 
-Edit `/home/windrose/windrose-server/data/R5/ServerDescription.json` and set the persistent world ID to the copied folder name:
+Validate the copied worlds and switch using the upstream helper CLI:
 
-```json
-"ServerDescription_Persistent": {
-  "WorldIslandId": "<WorldIslandId>"
-}
+```bash
+cd /home/windrose/windrose-server
+./windrose worlds
+./windrose worlds-check
+./windrose switch
 ```
 
-Start the server:
+The `switch` command updates `ServerDescription_Persistent.WorldIslandId` for you, and restarts the container if it was already running.
+
+Start the server if it was stopped:
 
 ```bash
 ansible-playbook playbooks/start.yml
@@ -211,7 +242,7 @@ Watch logs while the world loads:
 
 ```bash
 ssh windrose \
-  'docker compose --project-directory /home/windrose/windrose-server logs -f windrose'
+  'cd /home/windrose/windrose-server && ./windrose logs'
 ```
 
 The copied world folder name, `WorldDescription.IslandId` inside that world, and `ServerDescription_Persistent.WorldIslandId` must match exactly.

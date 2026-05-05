@@ -30,21 +30,30 @@
     mode: "0644"
   notify: restart windrose
 
-- name: Pull Windrose image
-  community.docker.docker_compose_v2_pull:
-    project_src: "{{ windrose_project_dir }}"
+- name: Install Windrose helper CLI scripts
+  ansible.builtin.get_url:
+    url: "{{ windrose_helper_repository_raw_url }}/{{ windrose_helper_ref }}/{{ item }}"
+    dest: "{{ windrose_project_dir }}/{{ item }}"
+    owner: "{{ windrose_user }}"
+    group: "{{ windrose_group }}"
+    mode: "0755"
+  loop: "{{ windrose_helper_scripts }}"
 
-- name: Start Windrose compose project
-  community.docker.docker_compose_v2:
-    project_src: "{{ windrose_project_dir }}"
-    state: present
+- name: Start Windrose server with helper CLI
+  ansible.builtin.command:
+    cmd: ./windrose start
+    chdir: "{{ windrose_project_dir }}"
+  become_user: "{{ windrose_user }}"
 
 - name: Display Windrose startup information
   ansible.builtin.debug:
     msg: |
       Windrose is managed from {{ windrose_project_dir }}.
       View logs with:
-        sudo docker compose --project-directory {{ windrose_project_dir }} logs -f windrose
+        cd {{ windrose_project_dir }} && ./windrose logs
+
+      Check status with:
+        cd {{ windrose_project_dir }} && ./windrose status
 
       Players normally join using the invite code in:
         {{ windrose_project_dir }}/data/R5/ServerDescription.json

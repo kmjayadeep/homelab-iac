@@ -13,6 +13,14 @@ windrose_image_tag: v1.6.2
 windrose_container_name: windrose
 windrose_container_hostname: localhost
 windrose_seccomp_unconfined: true
+windrose_helper_repository_raw_url: https://raw.githubusercontent.com/UberDudePL/windrose-dedicated-server-docker
+windrose_helper_ref: "{{ windrose_image_tag }}"
+windrose_helper_scripts:
+  - windrose
+  - serverctl.sh
+  - backup.sh
+  - notify.sh
+  - migrate-folders.sh
 
 # Steam / game
 windrose_app_id: "4129620"

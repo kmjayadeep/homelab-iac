@@ -5,6 +5,7 @@
       - ca-certificates
       - curl
       - gnupg
+      - jq
       - python3-docker
       - ufw
     state: present

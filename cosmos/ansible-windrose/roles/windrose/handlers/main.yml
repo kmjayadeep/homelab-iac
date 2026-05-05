@@ -4,6 +4,7 @@
     daemon_reload: true
 
 - name: restart windrose
-  community.docker.docker_compose_v2:
-    project_src: "{{ windrose_project_dir }}"
-    state: restarted
+  ansible.builtin.command:
+    cmd: ./windrose restart
+    chdir: "{{ windrose_project_dir }}"
+  become_user: "{{ windrose_user }}"

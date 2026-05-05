@@ -4,7 +4,8 @@
   become: true
 
   tasks:
-    - name: Start Windrose compose project
-      community.docker.docker_compose_v2:
-        project_src: "{{ windrose_project_dir }}"
-        state: present
+    - name: Start Windrose server with helper CLI
+      ansible.builtin.command:
+        cmd: ./windrose start
+        chdir: "{{ windrose_project_dir }}"
+      become_user: "{{ windrose_user }}"
