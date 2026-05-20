@@ -1,0 +1,23 @@
+[Unit]
+Description=Hermes Agent Dashboard
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=/home/{{ hermes_user }}/.local/bin/hermes dashboard --port 8642 --no-open
+Environment="PATH=/home/{{ hermes_user }}/.hermes/hermes-agent/venv/bin:/home/{{ hermes_user }}/.hermes/hermes-agent/node_modules/.bin:/home/{{ hermes_user }}/.hermes/node/bin:/home/{{ hermes_user }}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="HOME=/home/{{ hermes_user }}"
+Restart=always
+RestartSec=5
+RestartMaxDelaySec=300
+RestartSteps=5
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

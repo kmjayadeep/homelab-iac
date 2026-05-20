@@ -142,40 +142,56 @@
   ansible.builtin.command: git config --global user.email "{{ hermes_git_user_email }}"
   become_user: "{{ hermes_user }}"
 
-- name: Create Open WebUI directory
+- name: Check for existing Open WebUI compose project
+  ansible.builtin.stat:
+    path: "/home/{{ hermes_user }}/open-webui/docker-compose.yml"
+  register: hermes_openwebui_compose
+
+- name: Stop and remove Open WebUI compose project
+  ansible.builtin.command: docker compose down --remove-orphans --volumes
+  args:
+    chdir: "/home/{{ hermes_user }}/open-webui"
+  when: hermes_openwebui_compose.stat.exists
+  changed_when: true
+
+- name: Remove Open WebUI directory
   ansible.builtin.file:
     path: "/home/{{ hermes_user }}/open-webui"
+    state: absent
+
+- name: Enable linger for hermes user
+  ansible.builtin.command: loginctl enable-linger {{ hermes_user }}
+  changed_when: false
+
+- name: Create hermes user systemd directory
+  ansible.builtin.file:
+    path: "/home/{{ hermes_user }}/.config/systemd/user"
     state: directory
     owner: "{{ hermes_user }}"
     group: "{{ hermes_group }}"
     mode: "0755"
 
-- name: Create Open WebUI docker-compose
-  ansible.builtin.copy:
-    dest: "/home/{{ hermes_user }}/open-webui/docker-compose.yml"
-    content: |
-      services:
-        open-webui:
-          image: ghcr.io/open-webui/open-webui:main
-          ports:
-            - "3000:8080"
-          volumes:
-            - open-webui:/app/backend/data
-          environment:
-            - OPENAI_API_BASE_URL=https://hermes.cosmos.cboxlab.com/v1
-            - OPENAI_API_KEY={{ hermes_api_key }}
-            - CORS_ALLOW_ORIGIN=https://hermes.cosmos.cboxlab.com
-          restart: always
-      volumes:
-        open-webui:
+- name: Deploy hermes dashboard systemd service
+  ansible.builtin.template:
+    src: hermes-dashboard.service.j2
+    dest: "/home/{{ hermes_user }}/.config/systemd/user/{{ hermes_service_name }}.service"
     owner: "{{ hermes_user }}"
     group: "{{ hermes_group }}"
     mode: "0644"
 
-- name: Start Open WebUI via docker compose
-  community.docker.docker_compose_v2:
-    project_src: "/home/{{ hermes_user }}/open-webui"
-    state: present
+- name: Reload hermes user systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
+    scope: user
+  become_user: "{{ hermes_user }}"
+
+- name: Enable and start hermes dashboard service
+  ansible.builtin.systemd:
+    name: "{{ hermes_service_name }}"
+    state: started
+    enabled: true
+    scope: user
+  become_user: "{{ hermes_user }}"
 
 - name: Install Nginx
   ansible.builtin.apt:
@@ -239,6 +255,15 @@
       set -e
       systemctl reload nginx
 
+- name: Deploy dashboard htpasswd file
+  ansible.builtin.copy:
+    src: dashboard-creds
+    dest: /etc/nginx/.htpasswd
+    owner: root
+    group: www-data
+    mode: "0640"
+  notify: Reload Nginx
+
 - name: Configure Nginx for hermes UI
   ansible.builtin.template:
     src: hermes-nginx.conf.j2
@@ -259,20 +284,21 @@
     state: started
     enabled: true
 
-- name: Print manual hermes onboarding steps
+- name: Print post-deployment info
   ansible.builtin.debug:
     msg:
-      - "Hermes prerequisites are installed. Run onboarding manually before starting the service:"
-      - "sudo -i -u {{ hermes_user }}"
-      - "cd ~/open-webui && docker compose up -d"
-      - "curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash"
-      - "source ~/.bashrc"
-      - "hermes model          # Configure your LLM provider"
-      - "hermes config set OPENROUTER_API_KEY your-key"
-      - "hermes config set API_SERVER_ENABLED true"
-      - "hermes config set API_SERVER_KEY {{ hermes_api_key }}"
-      - "hermes doctor"
-      - "systemctl --user daemon-reload"
-      - "systemctl --user enable --now {{ hermes_service_name }}"
+      - "Hermes dashboard is deployed and running."
+      - "Dashboard: https://hermes.cosmos.cboxlab.com"
       - ""
-      - "Open WebUI will be available at https://hermes.cosmos.cboxlab.com after starting."
+      - "Check dashboard service:  sudo -i -u {{ hermes_user }} systemctl --user status {{ hermes_service_name }}"
+      - "Check dashboard logs:    sudo -i -u {{ hermes_user }} journalctl --user -u {{ hermes_service_name }} -f"
+      - ""
+      - "If this is a fresh install, run onboarding first:"
+      - "  sudo -i -u {{ hermes_user }}"
+      - "  curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash"
+      - "  source ~/.bashrc"
+      - "  hermes model          # Configure your LLM provider"
+      - "  hermes config set API_SERVER_ENABLED true"
+      - "  hermes config set API_SERVER_KEY {{ hermes_api_key }}"
+      - "  hermes doctor"
+      - "  systemctl --user restart {{ hermes_service_name }}"
