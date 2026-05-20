@@ -35,6 +35,18 @@
     state: directory
     mode: "0755"
 
+- name: Download mise GPG key
+  ansible.builtin.get_url:
+    url: https://mise.en.dev/gpg-key.pub
+    dest: /etc/apt/keyrings/mise-archive-keyring.asc
+    mode: "0644"
+
+- name: Add mise repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.asc] https://mise.en.dev/deb stable main"
+    filename: mise
+    state: present
+
 - name: Set Docker repository parameters
   ansible.builtin.set_fact:
     hermes_docker_repo_os: "{{ 'ubuntu' if ansible_distribution == 'Ubuntu' else 'debian' if ansible_distribution == 'Debian' else '' }}"
@@ -67,6 +79,12 @@
       - containerd.io
       - docker-buildx-plugin
       - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Install mise
+  ansible.builtin.apt:
+    name: mise
     state: present
     update_cache: true
 
@@ -104,6 +122,17 @@
     key: "{{ item }}"
     state: present
   loop: "{{ hermes_authorized_keys }}"
+
+- name: Activate mise for hermes bash sessions
+  ansible.builtin.lineinfile:
+    path: "/home/{{ hermes_user }}/.bashrc"
+    regexp: '^eval "\$\(mise activate bash\)"$'
+    line: 'eval "$(mise activate bash)"'
+    state: present
+    create: true
+    owner: "{{ hermes_user }}"
+    group: "{{ hermes_group }}"
+    mode: "0644"
 
 - name: Configure git user name for hermes
   ansible.builtin.command: git config --global user.name "{{ hermes_git_user_name }}"
