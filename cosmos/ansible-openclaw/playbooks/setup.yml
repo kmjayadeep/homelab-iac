@@ -1,5 +1,5 @@
 ---
-- name: Setup OpenClaw
-  hosts: openclaw_servers
+- name: Prepare NanoClaw VM
+  hosts: nanoclaw_servers
   roles:
-    - openclaw
+    - nanoclaw

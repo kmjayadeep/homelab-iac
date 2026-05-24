@@ -1,0 +1,62 @@
+---
+- name: Install base packages for NanoClaw quickstart
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - git
+      - gnupg
+      - sudo
+    state: present
+    update_cache: true
+
+- name: Ensure NanoClaw group exists
+  ansible.builtin.group:
+    name: "{{ nanoclaw_group }}"
+    state: present
+
+- name: Ensure Docker group exists for NanoClaw containers
+  ansible.builtin.group:
+    name: docker
+    state: present
+  when: nanoclaw_create_docker_group
+
+- name: Ensure NanoClaw user exists
+  ansible.builtin.user:
+    name: "{{ nanoclaw_user }}"
+    group: "{{ nanoclaw_group }}"
+    groups: "{{ 'docker' if nanoclaw_create_docker_group else omit }}"
+    append: true
+    shell: /bin/bash
+    create_home: true
+
+- name: Install SSH authorized keys for NanoClaw user
+  ansible.builtin.authorized_key:
+    user: "{{ nanoclaw_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ nanoclaw_authorized_keys }}"
+
+- name: Configure git user name for NanoClaw
+  community.general.git_config:
+    name: user.name
+    scope: global
+    value: "{{ nanoclaw_git_user_name }}"
+  become_user: "{{ nanoclaw_user }}"
+
+- name: Configure git user email for NanoClaw
+  community.general.git_config:
+    name: user.email
+    scope: global
+    value: "{{ nanoclaw_git_user_email }}"
+  become_user: "{{ nanoclaw_user }}"
+
+- name: Print NanoClaw quickstart steps
+  ansible.builtin.debug:
+    msg:
+      - "VM prepared for NanoClaw. OpenClaw is no longer installed by Ansible."
+      - "Manual install as {{ nanoclaw_user }}:"
+      - "sudo -i -u {{ nanoclaw_user }}"
+      - "git clone {{ nanoclaw_repo_url }} {{ nanoclaw_checkout_dir }}"
+      - "cd {{ nanoclaw_checkout_dir }}"
+      - "{{ nanoclaw_install_command }}"

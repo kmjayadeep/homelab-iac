@@ -1,6 +1,6 @@
-# OpenClaw Ansible Setup
+# NanoClaw VM Ansible Setup
 
-This Ansible project installs and manages OpenClaw on the `openclaw` VM.
+This Ansible project prepares the fresh `openclaw` VM for the NanoClaw quickstart. It no longer installs OpenClaw, Node.js, Nginx, Certbot, or an OpenClaw systemd service.
 
 ## Prerequisites
 
@@ -8,7 +8,7 @@ This Ansible project installs and manages OpenClaw on the `openclaw` VM.
 - SSH access to `openclaw.cosmos.cboxlab.com`
 - SSH key configured for the `ansible` user
 
-## Installation
+## VM preparation
 
 ### 1. Install Ansible collections
 
@@ -22,37 +22,35 @@ ansible-galaxy collection install -r requirements.yml
 ansible all -m ping
 ```
 
-### 3. Run setup
+### 3. Prepare the VM
 
 ```bash
 ansible-playbook playbooks/setup.yml
 ```
 
-Ensure the environment variables are set (see `.envrc`):
-- `CLOUDFLARE_API_TOKEN`
-- `OPENCLAW_EMAIL`
+The playbook installs basic packages, creates a `nanoclaw` user, adds your SSH key, configures git, and prints the manual NanoClaw quickstart commands.
 
-## Manual onboarding (required)
+Optional environment variable:
 
-OpenClaw onboarding is manual by design:
+- `NANOCLAW_EMAIL` - git email for the `nanoclaw` user. Defaults to `nanoclaw@localhost`.
+
+## Manual NanoClaw install
+
+Run the upstream quickstart manually on the VM:
 
 ```bash
 ssh ansible@openclaw.cosmos.cboxlab.com
-sudo -i -u openclaw
-openclaw onboard --install-daemon
+sudo -i -u nanoclaw
+git clone https://github.com/nanocoai/nanoclaw.git nanoclaw-v2
+cd nanoclaw-v2
+bash nanoclaw.sh
 ```
 
-## Dashboard via Nginx
-
-The playbook installs Nginx and proxies the OpenClaw dashboard.
-
-```bash
-https://openclaw.cosmos.cboxlab.com
-```
-
-To access the dashboard, run `openclaw dashboard` on the VM to generate a token, then use that token when opening the URL above.
+`nanoclaw.sh` handles NanoClaw setup and can install Node, pnpm, and Docker if missing.
 
 ## Service management
+
+NanoClaw is managed by its own installer/tooling. The old OpenClaw user service playbooks have been replaced with guidance-only notices:
 
 ```bash
 ansible-playbook playbooks/start.yml
@@ -60,30 +58,20 @@ ansible-playbook playbooks/stop.yml
 ansible-playbook playbooks/restart.yml
 ```
 
-## Update OpenClaw
+## Update NanoClaw checkout
+
+If the repo has already been cloned, this pulls the latest changes as the `nanoclaw` user:
 
 ```bash
 ansible-playbook playbooks/update.yml
 ```
 
-This runs:
-- `npm install -g openclaw@latest`
-- `openclaw doctor`
-- service restart
-
-## Logs and status
-
-```bash
-ssh ansible@openclaw.cosmos.cboxlab.com
-sudo -i -u openclaw
-systemctl --user status openclaw-gateway
-journalctl --user -u openclaw-gateway -f
-```
+Run any NanoClaw installer or migration steps manually afterward.
 
 ## Configuration
 
-See `inventory/group_vars/openclaw_servers.yml` for tunables like:
-- OpenClaw user and service name
-- Node.js version
-- OpenClaw npm package/version
-- Git user name/email for the openclaw user
+See `inventory/group_vars/nanoclaw_servers.yml` for tunables like:
+
+- NanoClaw user and group
+- NanoClaw repo URL and checkout path
+- Git user name/email for the `nanoclaw` user

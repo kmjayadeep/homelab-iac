@@ -1,10 +1,9 @@
 ---
-- name: Restart OpenClaw service
-  hosts: openclaw_servers
+- name: NanoClaw restart notice
+  hosts: nanoclaw_servers
   tasks:
-    - name: Restart OpenClaw
-      ansible.builtin.systemd:
-        name: "{{ openclaw_service_name }}"
-        state: restarted
-        scope: user
-      become_user: "{{ openclaw_user }}"
+    - name: Show manual NanoClaw restart guidance
+      ansible.builtin.debug:
+        msg:
+          - "NanoClaw is installed and managed by its own quickstart tooling, not an Ansible OpenClaw service."
+          - "SSH to the VM as {{ nanoclaw_user }} and use the commands created by nanoclaw.sh."

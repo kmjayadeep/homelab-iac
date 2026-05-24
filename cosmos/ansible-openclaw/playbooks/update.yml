@@ -1,42 +1,24 @@
 ---
-- name: Update OpenClaw
-  hosts: openclaw_servers
+- name: Update NanoClaw checkout
+  hosts: nanoclaw_servers
   tasks:
-    - name: Get npm global root
-      ansible.builtin.command: npm root -g
-      register: openclaw_npm_root
-      changed_when: false
+    - name: Check for NanoClaw checkout
+      ansible.builtin.stat:
+        path: "{{ nanoclaw_checkout_dir }}/.git"
+      register: nanoclaw_checkout
 
-    - name: Update OpenClaw via npm
-      block:
-        - name: Update OpenClaw via npm
-          community.general.npm:
-            name: "{{ openclaw_npm_name }}"
-            version: "{{ openclaw_npm_version }}"
-            global: true
-            state: latest
-          environment: "{{ openclaw_npm_env }}"
-      rescue:
-        - name: Clean OpenClaw npm directory after update failure
-          ansible.builtin.file:
-            path: "{{ openclaw_npm_root.stdout }}/openclaw"
-            state: absent
+    - name: Pull latest NanoClaw repo changes
+      ansible.builtin.git:
+        repo: "{{ nanoclaw_repo_url }}"
+        dest: "{{ nanoclaw_checkout_dir }}"
+        update: true
+      become_user: "{{ nanoclaw_user }}"
+      when: nanoclaw_checkout.stat.exists
 
-        - name: Retry OpenClaw update via npm
-          community.general.npm:
-            name: "{{ openclaw_npm_name }}"
-            version: "{{ openclaw_npm_version }}"
-            global: true
-            state: latest
-          environment: "{{ openclaw_npm_env }}"
-
-    - name: Run OpenClaw doctor
-      ansible.builtin.command: openclaw doctor
-      become_user: "{{ openclaw_user }}"
-
-    - name: Restart OpenClaw service
-      ansible.builtin.systemd:
-        name: "{{ openclaw_service_name }}"
-        state: restarted
-        scope: user
-      become_user: "{{ openclaw_user }}"
+    - name: Show manual update guidance
+      ansible.builtin.debug:
+        msg:
+          - "NanoClaw repo updated if it already existed."
+          - "Run any NanoClaw installer or migration steps manually as {{ nanoclaw_user }}:"
+          - "cd {{ nanoclaw_checkout_dir }}"
+          - "{{ nanoclaw_install_command }}"
