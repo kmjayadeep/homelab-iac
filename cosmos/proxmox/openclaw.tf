@@ -1,21 +1,21 @@
-resource "proxmox_virtual_environment_vm" "agent0" {
+resource "proxmox_virtual_environment_vm" "openclaw" {
   provider  = proxmox-bpg.jupiter-bpg
-  name      = "agent0"
+  name      = "openclaw"
   node_name = "jupiter"
-  started   = false
+  started   = true
 
   machine     = "q35"
   bios        = "ovmf"
-  description = "agent0 - AI Orchestrator"
-  tags        = ["paperclip", "AI"]
+  description = "OpenClaw VM"
+  tags        = ["openclaw"]
 
   cpu {
-    cores = 8
+    cores = 2
     type  = "host"
   }
 
   memory {
-    dedicated = 8192
+    dedicated = 4096
   }
 
   efi_disk {
@@ -27,7 +27,7 @@ resource "proxmox_virtual_environment_vm" "agent0" {
     datastore_id = "local-lvm"
     import_from  = proxmox_download_file.latest_debian_13_qcow2_img.id
     interface    = "virtio0"
-    size         = 200
+    size         = 100
   }
 
   initialization {
@@ -36,7 +36,7 @@ resource "proxmox_virtual_environment_vm" "agent0" {
         address = "dhcp"
       }
     }
-    user_data_file_id = proxmox_virtual_environment_file.agent0_user_data.id
+    user_data_file_id = proxmox_virtual_environment_file.openclaw_user_data.id
   }
 
   network_device {
@@ -48,7 +48,7 @@ resource "proxmox_virtual_environment_vm" "agent0" {
   }
 }
 
-resource "proxmox_virtual_environment_file" "agent0_user_data" {
+resource "proxmox_virtual_environment_file" "openclaw_user_data" {
   provider     = proxmox-bpg.jupiter-bpg
   content_type = "snippets"
   datastore_id = "nfs-templates"
@@ -57,7 +57,7 @@ resource "proxmox_virtual_environment_file" "agent0_user_data" {
   source_raw {
     data = <<-EOF
     #cloud-config
-    hostname: agent0
+    hostname: openclaw
     timezone: Europe/Berlin
     users:
       - name: "${var.cloudinit_username}"
@@ -91,18 +91,16 @@ resource "proxmox_virtual_environment_file" "agent0_user_data" {
       - echo "done" > /tmp/cloud-config.done
     EOF
 
-    file_name = "agent0_cloudinit.yaml"
+    file_name = "openclaw_cloudinit.yaml"
   }
 }
 
-resource "cloudflare_dns_record" "agent0" {
-  count = 0
-
+resource "cloudflare_dns_record" "openclaw" {
   zone_id = var.cloudflare_zone_id
-  name    = "agent0.cosmos.cboxlab.com"
+  name    = "openclaw.cosmos.cboxlab.com"
   type    = "A"
-  comment = "agent0 VM"
-  content = try(proxmox_virtual_environment_vm.agent0.ipv4_addresses[1][0], "0.0.0.0")
+  comment = "OpenClaw VM"
+  content = proxmox_virtual_environment_vm.openclaw.ipv4_addresses[1][0]
   proxied = false
   ttl     = 300
 }
