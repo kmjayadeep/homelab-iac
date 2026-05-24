@@ -19,6 +19,11 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
+# Ignore terraform state files — may contain sensitive data
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
 # Ignore transient lock info files created by terraform apply
 .terraform.tfstate.lock.info
 
