@@ -1,0 +1,23 @@
+---
+openclaw_user: "openclaw"
+openclaw_group: "openclaw"
+
+openclaw_authorized_keys:
+  - "{{ lookup('file', ansible_ssh_private_key_file + '.pub') }}"
+
+openclaw_git_user_name: "OpenClaw"
+openclaw_git_user_email: "{{ lookup('env', 'OPENCLAW_EMAIL') | default('openclaw@localhost', true) }}"
+
+openclaw_install_url: "https://openclaw.ai/install.sh"
+openclaw_install_args: "--no-prompt --no-onboard --verify"
+openclaw_install_command: "curl -fsSL --proto '=https' --tlsv1.2 {{ openclaw_install_url }} | bash -s -- {{ openclaw_install_args }}"
+openclaw_bin: "/home/{{ openclaw_user }}/.npm-global/bin/openclaw"
+
+openclaw_domain: "openclaw.cosmos.cboxlab.com"
+openclaw_cert_domain: "{{ openclaw_domain }}"
+openclaw_gateway_host: "127.0.0.1"
+openclaw_gateway_port: 18791
+openclaw_gateway_url: "http://{{ openclaw_gateway_host }}:{{ openclaw_gateway_port }}"
+
+cloudflare_api_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
+letsencrypt_email: "{{ lookup('env', 'OPENCLAW_CERTBOT_EMAIL') | default(lookup('env', 'OPENCLAW_EMAIL') | default('admin@cboxlab.com', true), true) }}"

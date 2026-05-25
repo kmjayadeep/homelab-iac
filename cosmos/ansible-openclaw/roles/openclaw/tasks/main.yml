@@ -1,0 +1,161 @@
+---
+- name: Install base packages for OpenClaw installer
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - certbot
+      - curl
+      - git
+      - gnupg
+      - nginx
+      - python3-certbot-dns-cloudflare
+      - sudo
+    state: present
+    update_cache: true
+
+- name: Ensure OpenClaw group exists
+  ansible.builtin.group:
+    name: "{{ openclaw_group }}"
+    state: present
+
+- name: Ensure OpenClaw user exists
+  ansible.builtin.user:
+    name: "{{ openclaw_user }}"
+    group: "{{ openclaw_group }}"
+    shell: /bin/bash
+    create_home: true
+
+- name: Install SSH authorized keys for OpenClaw user
+  ansible.builtin.authorized_key:
+    user: "{{ openclaw_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ openclaw_authorized_keys }}"
+
+- name: Configure git user name for OpenClaw
+  community.general.git_config:
+    name: user.name
+    scope: global
+    value: "{{ openclaw_git_user_name }}"
+  become_user: "{{ openclaw_user }}"
+
+- name: Configure git user email for OpenClaw
+  community.general.git_config:
+    name: user.email
+    scope: global
+    value: "{{ openclaw_git_user_email }}"
+  become_user: "{{ openclaw_user }}"
+
+- name: Install OpenClaw with upstream installer
+  block:
+    - name: Allow OpenClaw installer to install system dependencies
+      ansible.builtin.copy:
+        dest: "/etc/sudoers.d/{{ openclaw_user }}-installer"
+        content: "{{ openclaw_user }} ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: "0440"
+        validate: "visudo -cf %s"
+
+    - name: Run OpenClaw installer
+      ansible.builtin.shell: "{{ openclaw_install_command }}"
+      args:
+        executable: /bin/bash
+        creates: "{{ openclaw_bin }}"
+      become_user: "{{ openclaw_user }}"
+      environment:
+        HOME: "/home/{{ openclaw_user }}"
+        OPENCLAW_NO_PROMPT: "1"
+        OPENCLAW_NO_ONBOARD: "1"
+        PATH: "/home/{{ openclaw_user }}/.local/bin:/home/{{ openclaw_user }}/.npm-global/bin:{{ ansible_env.PATH }}"
+  always:
+    - name: Remove temporary OpenClaw installer sudo access
+      ansible.builtin.file:
+        path: "/etc/sudoers.d/{{ openclaw_user }}-installer"
+        state: absent
+
+- name: Ensure Cloudflare token and Let's Encrypt email are set
+  ansible.builtin.assert:
+    that:
+      - cloudflare_api_token | length > 0
+      - letsencrypt_email | length > 0
+    fail_msg: "CLOUDFLARE_API_TOKEN and OPENCLAW_CERTBOT_EMAIL or OPENCLAW_EMAIL must be set in the environment."
+
+- name: Install Cloudflare credentials for Certbot
+  ansible.builtin.template:
+    src: cloudflare.ini.j2
+    dest: /etc/letsencrypt/cloudflare.ini
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Obtain OpenClaw Let's Encrypt certificate via DNS challenge
+  ansible.builtin.command: >-
+    certbot certonly
+    --dns-cloudflare
+    --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini
+    --non-interactive
+    --agree-tos
+    -m {{ letsencrypt_email }}
+    -d {{ openclaw_cert_domain }}
+  args:
+    creates: "/etc/letsencrypt/live/{{ openclaw_cert_domain }}/fullchain.pem"
+
+- name: Install Certbot deploy hook to reload Nginx
+  ansible.builtin.copy:
+    dest: /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+    mode: "0755"
+    owner: root
+    group: root
+    content: |-
+      #!/usr/bin/env bash
+      set -e
+      systemctl reload nginx
+
+- name: Remove default and legacy OpenClaw nginx sites
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/nginx/sites-enabled/default
+    - /etc/nginx/sites-enabled/openclaw
+    - /etc/nginx/sites-available/openclaw
+  notify: Reload nginx
+
+- name: Configure Nginx for OpenClaw gateway
+  ansible.builtin.template:
+    src: openclaw-nginx.conf.j2
+    dest: /etc/nginx/sites-available/openclaw.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable OpenClaw Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/openclaw.conf
+    dest: /etc/nginx/sites-enabled/openclaw.conf
+    state: link
+  notify: Reload nginx
+
+- name: Ensure Nginx is running
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Ensure certbot renewal timer is enabled
+  ansible.builtin.service:
+    name: certbot.timer
+    state: started
+    enabled: true
+  failed_when: false
+
+- name: Show OpenClaw next steps
+  ansible.builtin.debug:
+    msg:
+      - "OpenClaw installed for {{ openclaw_user }}."
+      - "Gateway: https://{{ openclaw_domain }} -> {{ openclaw_gateway_url }}"
+      - "SSH to the VM and finish interactive onboarding:"
+      - "sudo -i -u {{ openclaw_user }}"
+      - "{{ openclaw_bin }} onboard"

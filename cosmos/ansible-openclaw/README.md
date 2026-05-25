@@ -1,6 +1,6 @@
-# NanoClaw VM Ansible Setup
+# OpenClaw VM Ansible Setup
 
-This Ansible project prepares the fresh `openclaw` VM for the NanoClaw quickstart. It no longer installs OpenClaw, Node.js, Nginx, Certbot, or an OpenClaw systemd service.
+This Ansible project installs OpenClaw on the `openclaw` VM using the upstream installer from <https://openclaw.ai/>.
 
 ## Prerequisites
 
@@ -22,35 +22,41 @@ ansible-galaxy collection install -r requirements.yml
 ansible all -m ping
 ```
 
-### 3. Prepare the VM
+### 3. Install OpenClaw
 
 ```bash
 ansible-playbook playbooks/setup.yml
 ```
 
-The playbook installs basic packages, creates a `nanoclaw` user, adds your SSH key, configures git, and prints the manual NanoClaw quickstart commands.
+The playbook installs base packages, creates an `openclaw` user, adds your SSH key, configures git, installs OpenClaw, and configures Nginx + Let's Encrypt SSL for the OpenClaw gateway using Cloudflare DNS challenge.
+
+OpenClaw gateway traffic is proxied from `https://openclaw.cosmos.cboxlab.com` to `http://127.0.0.1:18791`. The Nginx vhost follows the OpenClaw reverse-proxy guidance: loopback upstream, WebSocket upgrade handling with the `418` escape hatch, static asset caching, and security headers.
+
+The OpenClaw installer command is:
+
+```bash
+curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install.sh | bash -s -- --no-prompt --no-onboard --verify
+```
 
 Optional environment variable:
 
-- `NANOCLAW_EMAIL` - git email for the `nanoclaw` user. Defaults to `nanoclaw@localhost`.
+- `OPENCLAW_EMAIL` - git email for the `openclaw` user. Defaults to `openclaw@localhost`.
+- `CLOUDFLARE_API_TOKEN` - Cloudflare API token used for the Let's Encrypt DNS challenge.
+- `OPENCLAW_CERTBOT_EMAIL` - Let's Encrypt registration email. Defaults to `OPENCLAW_EMAIL`, then `admin@cboxlab.com`.
 
-## Manual NanoClaw install
+## Finish onboarding
 
-Run the upstream quickstart manually on the VM:
+Run OpenClaw onboarding interactively on the VM:
 
 ```bash
 ssh ansible@openclaw.cosmos.cboxlab.com
-sudo -i -u nanoclaw
-git clone https://github.com/nanocoai/nanoclaw.git nanoclaw-v2
-cd nanoclaw-v2
-bash nanoclaw.sh
+sudo -i -u openclaw
+~/.npm-global/bin/openclaw onboard
 ```
-
-`nanoclaw.sh` handles NanoClaw setup and can install Node, pnpm, and Docker if missing.
 
 ## Service management
 
-NanoClaw is managed by its own installer/tooling. The old OpenClaw user service playbooks have been replaced with guidance-only notices:
+OpenClaw is managed by its own CLI/tooling. These playbooks print guidance only:
 
 ```bash
 ansible-playbook playbooks/start.yml
@@ -58,20 +64,17 @@ ansible-playbook playbooks/stop.yml
 ansible-playbook playbooks/restart.yml
 ```
 
-## Update NanoClaw checkout
-
-If the repo has already been cloned, this pulls the latest changes as the `nanoclaw` user:
+## Update OpenClaw
 
 ```bash
 ansible-playbook playbooks/update.yml
 ```
 
-Run any NanoClaw installer or migration steps manually afterward.
-
 ## Configuration
 
-See `inventory/group_vars/nanoclaw_servers.yml` for tunables like:
+See `inventory/group_vars/openclaw_servers.yml` for tunables like:
 
-- NanoClaw user and group
-- NanoClaw repo URL and checkout path
-- Git user name/email for the `nanoclaw` user
+- OpenClaw user and group
+- OpenClaw installer URL and arguments
+- OpenClaw gateway domain and upstream URL
+- Git user name/email for the `openclaw` user

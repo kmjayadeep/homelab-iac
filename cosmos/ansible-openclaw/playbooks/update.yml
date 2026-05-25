@@ -1,24 +1,45 @@
 ---
-- name: Update NanoClaw checkout
-  hosts: nanoclaw_servers
+- name: Update OpenClaw install
+  hosts: openclaw_servers
   tasks:
-    - name: Check for NanoClaw checkout
+    - name: Check for OpenClaw binary
       ansible.builtin.stat:
-        path: "{{ nanoclaw_checkout_dir }}/.git"
-      register: nanoclaw_checkout
+        path: "{{ openclaw_bin }}"
+      register: openclaw_binary
 
-    - name: Pull latest NanoClaw repo changes
-      ansible.builtin.git:
-        repo: "{{ nanoclaw_repo_url }}"
-        dest: "{{ nanoclaw_checkout_dir }}"
-        update: true
-      become_user: "{{ nanoclaw_user }}"
-      when: nanoclaw_checkout.stat.exists
+    - name: Update OpenClaw with its built-in updater
+      ansible.builtin.command: "{{ openclaw_bin }} update"
+      become_user: "{{ openclaw_user }}"
+      environment:
+        HOME: "/home/{{ openclaw_user }}"
+        OPENCLAW_NO_PROMPT: "1"
+        PATH: "/home/{{ openclaw_user }}/.local/bin:/home/{{ openclaw_user }}/.npm-global/bin:{{ ansible_env.PATH }}"
+      when: openclaw_binary.stat.exists
 
-    - name: Show manual update guidance
-      ansible.builtin.debug:
-        msg:
-          - "NanoClaw repo updated if it already existed."
-          - "Run any NanoClaw installer or migration steps manually as {{ nanoclaw_user }}:"
-          - "cd {{ nanoclaw_checkout_dir }}"
-          - "{{ nanoclaw_install_command }}"
+    - name: Install OpenClaw if missing
+      when: not openclaw_binary.stat.exists
+      block:
+        - name: Allow OpenClaw installer to install system dependencies
+          ansible.builtin.copy:
+            dest: "/etc/sudoers.d/{{ openclaw_user }}-installer"
+            content: "{{ openclaw_user }} ALL=(ALL) NOPASSWD:ALL\n"
+            owner: root
+            group: root
+            mode: "0440"
+            validate: "visudo -cf %s"
+
+        - name: Run OpenClaw installer
+          ansible.builtin.shell: "{{ openclaw_install_command }}"
+          args:
+            executable: /bin/bash
+          become_user: "{{ openclaw_user }}"
+          environment:
+            HOME: "/home/{{ openclaw_user }}"
+            OPENCLAW_NO_PROMPT: "1"
+            OPENCLAW_NO_ONBOARD: "1"
+            PATH: "/home/{{ openclaw_user }}/.local/bin:/home/{{ openclaw_user }}/.npm-global/bin:{{ ansible_env.PATH }}"
+      always:
+        - name: Remove temporary OpenClaw installer sudo access
+          ansible.builtin.file:
+            path: "/etc/sudoers.d/{{ openclaw_user }}-installer"
+            state: absent

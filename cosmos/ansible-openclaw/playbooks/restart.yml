@@ -1,9 +1,9 @@
 ---
-- name: NanoClaw restart notice
-  hosts: nanoclaw_servers
+- name: OpenClaw restart notice
+  hosts: openclaw_servers
   tasks:
-    - name: Show manual NanoClaw restart guidance
+    - name: Show manual OpenClaw restart guidance
       ansible.builtin.debug:
         msg:
-          - "NanoClaw is installed and managed by its own quickstart tooling, not an Ansible OpenClaw service."
-          - "SSH to the VM as {{ nanoclaw_user }} and use the commands created by nanoclaw.sh."
+          - "OpenClaw is installed and managed by its own CLI/tooling, not an Ansible-managed service."
+          - "SSH to the VM as {{ openclaw_user }} and run {{ openclaw_bin }} --help for available commands."
