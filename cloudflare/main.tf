@@ -17,3 +17,15 @@ resource "cloudflare_dns_record" "baskit" {
 
   comment = "Baskit Firebase hosting - managed by Terraform"
 }
+
+resource "cloudflare_dns_record" "baskit_verification" {
+  provider = cloudflare.dns
+
+  zone_id = "efad963cb5839dca8c2674cccf34e37d"
+  name    = "baskit.cboxlab.com"
+  content = "hosting-site=baskit-b54b5"
+  type    = "TXT"
+  ttl     = 300
+
+  comment = "Baskit Firebase hosting verification - managed by Terraform"
+}
