@@ -30,7 +30,7 @@ ansible-playbook playbooks/setup.yml
 
 The playbook installs base packages, creates an `openclaw` user, adds your SSH key, configures git, installs OpenClaw, and configures Nginx + Let's Encrypt SSL for the OpenClaw gateway using Cloudflare DNS challenge.
 
-OpenClaw gateway traffic is proxied from `https://openclaw.cosmos.cboxlab.com` to `http://127.0.0.1:18791`. The Nginx vhost follows the OpenClaw reverse-proxy guidance: loopback upstream, WebSocket upgrade handling with the `418` escape hatch, static asset caching, and security headers.
+OpenClaw dashboard traffic is proxied from `https://openclaw.cosmos.cboxlab.com` to the local Gateway Control UI at `http://127.0.0.1:18789`, which is the dashboard URL documented by OpenClaw. The Nginx vhost keeps the upstream on loopback, preserves WebSocket upgrades for Control UI auth, and adds static asset caching and security headers.
 
 The OpenClaw installer command is:
 
@@ -76,5 +76,5 @@ See `inventory/group_vars/openclaw_servers.yml` for tunables like:
 
 - OpenClaw user and group
 - OpenClaw installer URL and arguments
-- OpenClaw gateway domain and upstream URL
+- OpenClaw dashboard domain and upstream URL
 - Git user name/email for the `openclaw` user

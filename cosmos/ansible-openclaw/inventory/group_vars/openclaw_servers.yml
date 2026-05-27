@@ -16,7 +16,7 @@ openclaw_bin: "/home/{{ openclaw_user }}/.npm-global/bin/openclaw"
 openclaw_domain: "openclaw.cosmos.cboxlab.com"
 openclaw_cert_domain: "{{ openclaw_domain }}"
 openclaw_gateway_host: "127.0.0.1"
-openclaw_gateway_port: 18791
+openclaw_gateway_port: 18789
 openclaw_gateway_url: "http://{{ openclaw_gateway_host }}:{{ openclaw_gateway_port }}"
 
 cloudflare_api_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
