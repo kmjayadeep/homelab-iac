@@ -1,0 +1,98 @@
+flowchart LR
+  subgraph network["Network"]
+    ispRouter["ISP router + internet\n192.168.1.0/24\nP0"]
+    switch25g["2.5G switch\nP0"]
+    cloudflare["Cloudflare\nDNS / ACME / R2\nP0"]
+    hetzner["Hetzner Cloud\nP2"]
+  end
+
+  subgraph marsBox["mars hardware\nProxmox host on 2.5G switch"]
+    mars["mars\nP0"]
+    gatekeeperVm["gatekeeper VM\nP0"]
+    dnsProxy["DNS / reverse proxy\nP0"]
+    heliosVm["helios VM\nP1"]
+    postgres["Postgres platform\nP1"]
+    titaniaWorker1["titania-worker1 VM\nP1"]
+    gameVms["game VMs\nP3"]
+    games["Game servers\nP3"]
+  end
+
+  subgraph jupiterBox["jupiter hardware\nProxmox host on 2.5G switch"]
+    jupiter["jupiter\nP0"]
+    titaniaMaster["titania-master VM\nP1"]
+    homeAssistantVm["home-assistant VM\nP2"]
+    homeAssistant["Home Assistant\nP2"]
+  end
+
+  subgraph truenasBox["TrueNAS hardware\nNAS on 2.5G switch"]
+    truenas["TrueNAS\nP0"]
+    nfs["NFS templates\nP0"]
+    dockerJail["Docker jail\nP0"]
+    minio["MinIO\nP0"]
+    nasRemote["NAS remote backup\nP0"]
+  end
+
+  subgraph plutoBox["pluto hardware\n1G direct to ISP router"]
+    pluto["pluto\nP1"]
+    pbs["PBS\nbackup target\nP1"]
+  end
+
+  subgraph hetznerBox["Hetzner boundary"]
+    nova["nova VM\nP2"]
+    psuite["psuite apps\nP2"]
+  end
+
+  subgraph platformApps["Cross-host platforms and app groups"]
+    k3s["K3s platform\nP1"]
+    k8sApps["Kubernetes apps\nunknown"]
+    pgApps["Postgres-backed apps\nP1"]
+    r2["Cloudflare R2\nP1"]
+    backups["Backup paths\nP1"]
+  end
+
+  switch25g --> ispRouter
+  mars --> switch25g
+  jupiter --> switch25g
+  truenas --> switch25g
+  pluto --> ispRouter
+  cloudflare --> ispRouter
+  hetzner --> ispRouter
+
+  gatekeeperVm --> mars
+  dnsProxy --> gatekeeperVm
+  heliosVm --> mars
+  postgres --> heliosVm
+  titaniaWorker1 --> mars
+  gameVms --> mars
+  games --> gameVms
+
+  titaniaMaster --> jupiter
+  homeAssistantVm --> jupiter
+  homeAssistant --> homeAssistantVm
+
+  nfs --> truenas
+  dockerJail --> truenas
+  minio --> dockerJail
+  nasRemote --> truenas
+
+  pbs --> pluto
+  nova --> hetzner
+  psuite --> nova
+
+  mars --> nfs
+  jupiter --> nfs
+  pluto --> nfs
+  k3s --> titaniaMaster
+  k3s --> titaniaWorker1
+  k8sApps --> k3s
+  pgApps --> postgres
+  games --> minio
+  dnsProxy --> cloudflare
+  psuite --> cloudflare
+  r2 --> cloudflare
+  backups --> postgres
+  backups --> pbs
+  backups --> r2
+  backups --> minio
+  backups --> nasRemote
+  backups --> ispRouter

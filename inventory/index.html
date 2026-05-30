@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homelab Platform Map</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f4;
+      --panel: #ffffff;
+      --panel-2: #eef2ed;
+      --ink: #17201b;
+      --muted: #66716b;
+      --line: #c8d1c9;
+      --line-strong: #58645e;
+      --p0: #b3261e;
+      --p1: #b45f06;
+      --p2: #2c6f55;
+      --p3: #355f9f;
+      --unknown: #6f6476;
+      --shadow: 0 18px 45px rgba(24, 34, 29, 0.12);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    }
+
+    aside {
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      min-height: 100vh;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .topbar {
+      min-height: 72px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.74);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 20px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 20px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 14px;
+      line-height: 1.25;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h3 {
+      font-size: 16px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .control {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    select,
+    .search {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      color: var(--ink);
+      min-height: 38px;
+      padding: 8px 10px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      min-height: 36px;
+      padding: 7px 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+
+    .btn:hover,
+    .btn.active {
+      border-color: var(--line-strong);
+      background: var(--panel-2);
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      flex: 0 0 auto;
+      background: var(--unknown);
+    }
+
+    .dot.p0,
+    .node.p0 {
+      --tier: var(--p0);
+    }
+
+    .dot.p1,
+    .node.p1 {
+      --tier: var(--p1);
+    }
+
+    .dot.p2,
+    .node.p2 {
+      --tier: var(--p2);
+    }
+
+    .dot.p3,
+    .node.p3 {
+      --tier: var(--p3);
+    }
+
+    .dot.unknown,
+    .node.unknown {
+      --tier: var(--unknown);
+    }
+
+    .legend-item .dot {
+      background: var(--tier);
+    }
+
+    .details {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      min-height: 220px;
+    }
+
+    .meta-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr);
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .meta strong {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .map-shell {
+      position: relative;
+      overflow: auto;
+      background:
+        linear-gradient(rgba(30, 40, 34, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30, 40, 34, 0.045) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .map {
+      position: relative;
+      width: 1420px;
+      height: 930px;
+      margin: 20px;
+    }
+
+    .group {
+      position: absolute;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.52);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+      cursor: default;
+    }
+
+    .group.hardware {
+      background: rgba(238, 242, 237, 0.82);
+    }
+
+    .group.network {
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .group-title {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: #3e4842;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .group-title span:last-child {
+      color: var(--muted);
+      font-weight: 650;
+      text-transform: none;
+    }
+
+    .group.selectable {
+      cursor: pointer;
+    }
+
+    .group.selectable:hover,
+    .group.selected {
+      border-color: var(--line-strong);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.85), var(--shadow);
+    }
+
+    .group.impact {
+      border-color: #111814;
+    }
+
+    .group.dim {
+      opacity: 0.28;
+    }
+
+    svg.edges {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    .edge {
+      stroke: var(--line);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .edge.contains {
+      stroke-dasharray: 4 5;
+    }
+
+    .edge.network {
+      stroke: #789083;
+    }
+
+    .edge.storage,
+    .edge.backup {
+      stroke: #7d6d98;
+    }
+
+    .edge.impact {
+      stroke: #111814;
+      stroke-width: 3;
+    }
+
+    .edge.dim {
+      opacity: 0;
+    }
+
+    .node {
+      position: absolute;
+      width: 170px;
+      min-height: 74px;
+      border: 1px solid color-mix(in srgb, var(--tier) 48%, var(--line));
+      border-left: 6px solid var(--tier);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 10px 24px rgba(25, 35, 29, 0.08);
+      padding: 10px 10px 9px;
+      display: grid;
+      gap: 7px;
+      cursor: pointer;
+      text-align: left;
+      transition: transform 140ms ease, opacity 140ms ease, box-shadow 140ms ease;
+      z-index: 2;
+    }
+
+    .node.layer-hardware {
+      background: #ffffff;
+    }
+
+    .node.layer-vm {
+      background: #f8fbff;
+      border-style: dashed;
+    }
+
+    .node.layer-platform {
+      background: #fffaf1;
+    }
+
+    .node.layer-app {
+      background: #f8fff9;
+    }
+
+    .node.layer-backup {
+      background: #fbf8ff;
+    }
+
+    .node:hover,
+    .node.selected {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--tier);
+    }
+
+    .node.dim {
+      opacity: 0.2;
+    }
+
+    .node.impact {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--tier) 28%, transparent), var(--shadow);
+      border-color: var(--tier);
+    }
+
+    .node-title {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .node-name {
+      font-size: 14px;
+      line-height: 1.15;
+      font-weight: 750;
+      overflow-wrap: anywhere;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: var(--tier);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 750;
+      min-width: 34px;
+      text-align: center;
+      padding: 3px 7px;
+      line-height: 1;
+    }
+
+    .node-kind {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .column-label {
+      position: absolute;
+      top: 0;
+      color: #53605a;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      background: rgba(246, 247, 244, 0.88);
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .impact-list {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .list {
+      display: grid;
+      gap: 6px;
+      max-height: 170px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .list button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 7px 8px;
+      text-align: left;
+      cursor: pointer;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .list button:hover {
+      border-color: var(--line-strong);
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .stat {
+      min-width: 92px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 8px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        min-height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .map {
+        margin: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div>
+        <h1>Homelab Platform Map</h1>
+        <p class="subtle">Click a component to see immediate dependencies and the downstream blast radius if it fails.</p>
+      </div>
+
+      <input class="search" id="search" type="search" placeholder="Search components">
+
+      <div class="controls">
+        <div class="control">
+          <label for="tierFilter">Tier</label>
+          <select id="tierFilter">
+            <option value="all">All tiers</option>
+            <option value="P0">P0</option>
+            <option value="P1">P1</option>
+            <option value="P2">P2</option>
+            <option value="P3">P3</option>
+            <option value="unknown">Unknown</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="kindFilter">Kind</label>
+          <select id="kindFilter">
+            <option value="all">All kinds</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn active" id="modeImpact" type="button">Blast radius</button>
+        <button class="btn" id="modeDeps" type="button">Dependencies</button>
+        <button class="btn" id="reset" type="button">Reset</button>
+      </div>
+
+      <div>
+        <h2>Legend</h2>
+        <div class="legend" aria-label="Tier legend">
+          <div class="legend-item"><span class="dot p0"></span><span>P0 foundation</span></div>
+          <div class="legend-item"><span class="dot p1"></span><span>P1 important</span></div>
+          <div class="legend-item"><span class="dot p2"></span><span>P2 focused</span></div>
+          <div class="legend-item"><span class="dot p3"></span><span>P3 best effort</span></div>
+        </div>
+      </div>
+
+      <section class="details" id="details" aria-live="polite"></section>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <h2>Containment And Failure Impact View</h2>
+          <p class="subtle">Hardware is shown as containers. VMs and dedicated apps sit inside the hardware they run on; only cross-boundary dependencies are drawn by default.</p>
+        </div>
+        <div class="stats" id="stats"></div>
+      </header>
+
+      <section class="map-shell" aria-label="Interactive dependency map">
+        <div class="map" id="map">
+          <div class="column-label" style="left: 34px;">Network and external</div>
+          <div class="column-label" style="left: 34px; top: 140px;">Hardware containers</div>
+          <svg class="edges" id="edges" aria-hidden="true"></svg>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const groups = [
+      { id: "network", title: "Network", note: "router + subnet + switch", className: "network", x: 30, y: 45, w: 600, h: 92 },
+      { id: "external", title: "External", note: "DNS / cloud / offsite", className: "network", x: 660, y: 45, w: 520, h: 92 },
+      { id: "marsBox", nodeId: "mars", title: "mars", note: "Proxmox host on 2.5G switch", className: "hardware", x: 30, y: 170, w: 320, h: 530 },
+      { id: "jupiterBox", nodeId: "jupiter", title: "jupiter", note: "Proxmox host on 2.5G switch", className: "hardware", x: 380, y: 170, w: 320, h: 420 },
+      { id: "truenasBox", nodeId: "truenas", title: "TrueNAS", note: "NAS on 2.5G switch", className: "hardware", x: 730, y: 170, w: 320, h: 455 },
+      { id: "plutoBox", nodeId: "pluto", title: "pluto", note: "PBS target, direct 1G to router", className: "hardware", x: 1080, y: 170, w: 270, h: 180 },
+      { id: "hetznerBox", nodeId: "hetzner", title: "Hetzner", note: "cloud hardware boundary", className: "hardware", x: 1080, y: 380, w: 270, h: 245 },
+      { id: "clusterBox", title: "Cross-host platforms", note: "abstractions spanning multiple VMs", className: "network", x: 380, y: 620, w: 670, h: 115 },
+      { id: "backupBox", title: "Backup targets", note: "cross-boundary dependencies", className: "network", x: 30, y: 760, w: 1020, h: 115 }
+    ];
+
+    const nodes = [
+      { id: "ispRouter", name: "ISP router + internet", tier: "P0", kind: "network", layer: "hardware", x: 55, y: 80, role: "Internet gateway and router for 192.168.1.0/24. Pluto is directly connected here at 1 Gbps.", known: "user stated + VM gateway values", todos: ["Record router model, DHCP/DNS behavior, firewall rules, port forwards, and failover options."] },
+      { id: "switch25g", name: "2.5G switch", tier: "P0", kind: "network", layer: "hardware", x: 315, y: 80, role: "Separate switch connected to ISP router. Mars, Jupiter, and TrueNAS are connected here at 2.5 Gbps.", known: "user stated", todos: ["Record switch model, port map, and exact host ports."] },
+      { id: "cloudflare", name: "Cloudflare", tier: "P0", kind: "external", layer: "hardware", x: 690, y: 80, role: "Public DNS, ACME DNS challenge provider, and R2 backup target.", known: "cloudflare/*.tf and ACME integrations" },
+      { id: "hetzner", name: "Hetzner Cloud", tier: "P2", kind: "external", layer: "hardware", x: 920, y: 80, role: "Cloud host provider for nova.", known: "hetzner/terraform" },
+
+      { id: "mars", name: "mars hardware", tier: "P0", kind: "hardware", layer: "hardware", groupOnly: true, x: 190, y: 435, role: "Proxmox hardware container for VMs on mars.", known: "cosmos/proxmox/*.tf + user network note", todos: ["Record hardware specs, disks, NICs, UPS, and cluster membership."] },
+      { id: "gatekeeperVm", name: "gatekeeper VM", tier: "P0", kind: "vm", layer: "vm", x: 55, y: 315, role: "Dedicated VM for DNS/proxy services.", known: "cosmos/proxmox/gatekeeper.tf + nixos-images/gatekeeper", todos: ["Confirm local DNS clients depend on this VM and document restore path."] },
+      { id: "dnsProxyApp", name: "DNS / reverse proxy", tier: "P0", kind: "app", layer: "app", x: 170, y: 315, role: "AdGuard Home and nginx/ACME inside the dedicated gatekeeper VM.", known: "nixos-images/gatekeeper" },
+      { id: "heliosVm", name: "helios VM", tier: "P1", kind: "vm", layer: "vm", x: 55, y: 420, role: "Dedicated VM for the Postgres platform.", known: "cosmos/proxmox/helios.tf + nixos-images/postgres" },
+      { id: "postgres", name: "Postgres platform", tier: "P1", kind: "platform", layer: "platform", x: 170, y: 420, role: "Database platform inside helios. Apps should depend on this black-box platform, not directly on the VM.", known: "nixos-images/postgres" },
+      { id: "titaniaWorker1", name: "titania-worker1 VM", tier: "P1", kind: "vm", layer: "vm", x: 55, y: 525, role: "K3s worker node VM on mars.", known: "cosmos/proxmox/titania-worker1.tf + ansible-k3s" },
+      { id: "gameVms", name: "game VMs", tier: "P3", kind: "vm-group", layer: "vm", x: 55, y: 630, role: "Dedicated VMs for Valheim and Windrose game servers.", known: "cosmos/proxmox/*valheim* + windrose.tf" },
+      { id: "gameApps", name: "Game servers", tier: "P3", kind: "app-group", layer: "app", x: 170, y: 630, role: "Valheim and Windrose apps inside dedicated game VMs.", known: "cosmos/ansible-valheim + ansible-windrose" },
+
+      { id: "jupiter", name: "jupiter hardware", tier: "P0", kind: "hardware", layer: "hardware", groupOnly: true, x: 540, y: 380, role: "Proxmox hardware container for VMs on jupiter.", known: "cosmos/proxmox/*.tf + user network note", todos: ["Record hardware specs, disks, NICs, UPS, and cluster membership."] },
+      { id: "titaniaMaster", name: "titania-master VM", tier: "P1", kind: "vm", layer: "vm", x: 405, y: 315, role: "K3s master node VM on jupiter.", known: "cosmos/proxmox/titania-master.tf + ansible-k3s" },
+      { id: "homeAssistantVm", name: "home-assistant VM", tier: "P2", kind: "vm", layer: "vm", x: 405, y: 495, role: "Dedicated VM for Home Assistant.", known: "cosmos/proxmox/home-assistant.tf" },
+      { id: "homeAssistantApp", name: "Home Assistant", tier: "P2", kind: "app", layer: "app", x: 520, y: 285, role: "Home Assistant app inside a dedicated VM.", known: "cosmos/proxmox/home-assistant.tf" },
+
+      { id: "truenas", name: "TrueNAS hardware", tier: "P0", kind: "hardware", layer: "hardware", groupOnly: true, x: 890, y: 400, role: "NAS hardware container. Hosts NFS templates, Docker jail, MinIO storage, and NAS backup jobs.", known: "user stated", todos: ["Record pools, datasets, snapshots, replication tasks, Docker jail details, and MinIO data path."] },
+      { id: "nfs", name: "NFS templates", tier: "P0", kind: "storage", layer: "platform", x: 755, y: 315, role: "Proxmox snippets/templates datastore exported from TrueNAS.", known: "user stated + datastore_id = nfs-templates", todos: ["Record backing TrueNAS dataset/export path and which Proxmox nodes mount it."] },
+      { id: "dockerJail", name: "Docker jail", tier: "P0", kind: "runtime", layer: "platform", x: 755, y: 420, role: "Docker jail running on the TrueNAS machine.", known: "user stated", todos: ["Record jail name, Docker config location, restart policy, and rebuild steps."] },
+      { id: "minio", name: "MinIO", tier: "P0", kind: "platform", layer: "platform", x: 870, y: 420, role: "S3-compatible object storage inside the TrueNAS Docker jail with mounted NAS storage.", known: "user stated + minio_s3_bucket module", todos: ["Record mounted dataset path, lifecycle policy, versioning, credentials location, and remote replication."] },
+      { id: "nasRemote", name: "NAS remote backup", tier: "P0", kind: "backup", layer: "backup", x: 755, y: 525, role: "TrueNAS dataset backup or replication to an unknown remote bucket.", known: "user stated", todos: ["Record provider, bucket, datasets, retention, encryption, and restore tests."] },
+
+      { id: "pluto", name: "pluto hardware", tier: "P1", kind: "hardware", layer: "hardware", groupOnly: true, x: 1215, y: 260, role: "Hardware directly connected to ISP router at 1 Gbps. Runs PBS as a backup target for most VMs.", known: "user stated + cosmos/pluto", todos: ["Record PBS datastore path, retention, prune/verify schedule, and disk layout."] },
+      { id: "pbs", name: "PBS", tier: "P1", kind: "backup", layer: "platform", x: 1105, y: 300, role: "Proxmox Backup Server running on pluto; backup target for most VMs.", known: "user stated", todos: ["Record covered VMs, datastore, retention, verify jobs, and restore test status."] },
+
+      { id: "nova", name: "nova VM", tier: "P2", kind: "vm", layer: "vm", x: 1105, y: 425, role: "Hetzner VM running psuite services.", known: "hetzner/terraform + ansible-nova" },
+      { id: "psuiteApps", name: "psuite apps", tier: "P2", kind: "app-group", layer: "app", x: 1105, y: 530, role: "Syncthing, SilverBullet wiki, and Fava inside nova.", known: "hetzner/ansible-nova/roles/podman/files/compose.yml" },
+
+      { id: "k3s", name: "K3s platform", tier: "P1", kind: "platform", layer: "platform", x: 425, y: 660, role: "Kubernetes abstraction running over titania-master and titania-worker1.", known: "cosmos/ansible-k3s + nixos-images/k3s", todos: ["Record workloads, ingress, persistent volumes, and cluster backup/restore path."] },
+      { id: "k8sApps", name: "Kubernetes apps", tier: "unknown", kind: "app-group", layer: "app", x: 625, y: 660, role: "Apps running on the K3s platform. Names and persistence need inventory.", known: "placeholder from platform scope", todos: ["Record namespaces, ingress names, persistent volumes, and database dependencies."] },
+
+      { id: "r2", name: "Cloudflare R2", tier: "P1", kind: "storage", layer: "platform", x: 360, y: 795, role: "Remote bucket for Postgres Restic backups.", known: "cloudflare/main.tf" },
+      { id: "postgresBackedApps", name: "Postgres-backed apps", tier: "P1", kind: "app-group", layer: "app", x: 560, y: 795, role: "Apps using helios/Postgres databases: totp, planka, immich, coder, taskplanner.", known: "nixos-images/postgres/modules/backup.nix" },
+      { id: "backupPaths", name: "Backup paths", tier: "P1", kind: "backup", layer: "backup", x: 760, y: 795, role: "Most VMs to PBS, Postgres to R2, game worlds to MinIO, and NAS remote bucket backups.", known: "inventory/backups.md + repo backup configs", todos: ["Split backup path details once restore tests are documented."] }
+    ];
+
+    const edges = [
+      { from: "switch25g", to: "ispRouter", type: "network" },
+      { from: "mars", to: "switch25g", type: "network" },
+      { from: "jupiter", to: "switch25g", type: "network" },
+      { from: "truenas", to: "switch25g", type: "network" },
+      { from: "pluto", to: "ispRouter", type: "network" },
+      { from: "cloudflare", to: "ispRouter", type: "external" },
+      { from: "hetzner", to: "ispRouter", type: "external" },
+      { from: "nova", to: "hetzner", type: "contains" },
+
+      { from: "gatekeeperVm", to: "mars", type: "contains" },
+      { from: "heliosVm", to: "mars", type: "contains" },
+      { from: "titaniaWorker1", to: "mars", type: "contains" },
+      { from: "gameVms", to: "mars", type: "contains" },
+      { from: "titaniaMaster", to: "jupiter", type: "contains" },
+      { from: "homeAssistantVm", to: "jupiter", type: "contains" },
+      { from: "pbs", to: "pluto", type: "contains" },
+      { from: "dnsProxyApp", to: "gatekeeperVm", type: "contains" },
+      { from: "postgres", to: "heliosVm", type: "contains" },
+      { from: "homeAssistantApp", to: "homeAssistantVm", type: "contains" },
+      { from: "gameApps", to: "gameVms", type: "contains" },
+      { from: "psuiteApps", to: "nova", type: "contains" },
+
+      { from: "nfs", to: "truenas", type: "contains" },
+      { from: "dockerJail", to: "truenas", type: "contains" },
+      { from: "minio", to: "dockerJail", type: "contains" },
+      { from: "nasRemote", to: "truenas", type: "contains" },
+
+      { from: "mars", to: "nfs", type: "storage" },
+      { from: "jupiter", to: "nfs", type: "storage" },
+      { from: "pluto", to: "nfs", type: "storage" },
+      { from: "k3s", to: "titaniaMaster", type: "platform" },
+      { from: "k3s", to: "titaniaWorker1", type: "platform" },
+      { from: "k8sApps", to: "k3s", type: "platform" },
+      { from: "postgresBackedApps", to: "postgres", type: "platform" },
+      { from: "gameApps", to: "minio", type: "storage" },
+      { from: "dnsProxyApp", to: "cloudflare", type: "external" },
+      { from: "psuiteApps", to: "cloudflare", type: "external" },
+      { from: "r2", to: "cloudflare", type: "external" },
+      { from: "backupPaths", to: "postgres", type: "backup" },
+      { from: "backupPaths", to: "pbs", type: "backup" },
+      { from: "backupPaths", to: "r2", type: "backup" },
+      { from: "backupPaths", to: "minio", type: "backup" },
+      { from: "backupPaths", to: "nasRemote", type: "backup" },
+      { from: "backupPaths", to: "ispRouter", type: "backup" }
+    ];
+
+    const map = document.getElementById("map");
+    const edgeSvg = document.getElementById("edges");
+    const details = document.getElementById("details");
+    const tierFilter = document.getElementById("tierFilter");
+    const kindFilter = document.getElementById("kindFilter");
+    const search = document.getElementById("search");
+    const stats = document.getElementById("stats");
+    const modeImpact = document.getElementById("modeImpact");
+    const modeDeps = document.getElementById("modeDeps");
+    const reset = document.getElementById("reset");
+    let selected = null;
+    let mode = "impact";
+
+    const byId = Object.fromEntries(nodes.map((node) => [node.id, node]));
+    const depsByNode = new Map(nodes.map((node) => [node.id, []]));
+    const dependentsByNode = new Map(nodes.map((node) => [node.id, []]));
+
+    for (const { from, to } of edges) {
+      depsByNode.get(from).push(to);
+      dependentsByNode.get(to).push(from);
+    }
+
+    function tierClass(tier) {
+      return String(tier || "unknown").toLowerCase();
+    }
+
+    function labelFor(id) {
+      return byId[id]?.name || id;
+    }
+
+    function walk(start, relation) {
+      const graph = relation === "dependencies" ? depsByNode : dependentsByNode;
+      const seen = new Set();
+      const queue = [...(graph.get(start) || [])];
+      while (queue.length) {
+        const current = queue.shift();
+        if (seen.has(current)) continue;
+        seen.add(current);
+        queue.push(...(graph.get(current) || []));
+      }
+      return seen;
+    }
+
+    function populateKinds() {
+      const kinds = [...new Set(nodes.map((node) => node.kind))].sort();
+      for (const kind of kinds) {
+        const option = document.createElement("option");
+        option.value = kind;
+        option.textContent = kind;
+        kindFilter.appendChild(option);
+      }
+    }
+
+    function drawGroups() {
+      for (const group of groups) {
+        const box = document.createElement("div");
+        const node = group.nodeId ? byId[group.nodeId] : null;
+        box.className = `group ${group.className || ""} ${node ? `selectable ${tierClass(node.tier)} layer-${node.layer}` : ""}`;
+        if (node) box.id = `node-${node.id}`;
+        box.style.left = `${group.x}px`;
+        box.style.top = `${group.y}px`;
+        box.style.width = `${group.w}px`;
+        box.style.height = `${group.h}px`;
+        box.innerHTML = `<div class="group-title"><span>${group.title}</span><span>${group.note}</span></div>`;
+        if (node) {
+          box.tabIndex = 0;
+          box.addEventListener("click", () => {
+            selected = node.id;
+            render();
+          });
+          box.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              selected = node.id;
+              render();
+            }
+          });
+        }
+        map.appendChild(box);
+      }
+    }
+
+    function drawNodes() {
+      for (const node of nodes) {
+        if (node.groupOnly) continue;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `node ${tierClass(node.tier)} layer-${node.layer || "platform"}`;
+        button.id = `node-${node.id}`;
+        button.style.left = `${node.x}px`;
+        button.style.top = `${node.y}px`;
+        button.innerHTML = `
+          <span class="node-title">
+            <span class="node-name">${node.name}</span>
+            <span class="badge">${node.tier}</span>
+          </span>
+          <span class="node-kind">${node.layer || "platform"} / ${node.kind}</span>
+        `;
+        button.addEventListener("click", () => {
+          selected = node.id;
+          render();
+        });
+        map.appendChild(button);
+      }
+    }
+
+    function nodeCenter(node) {
+      if (node.groupOnly) return { x: node.x, y: node.y };
+      return { x: node.x + 85, y: node.y + 37 };
+    }
+
+    function drawEdges(activeSet) {
+      edgeSvg.innerHTML = "";
+      const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      defs.innerHTML = `
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+          <path d="M 0 0 L 8 4 L 0 8 z" fill="#58645e"></path>
+        </marker>
+        <marker id="arrow-active" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+          <path d="M 0 0 L 8 4 L 0 8 z" fill="#111814"></path>
+        </marker>
+      `;
+      edgeSvg.appendChild(defs);
+      for (const { from, to, type } of edges) {
+        if (!selected && type !== "network") continue;
+        if (type === "contains" && !(activeSet.has(from) && activeSet.has(to))) continue;
+        if (selected && !(activeSet.has(from) && activeSet.has(to))) continue;
+        const a = nodeCenter(byId[from]);
+        const b = nodeCenter(byId[to]);
+        const mid = Math.abs(a.x - b.x) / 2;
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", `M ${a.x} ${a.y} C ${a.x - mid} ${a.y}, ${b.x + mid} ${b.y}, ${b.x} ${b.y}`);
+        const isActive = activeSet.has(from) && activeSet.has(to);
+        path.setAttribute("class", `edge ${type || "dependency"} ${isActive ? "impact" : "dim"}`);
+        path.setAttribute("marker-end", isActive ? "url(#arrow-active)" : "url(#arrow)");
+        edgeSvg.appendChild(path);
+      }
+    }
+
+    function passesFilter(node) {
+      const tierOk = tierFilter.value === "all" || node.tier === tierFilter.value;
+      const kindOk = kindFilter.value === "all" || node.kind === kindFilter.value;
+      const term = search.value.trim().toLowerCase();
+      const searchOk = !term || [node.name, node.kind, node.layer, node.role, node.known].join(" ").toLowerCase().includes(term);
+      return tierOk && kindOk && searchOk;
+    }
+
+    function renderDetails(activeSet) {
+      if (!selected) {
+        details.innerHTML = `
+          <div>
+            <h3>Containment map</h3>
+            <p class="subtle">Start with the large hardware boxes. VMs are inside the hardware they run on; dedicated apps/platforms sit inside or next to their VM.</p>
+          </div>
+          <div class="meta-grid">
+            <div class="meta"><strong>Default</strong><span>Only the network backbone is drawn.</span></div>
+            <div class="meta"><strong>Click</strong><span>Shows dependency lines for the selected component.</span></div>
+          </div>
+        `;
+        return;
+      }
+      const node = byId[selected];
+      const immediateDeps = depsByNode.get(selected) || [];
+      const immediateDependents = dependentsByNode.get(selected) || [];
+      const blastRadius = [...walk(selected, "dependents")];
+      const dependencies = [...walk(selected, "dependencies")];
+      const shownList = mode === "impact" ? blastRadius : dependencies;
+      const listTitle = mode === "impact" ? "Downstream impact" : "Upstream dependencies";
+
+      details.innerHTML = `
+        <div>
+          <h3>${node.name}</h3>
+          <p class="subtle">${node.role || "No role recorded."}</p>
+        </div>
+        <div class="meta-grid">
+          <div class="meta"><strong>Tier</strong><span>${node.tier}</span></div>
+          <div class="meta"><strong>Layer</strong><span>${node.layer || "platform"}</span></div>
+          <div class="meta"><strong>Kind</strong><span>${node.kind}</span></div>
+          <div class="meta"><strong>Known</strong><span>${node.known || "unknown"}</span></div>
+        </div>
+        <div>
+          <h2>Immediate dependencies</h2>
+          <div class="chips">${immediateDeps.length ? immediateDeps.map((id) => `<span class="chip">${labelFor(id)}</span>`).join("") : `<span class="chip">None recorded</span>`}</div>
+        </div>
+        <div>
+          <h2>Immediate dependents</h2>
+          <div class="chips">${immediateDependents.length ? immediateDependents.map((id) => `<span class="chip">${labelFor(id)}</span>`).join("") : `<span class="chip">None recorded</span>`}</div>
+        </div>
+        <div class="impact-list">
+          <h2>${listTitle} (${shownList.length})</h2>
+          <div class="list">
+            ${shownList.length ? shownList.map((id) => `<button type="button" data-node="${id}">${labelFor(id)} <span class="subtle">(${byId[id].tier})</span></button>`).join("") : `<p class="subtle">No linked components recorded.</p>`}
+          </div>
+        </div>
+        ${node.todos?.length ? `<div><h2>TODO</h2><div class="chips">${node.todos.map((todo) => `<span class="chip">${todo}</span>`).join("")}</div></div>` : ""}
+      `;
+
+      details.querySelectorAll("[data-node]").forEach((button) => {
+        button.addEventListener("click", () => {
+          selected = button.dataset.node;
+          render();
+        });
+      });
+    }
+
+    function renderStats() {
+      const p0 = nodes.filter((node) => node.tier === "P0").length;
+      const unknownTodos = nodes.filter((node) => node.todos?.length).length;
+      const backups = nodes.filter((node) => node.kind === "backup").length;
+      stats.innerHTML = `
+        <div class="stat"><strong>${nodes.length}</strong><span>nodes</span></div>
+        <div class="stat"><strong>${p0}</strong><span>P0</span></div>
+        <div class="stat"><strong>${backups}</strong><span>backup paths</span></div>
+        <div class="stat"><strong>${unknownTodos}</strong><span>with TODOs</span></div>
+      `;
+    }
+
+    function render() {
+      const active = selected ? walk(selected, mode === "impact" ? "dependents" : "dependencies") : new Set();
+      if (selected) active.add(selected);
+
+      for (const node of nodes) {
+        const element = document.getElementById(`node-${node.id}`);
+        if (!element) continue;
+        const visible = passesFilter(node);
+        element.hidden = !visible;
+        element.classList.toggle("selected", node.id === selected);
+        element.classList.toggle("impact", selected && active.has(node.id));
+        element.classList.toggle("dim", visible && selected && !active.has(node.id));
+      }
+
+      drawEdges(active);
+      renderDetails(active);
+      renderStats();
+      modeImpact.classList.toggle("active", mode === "impact");
+      modeDeps.classList.toggle("active", mode === "dependencies");
+    }
+
+    modeImpact.addEventListener("click", () => {
+      mode = "impact";
+      render();
+    });
+
+    modeDeps.addEventListener("click", () => {
+      mode = "dependencies";
+      render();
+    });
+
+    reset.addEventListener("click", () => {
+      selected = null;
+      mode = "impact";
+      tierFilter.value = "all";
+      kindFilter.value = "all";
+      search.value = "";
+      render();
+    });
+
+    tierFilter.addEventListener("change", render);
+    kindFilter.addEventListener("change", render);
+    search.addEventListener("input", render);
+
+    drawGroups();
+    populateKinds();
+    drawNodes();
+    render();
+  </script>
+</body>
+</html>

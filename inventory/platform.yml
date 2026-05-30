@@ -1,0 +1,673 @@
+---
+schema_version: 1
+purpose: >
+  Platform-level homelab inventory for answering what breaks when a host,
+  storage system, network component, or cloud dependency fails.
+
+tier_policy:
+  P0: "Core foundation; failure breaks broad access, storage, DNS, or many workloads."
+  P1: "Important platform or data service; failure breaks multiple important services."
+  P2: "Single-purpose platform/service host; failure has limited blast radius."
+  P3: "Best-effort, lab, game, or convenience workload."
+  unknown: "Impact has not been assessed yet."
+
+locations:
+  homelab:
+    description: "Primary home environment."
+  hetzner:
+    description: "Hetzner Cloud environment."
+  cloudflare:
+    description: "Cloudflare DNS/R2 and public edge dependencies."
+  unknown:
+    description: "Needs manual inventory."
+
+hardware:
+  compute:
+    mars:
+      kind: "proxmox_node"
+      location: "homelab"
+      tier: "P0"
+      role: "Primary Proxmox node for multiple platform VMs."
+      known_from:
+        - "cosmos/proxmox/*.tf"
+      depends_on:
+        - "network.switch_2_5g"
+        - "storage.nfs_templates"
+      supports:
+        - "vm.gatekeeper"
+        - "vm.helios"
+        - "vm.jd_vm"
+        - "vm.titania_worker1"
+        - "vm.valheim_rivers"
+        - "vm.chillyfries"
+      ha_status: "single_node_for_listed_vms"
+      todos:
+        - "Record CPU, RAM, disk layout, boot media, NICs, UPS/power, and Proxmox cluster membership."
+        - "Confirm which datastores are local versus backed by TrueNAS."
+    jupiter:
+      kind: "proxmox_node"
+      location: "homelab"
+      tier: "P0"
+      role: "Primary Proxmox node for K3s master and several service VMs."
+      known_from:
+        - "cosmos/proxmox/*.tf"
+      depends_on:
+        - "network.switch_2_5g"
+        - "storage.nfs_templates"
+      supports:
+        - "vm.titania_master"
+        - "vm.home_assistant"
+        - "vm.hermes"
+        - "vm.agent0"
+        - "vm.windrose"
+        - "vm.openclaw"
+      ha_status: "single_node_for_listed_vms"
+      todos:
+        - "Record CPU, RAM, disk layout, boot media, NICs, UPS/power, and Proxmox cluster membership."
+        - "Confirm which datastores are local versus backed by TrueNAS."
+    pluto:
+      kind: "proxmox_node"
+      location: "homelab"
+      tier: "P1"
+      role: "Hardware directly connected to ISP router at 1 Gbps. Runs PBS as a backup target for most VMs."
+      known_from:
+        - "user stated Pluto runs PBS"
+        - "cosmos/pluto"
+      depends_on:
+        - "network.isp_router"
+      supports:
+        - "platform.pbs_pluto"
+      ha_status: "unknown"
+      todos:
+        - "Record hardware details, PBS datastore path, disk layout, retention, prune/verify schedule, and restore test status."
+    truenas:
+      kind: "nas"
+      location: "homelab"
+      tier: "P0"
+      role: "Central NAS/storage host backing NFS templates, Docker jail storage, MinIO object storage, and remote-copy jobs."
+      known_from:
+        - "user stated TrueNAS exists"
+        - "user stated Docker jail and MinIO run on TrueNAS with mounted NAS storage"
+        - "user stated nfs-templates is mounted as NFS from TrueNAS"
+        - "Terraform references nfs-templates and MinIO backup buckets"
+      depends_on:
+        - "network.switch_2_5g"
+        - "network.isp_router"
+      supports:
+        - "storage.nfs_templates"
+        - "platform.truenas_docker_jail"
+        - "storage.minio"
+        - "backup.nas_remote_bucket"
+      ha_status: "unknown"
+      todos:
+        - "Record model, CPU, RAM, boot media, NICs, UPS/power, pool names, vdev layout, datasets, snapshots, and replication tasks."
+        - "Record Docker jail name, dataset mount paths, MinIO data path, and jail startup behavior."
+
+  network:
+    router:
+      kind: "router_gateway"
+      location: "homelab"
+      tier: "P0"
+      role: "ISP router, default gateway, internet path, and owner of 192.168.1.0/24."
+      known_from:
+        - "user stated router and ISP/internet should be treated together"
+        - "VM static gateway values use 192.168.1.1"
+      supports:
+        - "network.isp_router"
+        - "network.switch_2_5g"
+      todos:
+        - "Record device, LAN/VLANs, DHCP/DNS behavior, firewall rules, port forwards, VPN/tunnel dependencies, and HA/failover options."
+    switch:
+      kind: "switch"
+      location: "homelab"
+      tier: "P0"
+      role: "Separate 2.5 Gbps switch connected to ISP router; mars, jupiter, and TrueNAS connect here."
+      known_from:
+        - "user stated mars, jupiter, and NAS are connected to this switch at 2.5 Gbps"
+      supports:
+        - "network.switch_2_5g"
+      todos:
+        - "Record switch model, port map, uplink port, VLANs, LAGs, and PoE if any."
+    access_points:
+      kind: "wifi"
+      location: "homelab"
+      tier: "P2"
+      role: "Wireless access for clients and possibly IoT/Home Assistant devices."
+      known_from:
+        - "inferred from homelab topology"
+      supports: []
+      todos:
+        - "Record AP models, SSIDs, VLANs, and whether any critical devices are Wi-Fi-only."
+
+network:
+  isp_router:
+    kind: "router_and_subnet"
+    cidr: "192.168.1.0/24"
+    gateway: "192.168.1.1"
+    tier: "P0"
+    known_from:
+      - "user stated router, ISP, and subnet should be treated as one visual component"
+      - "Terraform VM static IPs and gateways"
+    depends_on:
+      - "hardware.network.router"
+    supports:
+      - "network.switch_2_5g"
+      - "hardware.compute.pluto"
+  switch_2_5g:
+    kind: "switch_segment"
+    tier: "P0"
+    speed: "2.5Gbps"
+    known_from:
+      - "user stated mars, jupiter, and NAS are connected to this switch at 2.5Gbps"
+    depends_on:
+      - "network.isp_router"
+    supports:
+      - "hardware.compute.mars"
+      - "hardware.compute.jupiter"
+      - "hardware.compute.truenas"
+  hetzner_nova_network:
+    kind: "cloud_private_network"
+    cidr: "10.10.0.0/16"
+    subnet: "10.10.0.0/24"
+    location: "hetzner"
+    tier: "P2"
+    known_from:
+      - "hetzner/terraform/network.tf"
+
+storage:
+  nfs_templates:
+    kind: "proxmox_datastore"
+    tier: "P0"
+    role: "Shared Proxmox snippets/templates datastore mounted over NFS from TrueNAS."
+    known_from:
+      - "user stated nfs-templates is mounted as NFS from TrueNAS"
+      - "cosmos/proxmox/*.tf datastore_id = nfs-templates"
+    depends_on:
+      - "hardware.compute.truenas"
+      - "network.switch_2_5g"
+    supports:
+      - "vm_cloudinit"
+      - "vm_template_images"
+    todos:
+      - "Record backing TrueNAS dataset/export path and which Proxmox nodes mount it."
+  minio_data:
+    kind: "truenas_dataset"
+    tier: "P0"
+    role: "Underlying NAS storage mounted into the Docker jail for MinIO object data."
+    known_from:
+      - "user stated MinIO mounts underlying NAS storage"
+    depends_on:
+      - "hardware.compute.truenas"
+    supports:
+      - "storage.minio"
+    todos:
+      - "Record pool, dataset path, snapshot policy, quota, and replication coverage."
+  minio:
+    kind: "s3_compatible_object_storage"
+    tier: "P0"
+    role: "Local S3-compatible storage running in a TrueNAS Docker jail, backed by mounted NAS storage."
+    known_from:
+      - "user stated MinIO runs in a Docker jail on TrueNAS"
+      - "terraform-modules/minio_s3_bucket"
+      - "cosmos/proxmox/*_s3 modules"
+    depends_on:
+      - "platform.truenas_docker_jail"
+      - "storage.minio_data"
+      - "network.switch_2_5g"
+    supports:
+      - "backup.valheim_minio"
+      - "backup.windrose_minio"
+    todos:
+      - "Record lifecycle policy, versioning, credentials location, and remote replication."
+  cloudflare_r2_postgres:
+    kind: "remote_object_storage"
+    location: "cloudflare"
+    tier: "P1"
+    role: "Remote bucket for Postgres restic backups."
+    known_from:
+      - "cloudflare/main.tf"
+      - "nixos-images/postgres/modules/backup.nix"
+    depends_on:
+      - "network.isp_router"
+      - "external.cloudflare"
+
+external:
+  cloudflare:
+    kind: "dns_r2_acme"
+    location: "cloudflare"
+    tier: "P0"
+    role: "Public DNS, ACME DNS challenge provider, and R2 backup target."
+    known_from:
+      - "cloudflare/*.tf"
+      - "cosmos/proxmox cloudflare_dns_record resources"
+      - "NixOS/Ansible Cloudflare ACME integrations"
+    supports:
+      - "dns.public_records"
+      - "storage.cloudflare_r2_postgres"
+      - "certificates.acme_dns_challenge"
+  hetzner:
+    kind: "cloud_provider"
+    location: "hetzner"
+    tier: "P2"
+    role: "Cloud host provider for nova."
+    known_from:
+      - "hetzner/terraform/*.tf"
+    supports:
+      - "vm.nova"
+
+platforms:
+  proxmox_cosmos:
+    kind: "virtualization"
+    location: "homelab"
+    tier: "P0"
+    known_from:
+      - "cosmos/proxmox"
+      - "cosmos/pluto"
+    depends_on:
+      - "hardware.compute.mars"
+      - "hardware.compute.jupiter"
+      - "hardware.compute.pluto"
+      - "storage.nfs_templates"
+      - "network.switch_2_5g"
+      - "network.isp_router"
+    supports:
+      - "vm.*"
+    ha_status: "unknown_cluster_state"
+    todos:
+      - "Confirm Proxmox cluster/quorum status and whether VM HA is enabled."
+  truenas_docker_jail:
+    kind: "container_runtime"
+    location: "homelab"
+    tier: "P0"
+    role: "Docker jail running on TrueNAS for MinIO."
+    known_from:
+      - "user stated TrueNAS has a Docker jail running on the same machine"
+      - "user stated MinIO runs in that jail"
+    depends_on:
+      - "hardware.compute.truenas"
+      - "storage.minio_data"
+      - "network.switch_2_5g"
+    supports:
+      - "storage.minio"
+    ha_status: "single_host_jail"
+    todos:
+      - "Record jail name, Docker compose/config location, restart policy, and upgrade/rebuild steps."
+  pbs_pluto:
+    kind: "backup_platform"
+    location: "homelab"
+    tier: "P1"
+    role: "Proxmox Backup Server running on Pluto; backup target for most VMs."
+    known_from:
+      - "user stated Pluto runs PBS"
+    depends_on:
+      - "hardware.compute.pluto"
+      - "network.isp_router"
+    supports:
+      - "backup.vm_pbs"
+    ha_status: "single_host"
+    todos:
+      - "Record covered VMs, datastore path, retention, prune jobs, verify jobs, encryption, and restore test status."
+  k3s_titania:
+    kind: "kubernetes_cluster"
+    location: "homelab"
+    tier: "P1"
+    known_from:
+      - "cosmos/ansible-k3s"
+      - "nixos-images/k3s"
+    depends_on:
+      - "vm.titania_master"
+      - "vm.titania_worker1"
+      - "network.switch_2_5g"
+      - "external.cloudflare"
+    supports:
+      - "k3s_workloads_unknown"
+    ha_status: "single_master_known"
+    todos:
+      - "Record workloads, ingress, persistent volumes, and cluster backup/restore path."
+  postgres_helios:
+    kind: "database_platform"
+    location: "homelab"
+    tier: "P1"
+    role: "Postgres platform running on the dedicated helios VM. Apps should depend on this platform as a black box."
+    known_from:
+      - "cosmos/proxmox/helios.tf"
+      - "nixos-images/postgres"
+    depends_on:
+      - "vm.helios"
+      - "storage.cloudflare_r2_postgres"
+      - "network.switch_2_5g"
+    supports:
+      - "database.postgres"
+      - "postgres_backed_apps_unknown"
+    ha_status: "single_vm"
+    todos:
+      - "Record client apps, restore order, and whether standby/replica options are worth it."
+
+vms:
+  gatekeeper:
+    kind: "nixos_vm"
+    tier: "P0"
+    role: "DNS/proxy node with AdGuard Home, nginx, Cloudflare ACME, and public Jellyfin proxy."
+    host: "mars"
+    ip: "192.168.1.250"
+    dns:
+      - "gatekeeper.cosmos.cboxlab.com"
+      - "jellyfin-public.cosmos.cboxlab.com"
+    known_from:
+      - "cosmos/proxmox/gatekeeper.tf"
+      - "nixos-images/gatekeeper"
+    depends_on:
+      - "hardware.compute.mars"
+      - "network.switch_2_5g"
+      - "network.isp_router"
+      - "external.cloudflare"
+    supports:
+      - "service.adguard_home"
+      - "service.nginx_reverse_proxy"
+    backup: "unknown"
+    todos:
+      - "Confirm local DNS clients depend on this VM and document restore path."
+  helios:
+    kind: "nixos_vm"
+    tier: "P1"
+    role: "Postgres DB host."
+    host: "mars"
+    ip: "192.168.1.77"
+    known_from:
+      - "cosmos/proxmox/helios.tf"
+      - "nixos-images/postgres"
+    depends_on:
+      - "hardware.compute.mars"
+      - "network.switch_2_5g"
+      - "storage.cloudflare_r2_postgres"
+    supports:
+      - "platform.postgres_helios"
+      - "database.postgres"
+      - "database.mongodb"
+      - "service.pgweb"
+    backup: "backup.postgres_r2"
+  titania_master:
+    kind: "vm"
+    tier: "P1"
+    role: "K3s master node."
+    host: "jupiter"
+    dns:
+      - "titania.cosmos.cboxlab.com"
+    known_from:
+      - "cosmos/proxmox/titania-master.tf"
+      - "cosmos/ansible-k3s/inventory/hosts.yml"
+    depends_on:
+      - "hardware.compute.jupiter"
+      - "network.switch_2_5g"
+    supports:
+      - "platform.k3s_titania"
+    backup: "unknown"
+  titania_worker1:
+    kind: "vm"
+    tier: "P1"
+    role: "K3s worker node."
+    host: "mars"
+    ip: "192.168.1.79"
+    known_from:
+      - "cosmos/proxmox/titania-worker1.tf"
+      - "cosmos/ansible-k3s/inventory/hosts.yml"
+    depends_on:
+      - "hardware.compute.mars"
+      - "network.switch_2_5g"
+    supports:
+      - "platform.k3s_titania"
+    backup: "unknown"
+  home_assistant:
+    kind: "vm"
+    tier: "P2"
+    role: "Home Assistant VM."
+    host: "jupiter"
+    dns:
+      - "home-assistant.cosmos.cboxlab.com"
+    known_from:
+      - "cosmos/proxmox/home-assistant.tf"
+    depends_on:
+      - "hardware.compute.jupiter"
+      - "network.switch_2_5g"
+    backup: "unknown"
+  nova:
+    kind: "hetzner_vm"
+    tier: "P2"
+    role: "Hetzner server running psuite Syncthing, wiki, and Fava behind nginx."
+    location: "hetzner"
+    dns:
+      - "nova.hetzner.cboxlab.com"
+      - "psuite.hetzner.cboxlab.com"
+      - "wiki.hetzner.cboxlab.com"
+      - "fava.hetzner.cboxlab.com"
+    known_from:
+      - "hetzner/terraform"
+      - "hetzner/ansible-nova"
+    depends_on:
+      - "external.hetzner"
+      - "external.cloudflare"
+      - "network.hetzner_nova_network"
+    supports:
+      - "service.psuite_syncthing"
+      - "service.psuite_wiki"
+      - "service.psuite_fava"
+    backup: "unknown"
+  jd_vm:
+    kind: "vm"
+    tier: "P3"
+    role: "Development/workspace VM."
+    host: "mars"
+    ip: "192.168.1.74"
+    known_from:
+      - "cosmos/proxmox/jd-vm.tf"
+      - "nixos-images/jd-workspace"
+    depends_on:
+      - "hardware.compute.mars"
+      - "network.switch_2_5g"
+    backup: "unknown"
+  hermes:
+    kind: "vm"
+    tier: "P3"
+    role: "AI agent/dashboard VM."
+    host: "jupiter"
+    dns:
+      - "hermes.cosmos.cboxlab.com"
+    known_from:
+      - "cosmos/proxmox/hermes.tf"
+      - "cosmos/ansible-hermes"
+    depends_on:
+      - "hardware.compute.jupiter"
+      - "network.switch_2_5g"
+      - "external.cloudflare"
+    backup: "unknown"
+  agent0:
+    kind: "vm"
+    tier: "P3"
+    role: "AI orchestrator VM."
+    host: "jupiter"
+    dns:
+      - "agent0.cosmos.cboxlab.com"
+    known_from:
+      - "cosmos/proxmox/agent0.tf"
+      - "cosmos/ansible-agent0"
+    depends_on:
+      - "hardware.compute.jupiter"
+      - "network.switch_2_5g"
+      - "external.cloudflare"
+    backup: "unknown"
+  openclaw:
+    kind: "vm"
+    tier: "P3"
+    role: "OpenClaw VM."
+    host: "jupiter"
+    dns:
+      - "openclaw.cosmos.cboxlab.com"
+    known_from:
+      - "cosmos/proxmox/openclaw.tf"
+      - "cosmos/ansible-openclaw"
+    depends_on:
+      - "hardware.compute.jupiter"
+      - "network.switch_2_5g"
+      - "external.cloudflare"
+    backup: "unknown"
+  windrose:
+    kind: "vm"
+    tier: "P3"
+    role: "Windrose dedicated server."
+    host: "jupiter"
+    dns:
+      - "windrose.cosmos.cboxlab.com"
+    known_from:
+      - "cosmos/proxmox/windrose.tf"
+      - "cosmos/ansible-windrose"
+    depends_on:
+      - "hardware.compute.jupiter"
+      - "network.switch_2_5g"
+      - "storage.minio"
+    backup: "backup.windrose_minio"
+  valheim_rivers:
+    kind: "vm"
+    tier: "P3"
+    role: "Valheim server."
+    host: "mars"
+    dns:
+      - "valheim-rivers.cosmos.cboxlab.com"
+    known_from:
+      - "cosmos/proxmox/valheim-rivers.tf"
+      - "cosmos/ansible-valheim"
+    depends_on:
+      - "hardware.compute.mars"
+      - "network.switch_2_5g"
+      - "storage.minio"
+    backup: "backup.valheim_minio"
+  chillyfries:
+    kind: "vm"
+    tier: "P3"
+    role: "Valheim server."
+    host: "mars"
+    dns:
+      - "chillyfries.cosmos.cboxlab.com"
+    known_from:
+      - "cosmos/proxmox/chillyfries.tf"
+      - "cosmos/ansible-valheim"
+    depends_on:
+      - "hardware.compute.mars"
+      - "network.switch_2_5g"
+      - "storage.minio"
+    backup: "backup.valheim_minio"
+
+services:
+  adguard_home:
+    tier: "P0"
+    role: "Local DNS/filtering on gatekeeper."
+    runs_on: "vm.gatekeeper"
+    known_from:
+      - "nixos-images/gatekeeper/modules/adguard.nix"
+  nginx_reverse_proxy:
+    tier: "P1"
+    role: "Reverse proxy and ACME certificate automation on gatekeeper."
+    runs_on: "vm.gatekeeper"
+    known_from:
+      - "nixos-images/gatekeeper/modules/proxy.nix"
+  postgres:
+    tier: "P1"
+    role: "Postgres databases for totp, planka, immich, coder, and taskplanner."
+    runs_on: "platform.postgres_helios"
+    backup: "backup.postgres_r2"
+    known_from:
+      - "nixos-images/postgres/modules/postgres.nix"
+      - "nixos-images/postgres/modules/backup.nix"
+  psuite_syncthing:
+    tier: "P2"
+    role: "Syncthing data sync on nova."
+    runs_on: "vm.nova"
+    known_from:
+      - "hetzner/ansible-nova/roles/podman/files/compose.yml"
+  psuite_wiki:
+    tier: "P2"
+    role: "SilverBullet wiki on nova."
+    runs_on: "vm.nova"
+    known_from:
+      - "hetzner/ansible-nova/roles/podman/files/compose.yml"
+  psuite_fava:
+    tier: "P2"
+    role: "Fava finance UI on nova."
+    runs_on: "vm.nova"
+    known_from:
+      - "hetzner/ansible-nova/roles/podman/files/compose.yml"
+
+backups:
+  vm_pbs:
+    tier: "P1"
+    source: "Most VMs"
+    mechanism: "Proxmox Backup Server"
+    schedule: "unknown"
+    destination: "platform.pbs_pluto"
+    offsite: false
+    restore_confidence: "unknown"
+    known_from:
+      - "user stated Pluto runs PBS as a backup target for most VMs"
+    todos:
+      - "Record exact VM coverage, backup schedule, retention, prune/verify policy, encryption, and restore tests."
+  postgres_r2:
+    tier: "P1"
+    source: "vm.helios Postgres databases"
+    mechanism: "restic + pg_dump via systemd timer"
+    schedule: "hourly"
+    retention: "keep_last=10, keep_daily=10, keep_monthly=12"
+    destination: "storage.cloudflare_r2_postgres"
+    offsite: true
+    restore_confidence: "medium"
+    known_from:
+      - "nixos-images/postgres/modules/backup.nix"
+      - "cloudflare/main.tf"
+    todos:
+      - "Document restore command, test restore into temporary database, and record RPO/RTO."
+  valheim_minio:
+    tier: "P3"
+    source: "Valheim worlds"
+    mechanism: "restic via Ansible role and/or NixOS timer"
+    schedule: "hourly"
+    retention: "keep_last=10, keep_daily=10, keep_monthly=12"
+    destination: "storage.minio"
+    offsite: false
+    restore_confidence: "medium"
+    known_from:
+      - "cosmos/ansible-valheim"
+      - "nixos-images/valheim/modules/backup.nix"
+      - "cosmos/proxmox/valheim-rivers.tf"
+      - "cosmos/proxmox/chillyfries.tf"
+    todos:
+      - "Confirm whether each active Valheim host uses Ansible or NixOS backup path."
+      - "Confirm MinIO bucket replication/offsite coverage."
+  windrose_minio:
+    tier: "P3"
+    source: "Windrose server data"
+    mechanism: "MinIO bucket provisioned; backup job details unknown"
+    schedule: "unknown"
+    destination: "storage.minio"
+    offsite: false
+    restore_confidence: "low"
+    known_from:
+      - "cosmos/proxmox/windrose.tf"
+    todos:
+      - "Find or add actual backup job and restore procedure."
+  nas_remote_bucket:
+    tier: "P0"
+    source: "TrueNAS datasets"
+    mechanism: "unknown remote bucket backup/replication"
+    schedule: "unknown"
+    destination: "remote_bucket_unknown"
+    offsite: true
+    restore_confidence: "unknown"
+    known_from:
+      - "user stated NAS backs up some data to remote bucket"
+    todos:
+      - "Record remote provider, bucket, datasets covered, snapshot schedule, replication schedule, retention, encryption, and restore test status."
+
+known_gaps:
+  - "TrueNAS pools, datasets, shares, snapshots, replication, Docker jail details, and MinIO data paths need exact names/paths."
+  - "Router, switch, AP, ISP, VLAN, DHCP, and local DNS topology need manual inventory."
+  - "K3s workloads, ingress, persistent volumes, and cluster backup strategy are not yet documented."
+  - "VM-level backups mostly target PBS on Pluto, but exact VM coverage, retention, and restore-test status still need documentation."
+  - "Several app hosts are captured only as platform dependencies; app-level SLA and runbooks are intentionally deferred."
