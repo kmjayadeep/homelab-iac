@@ -2,6 +2,7 @@ resource "proxmox_virtual_environment_vm" "valheim_rivers" {
   provider  = proxmox-bpg.mars-bpg
   name      = "valheim-rivers"
   node_name = "mars"
+  started   = false
 
   machine     = "q35"
   bios        = "ovmf"
@@ -107,7 +108,7 @@ resource "cloudflare_dns_record" "valheim_rivers" {
   name    = "valheim-rivers.cosmos.cboxlab.com"
   type    = "A"
   comment = "Valheim Rivers server (IEatPizzaP seed)"
-  content = proxmox_virtual_environment_vm.valheim_rivers.ipv4_addresses[1][0]
+  content = try(proxmox_virtual_environment_vm.valheim_rivers.ipv4_addresses[1][0], "192.168.1.98")
   proxied = false
   ttl     = 300
 }

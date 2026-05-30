@@ -43,7 +43,7 @@ output "chillyfries_bucket_secret_key" {
 }
 
 output "valheim_rivers_ip" {
-  value       = proxmox_virtual_environment_vm.valheim_rivers.ipv4_addresses[1][0]
+  value       = try(proxmox_virtual_environment_vm.valheim_rivers.ipv4_addresses[1][0], "192.168.1.98")
   description = "IP address of the Valheim Rivers server"
 }
 

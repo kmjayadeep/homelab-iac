@@ -2,6 +2,7 @@ resource "proxmox_virtual_environment_vm" "hermes" {
   provider  = proxmox-bpg.jupiter-bpg
   name      = "hermes"
   node_name = "jupiter"
+  vm_id     = 103
 
   machine     = "q35"
   bios        = "ovmf"
@@ -46,6 +47,12 @@ resource "proxmox_virtual_environment_vm" "hermes" {
     enabled = true
   }
 
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      initialization[0].user_data_file_id,
+    ]
+  }
 }
 
 resource "proxmox_virtual_environment_file" "hermes_user_data" {

@@ -2,7 +2,7 @@ resource "proxmox_virtual_environment_vm" "chillyfries" {
   provider  = proxmox-bpg.mars-bpg
   name      = "chillyfries"
   node_name = "mars"
-  started   = true
+  started   = false
   vm_id     = 207
 
   machine     = "q35"
@@ -108,7 +108,7 @@ resource "cloudflare_dns_record" "chillyfries" {
   name    = "chillyfries.cosmos.cboxlab.com"
   type    = "A"
   comment = "Chillyfries valheim server"
-  content = proxmox_virtual_environment_vm.chillyfries.ipv4_addresses[1][0]
+  content = try(proxmox_virtual_environment_vm.chillyfries.ipv4_addresses[1][0], "192.168.1.115")
   proxied = false
   ttl     = 300
 }
