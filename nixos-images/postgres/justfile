@@ -1,0 +1,53 @@
+host := "root@postgres.cosmos.cboxlab.com"
+ssh := "ssh"
+
+_default:
+  @just --list
+
+# Rebuild and switch the Helios NixOS configuration.
+rebuild:
+  nixos-rebuild switch --flake .#helios --target-host {{host}} --verbose
+
+# Open an interactive psql session as the postgres user.
+psql db="postgres":
+  {{ssh}} -t {{host}} 'sudo -u postgres psql {{db}}'
+
+# List non-template databases.
+db-list:
+  {{ssh}} {{host}} 'sudo -u postgres psql -Atc "SELECT datname FROM pg_database WHERE datistemplate = false ORDER BY datname;"'
+
+# Show database sizes, largest first.
+db-size:
+  {{ssh}} {{host}} 'sudo -u postgres psql -c "SELECT datname AS database, pg_size_pretty(pg_database_size(datname)) AS size FROM pg_database WHERE datistemplate = false ORDER BY pg_database_size(datname) DESC;"'
+
+# Trigger an immediate Postgres backup.
+db-backup-now:
+  {{ssh}} {{host}} 'systemctl start backup-postgres.service'
+
+# Show backup service and timer status.
+db-backup-status:
+  {{ssh}} {{host}} 'systemctl status backup-postgres.service backup-postgres.timer --no-pager'
+
+# Show recent backup logs. Override line count with: just db-backup-logs 200
+db-backup-logs lines="100":
+  {{ssh}} {{host}} 'journalctl -u backup-postgres.service -n {{lines}} --no-pager'
+
+# List Restic snapshots for the Postgres backup repository.
+db-snapshots:
+  {{ssh}} {{host}} 'sudo -u postgres bash -lc "source /etc/restic-env && restic snapshots"'
+
+# List files from the latest Restic snapshot.
+db-snapshot-files:
+  {{ssh}} {{host}} 'sudo -u postgres bash -lc "source /etc/restic-env && restic ls latest | grep postgres-backup"'
+
+# Inspect the local backup staging directory and metadata from the last successful run.
+db-inspect-staging:
+  {{ssh}} {{host}} 'ls -lah /var/tmp/postgres-backup/current /var/tmp/postgres-backup/current/databases && cat /var/tmp/postgres-backup/current/metadata.json'
+
+# Validate that all local custom-format dump files can be listed by pg_restore.
+db-check-dumps:
+  {{ssh}} {{host}} 'for dump in /var/tmp/postgres-backup/current/databases/*.dump; do echo "Checking $dump"; sudo -u postgres pg_restore -l "$dump" >/dev/null; done'
+
+# Print restore documentation location. Restore commands are intentionally manual until restore testing is automated.
+db-restore-help:
+  @echo "Restore procedures are documented in ../../docs/platform/postgres.md"

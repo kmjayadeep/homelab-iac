@@ -8,7 +8,7 @@ Platform improvement plans and current status.
 | --- | --- | --- |
 | 0 | Done | [00-postgres-service-contract.md](00-postgres-service-contract.md) |
 | 1 | Done | [01-postgres-backup-correctness.md](01-postgres-backup-correctness.md) |
-| 2 | Not started | [02-postgres-admin-interface.md](02-postgres-admin-interface.md) |
+| 2 | Done | [02-postgres-admin-interface.md](02-postgres-admin-interface.md) |
 | 3 | Not started | [03-postgres-database-catalog.md](03-postgres-database-catalog.md) |
 | 4 | Not started | [04-postgres-monitoring-alerting.md](04-postgres-monitoring-alerting.md) |
 | 5 | Not started | [05-postgres-backup-health-restore-automation.md](05-postgres-backup-health-restore-automation.md) |
@@ -24,7 +24,7 @@ Platform improvement plans and current status.
 
 ## Current priority
 
-Phase 1 is complete. Next priority is Phase 2:
+Phase 2 is complete. Next priority is Phase 3:
 
-1. Add a simple admin interface for Postgres operations.
-2. Keep restore testing tracked under Phase 5.
+1. Create a database catalog as the source of truth.
+2. Use the catalog for database/user creation and backup selection.

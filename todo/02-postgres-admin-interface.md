@@ -1,6 +1,6 @@
 # Phase 2: Admin Interface
 
-Status: Not started
+Status: Done
 
 ## Goal
 
@@ -9,7 +9,7 @@ Give the platform admin a simple, repeatable interface for common Postgres opera
 ## Current state
 
 - Rebuild command exists in `nixos-images/postgres/Makefile`.
-- Admin tasks are mostly manual: edit Nix, rebuild, run `psql`, inspect systemd logs.
+- `nixos-images/postgres/justfile` now wraps common admin operations.
 - pgweb exists for visual inspection but is not a lifecycle-management interface.
 
 ## Desired experience
@@ -35,22 +35,26 @@ just db-rotate-password myapp
 just db-decommission myapp
 ```
 
-## Proposed implementation
+## Implemented interface
 
-Add `nixos-images/postgres/justfile` with commands that SSH to Helios and wrap safe operations.
+Added `nixos-images/postgres/justfile` with commands that SSH to Helios and wrap safe operations.
 
-Initial low-risk commands:
+Implemented commands:
 
-- `rebuild` - existing NixOS rebuild
-- `psql` - open psql as postgres/admin
-- `db-list` - list databases
-- `db-size` - show database sizes
-- `db-backup-now` - start `backup-postgres.service`
-- `db-backup-status` - show backup service and timer state
-- `db-backup-logs` - show recent backup logs
-- `db-snapshots` - list Restic snapshots
+- `rebuild` - existing NixOS rebuild.
+- `psql` - open psql as postgres/admin.
+- `db-list` - list non-template databases.
+- `db-size` - show database sizes.
+- `db-backup-now` - start `backup-postgres.service`.
+- `db-backup-status` - show backup service and timer state.
+- `db-backup-logs` - show recent backup logs.
+- `db-snapshots` - list Restic snapshots.
+- `db-snapshot-files` - list Postgres backup files in the latest Restic snapshot.
+- `db-inspect-staging` - inspect local backup staging output and metadata.
+- `db-check-dumps` - validate local custom-format dumps with `pg_restore -l`.
+- `db-restore-help` - point to documented restore procedures without wrapping restore yet.
 
-Later commands:
+Deferred commands:
 
 - `db-restore`
 - `db-onboard`
@@ -59,10 +63,10 @@ Later commands:
 
 ## Deliverables
 
-- [ ] Add `justfile` under `nixos-images/postgres/`.
-- [ ] Keep commands read-only or operationally safe at first.
-- [ ] Document each command in `nixos-images/postgres/README.md`.
-- [ ] Add restore-related commands only after restore runbook is validated.
+- [x] Add `justfile` under `nixos-images/postgres/`.
+- [x] Keep commands read-only or operationally safe at first.
+- [x] Document each command in `nixos-images/postgres/README.md`.
+- [x] Keep restore operations documented only; do not add `db-restore` until restore testing is validated.
 
 ## Validation
 
