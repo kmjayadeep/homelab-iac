@@ -6,7 +6,7 @@ Platform improvement plans and current status.
 
 | Phase | Status | Document |
 | --- | --- | --- |
-| 0 | Not started | [00-postgres-service-contract.md](00-postgres-service-contract.md) |
+| 0 | Done | [00-postgres-service-contract.md](00-postgres-service-contract.md) |
 | 1 | Not started | [01-postgres-backup-correctness.md](01-postgres-backup-correctness.md) |
 | 2 | Not started | [02-postgres-admin-interface.md](02-postgres-admin-interface.md) |
 | 3 | Not started | [03-postgres-database-catalog.md](03-postgres-database-catalog.md) |
@@ -24,7 +24,7 @@ Platform improvement plans and current status.
 
 ## Current priority
 
-Start with Phase 0 and Phase 1:
+Phase 0 is complete. Next priority is Phase 1:
 
-1. Define the service contract so expectations are clear.
-2. Fix backup coverage drift before adding more platform features.
+1. Fix backup coverage drift before adding more platform features.
+2. Add restore validation so backup confidence can improve.

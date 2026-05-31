@@ -1,6 +1,6 @@
 # Phase 0: Postgres Service Contract
 
-Status: Not started
+Status: Done
 
 ## Goal
 
@@ -16,18 +16,19 @@ Define what the Helios Postgres service promises to apps and what it explicitly 
 - Backup: hourly Restic-backed dump job to Cloudflare R2
 - HA: none; single VM
 
-## Decisions to make
+## Decisions made
 
-- Should the stable app endpoint be IP-based or DNS-based?
-  - Current: `192.168.1.77:5432`
-  - Candidate: `postgres.cosmos.cboxlab.com`
-- Which databases are considered platform-supported?
-- Which extensions are allowed by default?
-- How should app credentials be delivered?
-  - Vault
-  - SOPS/secrets file
-  - manual handoff for now
-- What is the maintenance window policy?
+- Stable app endpoint should be DNS-based: `postgres.cosmos.cboxlab.com:5432`.
+- Clients should not depend on the Helios VM IP.
+- Access scope is LAN only.
+- TLS is not implemented yet, but should be considered as a future improvement.
+- `immich` and `uptimekuma` are the most important current databases.
+- Other current databases are supported while present, but may be cleaned up later.
+- Availability target should be real and monitorable: 99% monthly, excluding planned maintenance.
+- Maintenance may happen any time.
+- Credentials are delivered manually for now; Vault can be evaluated later.
+- Onboarding should move toward an admin interface plus inventory, while keeping infrastructure-as-code as the source of truth.
+- Extensions are enabled as needed; only `pgvector` is required right now for Immich.
 
 ## Proposed service contract
 
@@ -44,11 +45,14 @@ Restore tests: monthly or quarterly target
 
 ## Deliverables
 
-- [ ] Create a user-facing service document, probably `docs/platform/postgres.md` or `nixos-images/postgres/README.md` expansion.
-- [ ] Document endpoint, version, extensions, and onboarding process.
-- [ ] Document backup policy, RPO, RTO, and restore expectations.
-- [ ] Document known limitations: single VM, no automatic failover, homelab-grade SLA.
-- [ ] Update `inventory/platform.yml` with agreed RPO/RTO details.
+- [x] Create a user-facing service document at `docs/platform/postgres.md`.
+- [x] Document endpoint, version, extensions, and onboarding process.
+- [x] Document backup policy, RPO, RTO, and restore expectations.
+- [x] Document known limitations: single VM, no automatic failover, homelab-grade SLA.
+- [x] Update `inventory/platform.yml` with agreed RPO/RTO details.
+
+Deferred to Phase 5:
+
 - [ ] Update `inventory/backups.md` after restore testing begins.
 
 ## Validation

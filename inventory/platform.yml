@@ -329,9 +329,17 @@ platforms:
     location: "homelab"
     tier: "P1"
     role: "Postgres platform running on the dedicated helios VM. Apps should depend on this platform as a black box."
+    endpoint: "postgres.cosmos.cboxlab.com:5432"
+    network_scope: "LAN only"
+    service_contract: "docs/platform/postgres.md"
+    availability_target: "99% monthly, excluding planned maintenance and upstream homelab dependencies"
+    rpo: "<= 1 hour for databases included in backup policy"
+    rto: "best effort, target < 4 hours for normal restore"
+    maintenance_policy: "may happen any time"
     known_from:
       - "cosmos/proxmox/helios.tf"
       - "nixos-images/postgres"
+      - "docs/platform/postgres.md"
     depends_on:
       - "vm.helios"
       - "storage.cloudflare_r2_postgres"
@@ -339,9 +347,13 @@ platforms:
     supports:
       - "database.postgres"
       - "postgres_backed_apps_unknown"
-    ha_status: "single_vm"
+    important_databases:
+      - "immich"
+      - "uptimekuma"
+    ha_status: "single_vm_no_automatic_failover"
     todos:
       - "Record client apps, restore order, and whether standby/replica options are worth it."
+      - "Implement DNS record and evaluate Postgres TLS."
 
 vms:
   gatekeeper:
@@ -571,12 +583,14 @@ services:
       - "nixos-images/gatekeeper/modules/proxy.nix"
   postgres:
     tier: "P1"
-    role: "Postgres databases for totp, planka, immich, coder, and taskplanner."
+    role: "Postgres databases for homelab LAN apps; immich and uptimekuma are the most important current databases."
     runs_on: "platform.postgres_helios"
+    endpoint: "postgres.cosmos.cboxlab.com:5432"
     backup: "backup.postgres_r2"
     known_from:
       - "nixos-images/postgres/modules/postgres.nix"
       - "nixos-images/postgres/modules/backup.nix"
+      - "docs/platform/postgres.md"
   psuite_syncthing:
     tier: "P2"
     role: "Syncthing data sync on nova."
@@ -614,6 +628,8 @@ backups:
     source: "vm.helios Postgres databases"
     mechanism: "restic + pg_dump via systemd timer"
     schedule: "hourly"
+    rpo: "<= 1 hour for databases included in backup policy"
+    rto: "best effort, target < 4 hours for normal restore"
     retention: "keep_last=10, keep_daily=10, keep_monthly=12"
     destination: "storage.cloudflare_r2_postgres"
     offsite: true
