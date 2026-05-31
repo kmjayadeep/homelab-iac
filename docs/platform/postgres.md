@@ -27,7 +27,7 @@ It is not intended to be exposed directly to the public internet.
 
 ## Supported databases
 
-Current databases are managed from `nixos-images/postgres/modules/postgres.nix`.
+Current databases are managed from the catalog at `nixos-images/postgres/modules/postgres-catalog.nix`. The NixOS Postgres and backup modules consume that catalog.
 
 Important platform databases:
 
@@ -224,12 +224,14 @@ Expectations:
 
 Current preferred onboarding path:
 
-1. Add the database/user through infrastructure-as-code.
-2. Rebuild Helios.
-3. Create or deliver app credentials manually.
-4. Confirm the app can connect through the LAN endpoint.
-5. Confirm the database is included in the backup policy or explicitly excluded.
-6. Update inventory/docs if the app is important.
+1. Add the database/user metadata to `nixos-images/postgres/modules/postgres-catalog.nix`.
+2. Set backup policy, criticality, restore priority, and required extensions.
+3. Run `nix flake check` from `nixos-images/postgres/`.
+4. Rebuild Helios.
+5. Create or deliver app credentials manually.
+6. Confirm the app can connect through the LAN endpoint.
+7. Confirm the database is included in the backup policy or explicitly excluded.
+8. Update inventory/docs if the app is important.
 
 Future desired onboarding path:
 

@@ -1,16 +1,8 @@
 { config, lib, pkgs, ... }:
 
 let
-  backupDatabases = [
-    "planka"
-    "totp"
-    "immich"
-    "coder"
-    "shoppinglist"
-    "uptimekuma"
-    "taskplanner"
-    "k3s"
-  ];
+  catalog = import ./postgres-catalog.nix;
+  backupDatabases = builtins.attrNames (lib.filterAttrs (_: database: database.backup or false) catalog.databases);
   backupDatabaseList = lib.concatStringsSep " " backupDatabases;
   backupDatabaseJson = builtins.toJSON backupDatabases;
 in

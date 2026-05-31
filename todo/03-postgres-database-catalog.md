@@ -1,6 +1,6 @@
 # Phase 3: Database Catalog
 
-Status: Not started
+Status: Done
 
 ## Goal
 
@@ -8,38 +8,33 @@ Create a single source of truth for databases, users, backup policy, and platfor
 
 ## Current state
 
-Database names and users are hard-coded in `postgres.nix`.
-Backup DB names are hard-coded separately in `backup.nix`.
-Inventory documentation is maintained separately.
+Database names, owners, backup policy, criticality, and restore priority are defined in `nixos-images/postgres/modules/postgres-catalog.nix`.
 
-This causes drift, such as DBs existing but not being included in backups.
+`postgres.nix` consumes the catalog to generate `ensureDatabases` and `ensureUsers`.
+`backup.nix` consumes the same catalog to select databases where `backup = true`.
 
-## Proposed catalog shape
+## Implemented catalog shape
 
-A Nix-level catalog could look like:
+The Nix-level catalog looks like:
 
 ```nix
 {
-  planka = {
-    owner = "planka";
-    backup = true;
-    extensions = [];
-    criticality = "P2";
+  databases = {
+    immich = {
+      owner = "immich";
+      backup = true;
+      criticality = "P1";
+      extensions = [ "pgvector" ];
+      restorePriority = "high";
+    };
   };
 
-  immich = {
-    owner = "immich";
-    backup = true;
-    extensions = [ "vector" ];
-    criticality = "P1";
-  };
-
-  k3s = {
-    owner = "k3s";
-    backup = true;
-    extensions = [];
-    criticality = "P1";
-  };
+  extraUsers = [
+    {
+      name = "pgweb";
+      reason = "pgweb admin/visualization connection user";
+    }
+  ];
 }
 ```
 
@@ -53,19 +48,19 @@ A Nix-level catalog could look like:
 - inventory metadata
 - monitoring labels/annotations later, if useful
 
-## Decisions to make
+## Decisions made
 
-- Should the catalog live as a Nix module, a `.nix` data file, YAML, or Markdown table?
-- Should app passwords be in the catalog? Proposed answer: no, keep secrets separate.
-- Should excluded DBs be allowed? Proposed answer: yes, with `backup = false` and a reason.
+- The catalog lives as a Nix data file: `nixos-images/postgres/modules/postgres-catalog.nix`.
+- App passwords do not belong in the catalog; keep secrets separate.
+- Excluded DBs are allowed with `backup = false`, but should include a comment explaining why.
 
 ## Deliverables
 
-- [ ] Create database catalog file.
-- [ ] Refactor `postgres.nix` to generate DBs/users from catalog.
-- [ ] Refactor `backup.nix` to generate backup list from catalog where `backup = true`.
-- [ ] Document how to onboard a DB by editing the catalog.
-- [ ] Add explicit backup exclusion reason if any DB is not backed up.
+- [x] Create database catalog file.
+- [x] Refactor `postgres.nix` to generate DBs/users from catalog.
+- [x] Refactor `backup.nix` to generate backup list from catalog where `backup = true`.
+- [x] Document how to onboard a DB by editing the catalog.
+- [x] Add explicit backup exclusion reason if any DB is not backed up.
 
 ## Validation
 

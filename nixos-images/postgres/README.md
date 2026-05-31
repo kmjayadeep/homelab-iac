@@ -17,6 +17,26 @@ Current platform details:
 - PostgreSQL: 16
 - Backups: hourly Restic snapshots with `globals.sql` plus per-database custom-format dumps
 
+## Database catalog
+
+The database catalog is the source of truth for app databases, owners, backup policy, criticality, and restore priority:
+
+- [`modules/postgres-catalog.nix`](modules/postgres-catalog.nix)
+
+`modules/postgres.nix` uses the catalog to generate `ensureDatabases` and `ensureUsers`.
+`modules/backup.nix` uses the same catalog to back up databases where `backup = true`.
+
+To onboard a database manually through infrastructure-as-code:
+
+1. Add an entry under `databases` in `modules/postgres-catalog.nix`.
+2. Set `owner`, `backup`, `criticality`, `extensions`, and `restorePriority`.
+3. Keep credentials out of the catalog.
+4. Run `nix flake check`.
+5. Rebuild Helios with `just rebuild`.
+6. Deliver credentials manually for now.
+
+If a database should not be backed up, set `backup = false` and add a comment explaining why.
+
 ## Admin interface
 
 Common admin operations are wrapped in `just` recipes. Run from this directory:

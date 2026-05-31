@@ -588,6 +588,7 @@ services:
     endpoint: "postgres.cosmos.cboxlab.com:5432"
     backup: "backup.postgres_r2"
     known_from:
+      - "nixos-images/postgres/modules/postgres-catalog.nix"
       - "nixos-images/postgres/modules/postgres.nix"
       - "nixos-images/postgres/modules/backup.nix"
       - "docs/platform/postgres.md"
