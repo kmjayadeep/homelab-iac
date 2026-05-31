@@ -1,0 +1,30 @@
+# Todo Index
+
+Platform improvement plans and current status.
+
+## Helios Postgres Platform
+
+| Phase | Status | Document |
+| --- | --- | --- |
+| 0 | Not started | [00-postgres-service-contract.md](00-postgres-service-contract.md) |
+| 1 | Not started | [01-postgres-backup-correctness.md](01-postgres-backup-correctness.md) |
+| 2 | Not started | [02-postgres-admin-interface.md](02-postgres-admin-interface.md) |
+| 3 | Not started | [03-postgres-database-catalog.md](03-postgres-database-catalog.md) |
+| 4 | Not started | [04-postgres-monitoring-alerting.md](04-postgres-monitoring-alerting.md) |
+| 5 | Not started | [05-postgres-backup-health-restore-automation.md](05-postgres-backup-health-restore-automation.md) |
+| 6 | Not started | [06-postgres-security-access.md](06-postgres-security-access.md) |
+| 7 | Not started | [07-postgres-reliability-upgrades.md](07-postgres-reliability-upgrades.md) |
+
+## Status legend
+
+- `Not started` - planned but no implementation yet.
+- `In progress` - implementation or documentation has begun.
+- `Blocked` - waiting on a decision, dependency, or manual inventory.
+- `Done` - implemented and validated.
+
+## Current priority
+
+Start with Phase 0 and Phase 1:
+
+1. Define the service contract so expectations are clear.
+2. Fix backup coverage drift before adding more platform features.
