@@ -1,6 +1,6 @@
 # Phase 1: Backup Correctness
 
-Status: In progress
+Status: Done
 
 ## Goal
 
@@ -69,7 +69,7 @@ Phase 1 uses a hybrid logical backup:
 6. Keep one previous local backup under `/var/tmp/postgres-backup/previous`.
 7. Upload only `/var/tmp/postgres-backup/current` to Restic.
 
-A shared database catalog is still deferred to Phase 3.
+A shared database catalog is still deferred to Phase 3. Backup efficiency optimization is deferred to Phase 5 and should consider <https://strugglers.net/posts/2025/database-backups-dump-files-and-restic/>.
 
 ## Deliverables
 
@@ -78,11 +78,15 @@ A shared database catalog is still deferred to Phase 3.
 - [x] Add metadata file to each backup run.
 - [x] Decide dump format: custom format (`pg_dump -F c`) plus `globals.sql`.
 - [x] Document restore commands for the chosen format.
+
+Deferred to Phase 5:
+
 - [ ] Add a manual restore test and record date/result.
 
 ## Validation
 
 - `backup-postgres.service` backs up all intended DBs.
 - Restic snapshot contains DB dumps and metadata.
-- At least one DB can be restored into a test database.
+- Backup was deployed and checked on Helios.
+- At least one DB can be restored into a test database as part of Phase 5.
 - `inventory/backups.md` confidence can move from `Medium` toward `High` after restore testing.

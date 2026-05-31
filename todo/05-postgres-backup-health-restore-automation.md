@@ -49,6 +49,45 @@ Recommended cadence:
 - daily or weekly for homelab
 - alert on failure
 
+### Backup efficiency optimization
+
+Review the dump + Restic strategy using this reference:
+
+- <https://strugglers.net/posts/2025/database-backups-dump-files-and-restic/>
+
+Current Phase 1 layout is operationally good, but later optimization should check whether compressed dump files reduce Restic deduplication efficiency. Consider testing options such as:
+
+- custom-format dumps with compression disabled: `pg_dump -F c -Z 0`
+- directory-format dumps: `pg_dump -F d`
+- splitting large/churn-heavy databases into more dedupe-friendly files
+- measuring actual Restic repository growth across hourly snapshots before changing strategy
+
+### Multi-target backup strategy
+
+Evaluate using local MinIO on TrueNAS as an additional backup target.
+
+Rationale:
+
+- MinIO is local, so frequent or heavier snapshots are cheaper and faster.
+- Cloudflare R2 is offsite, so it should remain the disaster-recovery target.
+- Local MinIO can carry short-interval operational restores.
+- Cloud snapshots can potentially run less frequently once local backup health is proven.
+
+Possible future policy:
+
+| Target | Location | Purpose | Candidate frequency |
+| --- | --- | --- | --- |
+| MinIO on TrueNAS | Local | frequent operational restore points | every 15 minutes or hourly |
+| Cloudflare R2 | Offsite | disaster recovery | hourly, every 4 hours, or daily depending on measured cost/size |
+
+Questions to answer before implementation:
+
+- Should MinIO use a separate Restic repository or mirror the same backup output through a second repository?
+- What retention should local MinIO use versus Cloudflare R2?
+- Should local backups include more frequent snapshots or heavier dump formats optimized for Restic dedupe?
+- How should alerts distinguish local backup failure from offsite backup failure?
+- Is TrueNAS/MinIO itself sufficiently protected by NAS snapshots or replication?
+
 ### Restore test
 
 Start manually, then automate later.

@@ -17,4 +17,5 @@ This is a platform-level backup summary. It tracks source, mechanism, target, lo
 - Confirm whether MinIO buckets replicate to a remote bucket.
 - Record all TrueNAS snapshot and cloud-sync/replication tasks.
 - Add restore test dates for Postgres and at least one game-world backup.
+- Evaluate using local MinIO on TrueNAS as an additional high-frequency Postgres backup target, with Cloudflare R2 kept as lower-frequency/offsite disaster recovery if appropriate.
 - Record PBS datastore, VM coverage, retention, prune/verify jobs, and restore test dates.
