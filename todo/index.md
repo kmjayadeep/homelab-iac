@@ -7,7 +7,7 @@ Platform improvement plans and current status.
 | Phase | Status | Document |
 | --- | --- | --- |
 | 0 | Done | [00-postgres-service-contract.md](00-postgres-service-contract.md) |
-| 1 | Not started | [01-postgres-backup-correctness.md](01-postgres-backup-correctness.md) |
+| 1 | In progress | [01-postgres-backup-correctness.md](01-postgres-backup-correctness.md) |
 | 2 | Not started | [02-postgres-admin-interface.md](02-postgres-admin-interface.md) |
 | 3 | Not started | [03-postgres-database-catalog.md](03-postgres-database-catalog.md) |
 | 4 | Not started | [04-postgres-monitoring-alerting.md](04-postgres-monitoring-alerting.md) |
@@ -24,7 +24,8 @@ Platform improvement plans and current status.
 
 ## Current priority
 
-Phase 0 is complete. Next priority is Phase 1:
+Phase 1 implementation is in progress. Next steps:
 
-1. Fix backup coverage drift before adding more platform features.
-2. Add restore validation so backup confidence can improve.
+1. Deploy the backup changes to Helios.
+2. Run a manual backup.
+3. Restore one database into a temporary test database and record the result.

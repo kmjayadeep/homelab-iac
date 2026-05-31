@@ -78,7 +78,7 @@ Backup policy:
 
 | Field | Target |
 | --- | --- |
-| Backup mechanism | Logical dumps via `pg_dump`, uploaded with Restic |
+| Backup mechanism | `pg_dumpall --globals-only` plus per-database `pg_dump -F c`, uploaded with Restic |
 | Backup destination | Cloudflare R2 bucket `postgres-cosmos-backup` |
 | Frequency | Hourly |
 | RPO | <= 1 hour for databases included in backup policy |
@@ -88,7 +88,121 @@ Backup policy:
 
 Current backup implementation lives in `nixos-images/postgres/modules/backup.nix`.
 
-Important note: backup coverage must be kept aligned with the database inventory. Phase 1 tracks fixing current drift and adding restore validation.
+Backup layout in the Restic snapshot:
+
+```text
+/var/tmp/postgres-backup/current/
+  metadata.json
+  globals.sql
+  databases/
+    planka.dump
+    totp.dump
+    immich.dump
+    coder.dump
+    shoppinglist.dump
+    uptimekuma.dump
+    taskplanner.dump
+    k3s.dump
+```
+
+`metadata.json` records backup timestamps, host, Postgres version, included databases, retention target, and dump sizes.
+
+Helios also keeps one previous local backup under `/var/tmp/postgres-backup/previous`, but Restic only uploads `/var/tmp/postgres-backup/current`.
+
+## Restore procedures
+
+These examples assume commands are run on Helios as an admin with sudo access.
+
+### List Restic snapshots
+
+```bash
+sudo -u postgres bash -lc 'source /etc/restic-env && restic snapshots'
+```
+
+### Restore latest backup files to a temporary directory
+
+```bash
+sudo rm -rf /var/tmp/postgres-restore
+sudo -u postgres bash -lc 'source /etc/restic-env && restic restore latest --target /var/tmp/postgres-restore'
+```
+
+The restored files should be under:
+
+```text
+/var/tmp/postgres-restore/var/tmp/postgres-backup/current/
+```
+
+Set a helper variable for the examples below:
+
+```bash
+RESTORE_DIR=/var/tmp/postgres-restore/var/tmp/postgres-backup/current
+```
+
+### Restore globals on a fresh server
+
+Only run this on a fresh/replacement server or when you intentionally want to restore roles and global objects.
+
+```bash
+sudo -u postgres psql -f "$RESTORE_DIR/globals.sql"
+```
+
+### Restore one database to a new database
+
+This is the safest normal restore pattern because it does not overwrite the existing database.
+
+```bash
+DB=immich
+TARGET_DB=immich_restore
+OWNER=immich
+
+sudo -u postgres createdb -O "$OWNER" "$TARGET_DB"
+sudo -u postgres pg_restore -d "$TARGET_DB" "$RESTORE_DIR/databases/$DB.dump"
+```
+
+After validation, applications can be pointed at the restored database or data can be copied back intentionally.
+
+### Restore one table selectively
+
+List dump contents:
+
+```bash
+sudo -u postgres pg_restore -l "$RESTORE_DIR/databases/immich.dump" > /tmp/immich-restore.list
+```
+
+Edit `/tmp/immich-restore.list` and keep only the objects you want, then restore into a target database:
+
+```bash
+sudo -u postgres pg_restore -d immich_restore -L /tmp/immich-restore.list "$RESTORE_DIR/databases/immich.dump"
+```
+
+For a simple table restore, `pg_restore -t` can also be used:
+
+```bash
+sudo -u postgres pg_restore -d immich_restore -t some_table "$RESTORE_DIR/databases/immich.dump"
+```
+
+### Full logical restore outline
+
+On a fresh Postgres server:
+
+1. Restore `globals.sql`.
+2. Create each application database with the expected owner.
+3. Run `pg_restore` for each database dump.
+4. Validate app connectivity.
+5. Re-enable app traffic.
+
+Example:
+
+```bash
+sudo -u postgres psql -f "$RESTORE_DIR/globals.sql"
+
+for DB in planka totp immich coder shoppinglist uptimekuma taskplanner k3s; do
+  sudo -u postgres createdb -O "$DB" "$DB"
+  sudo -u postgres pg_restore -d "$DB" "$RESTORE_DIR/databases/$DB.dump"
+done
+```
+
+Important note: logical dumps support full and selective restore to the latest successful dump time. They do not provide point-in-time recovery; WAL/PITR is a future improvement.
 
 ## Credentials
 

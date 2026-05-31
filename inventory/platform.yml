@@ -626,7 +626,7 @@ backups:
   postgres_r2:
     tier: "P1"
     source: "vm.helios Postgres databases"
-    mechanism: "restic + pg_dump via systemd timer"
+    mechanism: "restic + pg_dumpall globals + per-database pg_dump custom-format dumps via systemd timer"
     schedule: "hourly"
     rpo: "<= 1 hour for databases included in backup policy"
     rto: "best effort, target < 4 hours for normal restore"

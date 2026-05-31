@@ -1,6 +1,6 @@
 # Phase 1: Backup Correctness
 
-Status: Not started
+Status: In progress
 
 ## Goal
 
@@ -40,37 +40,44 @@ Missing from current backup loop:
 - There is no restore test recorded.
 - Backup success is not clearly exposed as a platform health signal.
 
-## Proposed approach
+## Implemented approach
 
-1. Create one source of truth for Postgres databases.
-2. Use that source for both database/user creation and backup selection.
-3. Add a `backup = true/false` flag per DB.
-4. Include Postgres globals backup:
+Phase 1 uses a hybrid logical backup:
+
+1. Back up all current application databases.
+2. Exclude system databases (`postgres`, `template0`, `template1`) from per-database dumps.
+3. Include Postgres globals backup:
 
    ```bash
    pg_dumpall --globals-only
    ```
 
-5. Prefer per-database custom-format dumps if practical:
+4. Use per-database custom-format dumps:
 
    ```bash
    pg_dump -F c -d "$DB_NAME" -f "$DB_NAME.dump"
    ```
 
-6. Include backup metadata:
-   - timestamp
+5. Include backup metadata:
+   - start/finish timestamp
    - hostname
    - Postgres version
    - list of DBs included
+   - retention target
    - dump sizes
+
+6. Keep one previous local backup under `/var/tmp/postgres-backup/previous`.
+7. Upload only `/var/tmp/postgres-backup/current` to Restic.
+
+A shared database catalog is still deferred to Phase 3.
 
 ## Deliverables
 
-- [ ] Fix immediate backup drift by adding missing DBs or explicitly excluding them.
-- [ ] Add globals/roles backup.
-- [ ] Add metadata file to each backup run.
-- [ ] Decide dump format: current tar vs custom format.
-- [ ] Document restore commands for the chosen format.
+- [x] Fix immediate backup drift by adding missing DBs or explicitly excluding them.
+- [x] Add globals/roles backup.
+- [x] Add metadata file to each backup run.
+- [x] Decide dump format: custom format (`pg_dump -F c`) plus `globals.sql`.
+- [x] Document restore commands for the chosen format.
 - [ ] Add a manual restore test and record date/result.
 
 ## Validation
