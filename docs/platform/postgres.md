@@ -261,6 +261,28 @@ Applications should not assume:
 - Unlimited connections/storage.
 - Point-in-time recovery, until WAL/PITR is explicitly implemented.
 
+## Monitoring and alerting
+
+Prometheus rules for Helios Postgres are managed in the Kubernetes GitOps repository:
+
+```text
+homelab-k8s/clusters/titania/infra/monitoring/helmrelease-prometheus.yaml
+```
+
+Current alerting direction:
+
+- Postgres exporter down/query failure should be critical.
+- Helios exporter scrape failures should be critical.
+- Backup stale beyond the hourly RPO should be critical.
+- `backup-postgres.service` failure should become critical after systemd metrics are exposed.
+- Cache hit ratio is warning-level, not critical, because Immich can legitimately do large scans.
+
+Current metric caveat:
+
+- `node_systemd_unit_state` is not currently exposed for Helios, so backup service failure is covered indirectly through stale Restic snapshot alerts for now.
+
+True synthetic SQL checks are still a future improvement.
+
 ## Future improvements
 
 Tracked in `todo/`:
