@@ -69,28 +69,45 @@ Cost:
 - more complexity
 - more operational knowledge needed
 
-### Read replica
+### Read replica standby
 
-Add a second Postgres VM on another Proxmox node.
+Add a second Postgres VM on another Proxmox node as an async read replica standby.
 
-Initial mode should be manual failover only.
+This is desired eventually, but should come after the standby-from-backup restore target is working and restore drills are trusted.
+
+Initial mode should be manual failover only:
+
+```text
+helios primary -> streaming replication -> read replica standby
+postgres.cosmos.cboxlab.com -> helios normally
+manual failover -> promote replica, then update DNS
+```
 
 Benefit:
 
-- replica can validate streaming backup/replication health
-- faster manual recovery in some failures
+- faster manual recovery for primary VM/host failure
+- can validate streaming replication health
+- may support read-only checks or future read-only workloads
+- gives a path from restore-target standby toward a more cloud-like database service
+
+Important limitation:
+
+- app mistakes, bad migrations, accidental deletes, and data corruption can replicate to the standby. Backups and PITR are still required.
 
 Cost:
 
 - more moving parts
-- failover process must be documented and tested
+- replication monitoring required
+- promotion/failback process must be documented and tested
+- split-brain risk if failover is automated too early
 
 ## Recommended order
 
 1. Increase memory if resource budget allows.
 2. Tune Postgres memory settings.
 3. Consider WAL/PITR only after dump restores are tested.
-4. Consider read replica only after monitoring and backup health are reliable.
+4. Build and validate standby-from-backup first.
+5. Consider read replica standby only after monitoring, backup health, and restore drills are reliable.
 
 ## Deliverables
 
@@ -98,7 +115,7 @@ Cost:
 - [ ] Add Postgres memory tuning after RAM decision.
 - [ ] Decide whether hourly RPO is enough.
 - [ ] Evaluate WAL/PITR later.
-- [ ] Evaluate read replica later.
+- [ ] Evaluate read replica standby later after standby-from-backup is working.
 
 ## Validation
 
