@@ -10,6 +10,7 @@
       - nginx
       - python3-certbot-dns-cloudflare
       - sudo
+      - git-crypt
     state: present
     update_cache: true
 
