@@ -104,3 +104,9 @@ resource "cloudflare_dns_record" "openclaw" {
   proxied = false
   ttl     = 300
 }
+
+module "openclaw_s3" {
+  source      = "../../terraform-modules/minio_s3_bucket"
+  name        = "openclaw-backup"
+  create_user = true
+}
