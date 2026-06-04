@@ -9,3 +9,8 @@
     name: nginx
     state: reloaded
   listen: Reload nginx
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  listen: Reload systemd

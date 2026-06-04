@@ -1,0 +1,73 @@
+---
+- name: Verify restic credentials are configured
+  ansible.builtin.assert:
+    that:
+      - restic_repository is defined
+      - restic_repository | length > 0
+      - restic_password is defined
+      - restic_password | length > 0
+      - restic_s3_access_key is defined
+      - restic_s3_access_key | length > 0
+      - restic_s3_secret_key is defined
+      - restic_s3_secret_key | length > 0
+    fail_msg: "Restic credentials are missing. Set restic_repository, restic_password, restic_s3_access_key, and restic_s3_secret_key in inventory/group_vars or environment variables."
+    quiet: true
+
+- name: Install restic backup tool
+  ansible.builtin.apt:
+    name: restic
+    state: present
+    update_cache: true
+
+- name: Create restic environment file
+  ansible.builtin.template:
+    src: restic-env.j2
+    dest: /etc/restic-openclaw-env
+    owner: "{{ openclaw_user }}"
+    group: "{{ openclaw_group }}"
+    mode: "0600"
+
+- name: Create OpenClaw backup script
+  ansible.builtin.template:
+    src: backup-openclaw.sh.j2
+    dest: /usr/local/bin/backup-openclaw.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create systemd service for OpenClaw backup
+  ansible.builtin.template:
+    src: backup-openclaw.service.j2
+    dest: /etc/systemd/system/backup-openclaw.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Create systemd timer for OpenClaw backup
+  ansible.builtin.template:
+    src: backup-openclaw.timer.j2
+    dest: /etc/systemd/system/backup-openclaw.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Enable and start OpenClaw backup timer
+  ansible.builtin.systemd:
+    name: backup-openclaw.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Display OpenClaw backup configuration
+  ansible.builtin.debug:
+    msg:
+      - "OpenClaw backup configuration:"
+      - "  Enabled: {{ backup_enabled | default(false) }}"
+      - "  Schedule: {{ backup_schedule | default('hourly') }}"
+      - "  Backup paths: {{ backup_paths | default([]) }}"
+      - "  Retention: last {{ backup_retention.keep_last | default(10) }}, daily {{ backup_retention.keep_daily | default(10) }}, monthly {{ backup_retention.keep_monthly | default(12) }}"
+      - "  Repository: {{ restic_repository | default('NOT SET') }}"
+      - "Manual backup: sudo systemctl start backup-openclaw.service"
+      - "Check logs: sudo journalctl -u backup-openclaw.service -f"

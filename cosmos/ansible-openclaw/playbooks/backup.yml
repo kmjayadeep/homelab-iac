@@ -1,0 +1,41 @@
+---
+- name: Manage OpenClaw restic backups
+  hosts: openclaw_servers
+  vars_prompt:
+    - name: backup_operation
+      prompt: "Choose backup operation (setup|backup|list)"
+      default: "backup"
+      private: false
+  pre_tasks:
+    - name: Verify backup is enabled
+      ansible.builtin.fail:
+        msg: "Backup is not enabled. Set backup_enabled: true in group_vars."
+      when: not backup_enabled | default(false)
+  tasks:
+    - name: Setup backup timer and service
+      ansible.builtin.include_role:
+        name: openclaw
+        tasks_from: backup
+      when: backup_operation == "setup"
+
+    - name: Run manual backup
+      ansible.builtin.systemd:
+        name: backup-openclaw.service
+        state: started
+      when: backup_operation == "backup"
+
+    - name: List restic snapshots
+      ansible.builtin.shell: |
+        source /etc/restic-openclaw-env
+        restic snapshots
+      args:
+        executable: /bin/bash
+      become_user: "{{ openclaw_user }}"
+      register: restic_snapshots
+      changed_when: false
+      when: backup_operation == "list"
+
+    - name: Display restic snapshots
+      ansible.builtin.debug:
+        var: restic_snapshots.stdout_lines
+      when: backup_operation == "list"

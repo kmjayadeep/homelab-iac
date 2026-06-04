@@ -44,6 +44,43 @@ Optional environment variable:
 - `CLOUDFLARE_API_TOKEN` - Cloudflare API token used for the Let's Encrypt DNS challenge.
 - `OPENCLAW_CERTBOT_EMAIL` - Let's Encrypt registration email. Defaults to `OPENCLAW_EMAIL`, then `admin@cboxlab.com`.
 
+## Backups
+
+Setup installs a restic systemd timer that periodically backs up `/home/openclaw/.openclaw/` to the MinIO bucket `openclaw-backup`.
+
+Set these values via environment variables, Ansible vault, or host/group vars before running setup:
+
+```yaml
+restic_repository: s3:https://minio.cosmos.cboxlab.com/openclaw-backup
+restic_password: your-restic-password
+restic_s3_access_key: your-access-key
+restic_s3_secret_key: your-secret-key
+```
+
+Environment variable names are also supported:
+
+```bash
+export OPENCLAW_RESTIC_REPOSITORY=s3:https://minio.cosmos.cboxlab.com/openclaw-backup
+export OPENCLAW_RESTIC_PASSWORD=...
+export OPENCLAW_RESTIC_S3_ACCESS_KEY=...
+export OPENCLAW_RESTIC_S3_SECRET_KEY=...
+```
+
+Backup operations:
+
+```bash
+# Install or refresh restic service/timer files
+ansible-playbook playbooks/backup.yml -e backup_operation=setup
+
+# Run a manual backup
+ansible-playbook playbooks/backup.yml -e backup_operation=backup
+
+# List snapshots
+ansible-playbook playbooks/backup.yml -e backup_operation=list
+```
+
+The periodic units are `backup-openclaw.timer` and `backup-openclaw.service`.
+
 ## Finish onboarding
 
 Run OpenClaw onboarding interactively on the VM:

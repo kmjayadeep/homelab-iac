@@ -1,0 +1,15 @@
+[Unit]
+Description=Backup OpenClaw data using restic
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User={{ openclaw_user }}
+ExecStart=/usr/local/bin/backup-openclaw.sh
+WorkingDirectory=/home/{{ openclaw_user }}
+
+IOSchedulingClass=2
+IOSchedulingPriority=6
+CPUSchedulingPolicy=2
+CPUSchedulingPriority=19

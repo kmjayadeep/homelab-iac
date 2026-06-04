@@ -21,3 +21,19 @@ openclaw_gateway_url: "http://{{ openclaw_gateway_host }}:{{ openclaw_gateway_po
 
 cloudflare_api_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
 letsencrypt_email: "{{ lookup('env', 'OPENCLAW_CERTBOT_EMAIL') | default(lookup('env', 'OPENCLAW_EMAIL') | default('admin@cboxlab.com', true), true) }}"
+
+# Restic backup configuration. Repository credentials should come from the
+# environment or vault and must not be committed in plain text.
+backup_enabled: true
+backup_schedule: hourly
+backup_retention:
+  keep_last: 10
+  keep_daily: 10
+  keep_monthly: 12
+backup_paths:
+  - "/home/{{ openclaw_user }}/.openclaw"
+
+restic_repository: "{{ lookup('env', 'OPENCLAW_RESTIC_REPOSITORY') | default('s3:https://minio.cosmos.cboxlab.com/openclaw-backup', true) }}"
+restic_password: "{{ lookup('env', 'OPENCLAW_RESTIC_PASSWORD') }}"
+restic_s3_access_key: "{{ lookup('env', 'OPENCLAW_RESTIC_S3_ACCESS_KEY') }}"
+restic_s3_secret_key: "{{ lookup('env', 'OPENCLAW_RESTIC_S3_SECRET_KEY') }}"
