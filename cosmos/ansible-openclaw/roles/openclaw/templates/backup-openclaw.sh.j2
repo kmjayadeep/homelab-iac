@@ -40,3 +40,8 @@ echo "Listing current snapshots..."
 restic snapshots
 
 echo "OpenClaw backup completed successfully"
+
+if [ -n "${UPTIMEKUMA_URL:-}" ]; then
+    echo "Sending Uptime Kuma success notification..."
+    curl -fsS --retry 3 --retry-delay 2 --max-time 15 "$UPTIMEKUMA_URL" > /dev/null
+fi
