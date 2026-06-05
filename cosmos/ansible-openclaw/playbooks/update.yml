@@ -13,7 +13,7 @@
       environment:
         HOME: "/home/{{ openclaw_user }}"
         OPENCLAW_NO_PROMPT: "1"
-        PATH: "/home/{{ openclaw_user }}/.local/bin:/home/{{ openclaw_user }}/.npm-global/bin:{{ ansible_env.PATH }}"
+        PATH: "/home/{{ openclaw_user }}/.local/bin:/home/{{ openclaw_user }}/.npm-global/bin:{{ ansible_facts['env']['PATH'] }}"
       when: openclaw_binary.stat.exists
 
     - name: Install OpenClaw if missing
@@ -37,7 +37,7 @@
             HOME: "/home/{{ openclaw_user }}"
             OPENCLAW_NO_PROMPT: "1"
             OPENCLAW_NO_ONBOARD: "1"
-            PATH: "/home/{{ openclaw_user }}/.local/bin:/home/{{ openclaw_user }}/.npm-global/bin:{{ ansible_env.PATH }}"
+            PATH: "/home/{{ openclaw_user }}/.local/bin:/home/{{ openclaw_user }}/.npm-global/bin:{{ ansible_facts['env']['PATH'] }}"
       always:
         - name: Remove temporary OpenClaw installer sudo access
           ansible.builtin.file:
