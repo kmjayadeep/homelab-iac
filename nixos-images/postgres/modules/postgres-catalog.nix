@@ -44,6 +44,14 @@
       restorePriority = "normal";
     };
 
+    streakslap = {
+      owner = "streakslap";
+      backup = true;
+      criticality = "P3";
+      extensions = [];
+      restorePriority = "normal";
+    };
+
     taskplanner = {
       owner = "taskplanner";
       backup = true;
