@@ -28,6 +28,14 @@
       restorePriority = "high";
     };
 
+    litellm = {
+      owner = "litellm";
+      backup = true;
+      criticality = "P2";
+      extensions = [];
+      restorePriority = "normal";
+    };
+
     planka = {
       owner = "planka";
       backup = true;
