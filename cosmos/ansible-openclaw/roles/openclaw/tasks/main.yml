@@ -156,7 +156,7 @@
 
 - name: Include OpenClaw backup configuration tasks
   ansible.builtin.include_tasks: backup.yml
-  when: backup_enabled | default(false)
+  when: backup_enabled | default(false) | bool
 
 - name: Show OpenClaw next steps
   ansible.builtin.debug:
