@@ -81,3 +81,13 @@ output "openclaw_bucket_secret_key" {
   value     = module.openclaw_s3.secret_key
   sensitive = true
 }
+
+output "kite_bucket_access_key" {
+  value     = module.kite_s3.access_key
+  sensitive = true
+}
+
+output "kite_bucket_secret_key" {
+  value     = module.kite_s3.secret_key
+  sensitive = true
+}
