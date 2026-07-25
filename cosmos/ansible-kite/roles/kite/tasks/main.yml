@@ -1,0 +1,46 @@
+---
+- name: Install base packages
+  ansible.builtin.apt:
+    name: "{{ kite_base_packages }}"
+    state: present
+    update_cache: true
+
+- name: Ensure Kite group exists
+  ansible.builtin.group:
+    name: "{{ kite_group }}"
+    state: present
+
+- name: Ensure Kite user exists
+  ansible.builtin.user:
+    name: "{{ kite_user }}"
+    group: "{{ kite_group }}"
+    shell: /bin/bash
+    create_home: true
+
+- name: Install SSH authorized keys for Kite user
+  ansible.posix.authorized_key:
+    user: "{{ kite_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ kite_authorized_keys }}"
+
+- name: Configure git user name for Kite
+  ansible.builtin.git_config:
+    name: user.name
+    scope: global
+    value: "{{ kite_git_user_name }}"
+  become_user: "{{ kite_user }}"
+
+- name: Configure git user email for Kite
+  ansible.builtin.git_config:
+    name: user.email
+    scope: global
+    value: "{{ kite_git_user_email }}"
+  become_user: "{{ kite_user }}"
+
+- name: Show next steps
+  ansible.builtin.debug:
+    msg:
+      - "Kite VM base configuration is complete."
+      - "No application software or services were installed."
+      - "Connect with: ssh {{ kite_user }}@{{ ansible_host }}"

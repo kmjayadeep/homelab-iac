@@ -1,0 +1,19 @@
+---
+kite_user: "kite"
+kite_group: "kite"
+
+kite_authorized_keys:
+  - "{{ lookup('file', ansible_ssh_private_key_file + '.pub') }}"
+
+kite_git_user_name: "Kite"
+kite_git_user_email: "{{ lookup('env', 'KITE_EMAIL') | default('kite@localhost', true) }}"
+
+kite_base_packages:
+  - ca-certificates
+  - curl
+  - git
+  - git-crypt
+  - gnupg
+  - jq
+  - ripgrep
+  - sudo

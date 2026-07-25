@@ -1,0 +1,5 @@
+---
+- name: Prepare Kite VM
+  hosts: kite_servers
+  roles:
+    - kite
