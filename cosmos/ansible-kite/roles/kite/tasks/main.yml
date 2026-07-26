@@ -38,6 +38,50 @@
     value: "{{ kite_git_user_email }}"
   become_user: "{{ kite_user }}"
 
+- name: Ensure Cloudflare token and Let's Encrypt email are set
+  ansible.builtin.assert:
+    that:
+      - cloudflare_api_token | length > 0
+      - letsencrypt_email | length > 0
+    fail_msg: "CLOUDFLARE_API_TOKEN and KITE_CERTBOT_EMAIL or KITE_EMAIL must be set in the environment."
+
+- name: Install Cloudflare credentials for Certbot
+  ansible.builtin.template:
+    src: cloudflare.ini.j2
+    dest: /etc/letsencrypt/cloudflare.ini
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Obtain Kite Let's Encrypt certificate via DNS challenge
+  ansible.builtin.command: >-
+    certbot certonly
+    --dns-cloudflare
+    --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini
+    --non-interactive
+    --agree-tos
+    -m {{ letsencrypt_email }}
+    -d {{ kite_cert_domain }}
+  args:
+    creates: "/etc/letsencrypt/live/{{ kite_cert_domain }}/fullchain.pem"
+
+- name: Install Certbot deploy hook to reload Nginx
+  ansible.builtin.copy:
+    dest: /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+    owner: root
+    group: root
+    mode: "0755"
+    content: |-
+      #!/usr/bin/env bash
+      set -e
+      systemctl reload nginx
+
+- name: Ensure Certbot renewal timer is enabled
+  ansible.builtin.systemd:
+    name: certbot.timer
+    state: started
+    enabled: true
+
 - name: Disable default Nginx site
   ansible.builtin.file:
     path: /etc/nginx/sites-enabled/default
@@ -70,6 +114,6 @@
   ansible.builtin.debug:
     msg:
       - "Kite VM base configuration is complete."
-      - "Nginx proxies http://{{ kite_domain }} to http://{{ kite_upstream_host }}:{{ kite_upstream_port }}."
+      - "Nginx proxies https://{{ kite_domain }} to http://{{ kite_upstream_host }}:{{ kite_upstream_port }}."
       - "No application software was installed."
       - "Connect with: ssh {{ kite_user }}@{{ ansible_host }}"

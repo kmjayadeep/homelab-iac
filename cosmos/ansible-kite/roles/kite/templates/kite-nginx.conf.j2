@@ -2,6 +2,17 @@ server {
   listen 80;
   listen [::]:80;
   server_name {{ kite_domain }};
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  server_name {{ kite_domain }};
+
+  ssl_certificate /etc/letsencrypt/live/{{ kite_cert_domain }}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ kite_cert_domain }}/privkey.pem;
+  ssl_protocols TLSv1.2 TLSv1.3;
 
   location / {
     proxy_pass http://{{ kite_upstream_host }}:{{ kite_upstream_port }};

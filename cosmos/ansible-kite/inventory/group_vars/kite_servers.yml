@@ -9,16 +9,22 @@ kite_git_user_name: "Kite"
 kite_git_user_email: "{{ lookup('env', 'KITE_EMAIL') | default('kite@localhost', true) }}"
 
 kite_domain: "kite.cosmos.cboxlab.com"
+kite_cert_domain: "{{ kite_domain }}"
 kite_upstream_host: "127.0.0.1"
 kite_upstream_port: 3000
 
+cloudflare_api_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
+letsencrypt_email: "{{ lookup('env', 'KITE_CERTBOT_EMAIL') | default(lookup('env', 'KITE_EMAIL') | default('admin@cboxlab.com', true), true) }}"
+
 kite_base_packages:
   - ca-certificates
+  - certbot
   - curl
   - git
   - git-crypt
   - gnupg
   - jq
   - nginx
+  - python3-certbot-dns-cloudflare
   - ripgrep
   - sudo
