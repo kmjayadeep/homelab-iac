@@ -8,6 +8,10 @@ kite_authorized_keys:
 kite_git_user_name: "Kite"
 kite_git_user_email: "{{ lookup('env', 'KITE_EMAIL') | default('kite@localhost', true) }}"
 
+kite_domain: "kite.cosmos.cboxlab.com"
+kite_upstream_host: "127.0.0.1"
+kite_upstream_port: 3000
+
 kite_base_packages:
   - ca-certificates
   - curl
@@ -15,5 +19,6 @@ kite_base_packages:
   - git-crypt
   - gnupg
   - jq
+  - nginx
   - ripgrep
   - sudo

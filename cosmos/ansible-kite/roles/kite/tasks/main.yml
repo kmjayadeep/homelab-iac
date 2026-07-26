@@ -38,9 +38,38 @@
     value: "{{ kite_git_user_email }}"
   become_user: "{{ kite_user }}"
 
+- name: Disable default Nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+
+- name: Configure Nginx proxy for Kite
+  ansible.builtin.template:
+    src: kite-nginx.conf.j2
+    dest: /etc/nginx/sites-available/kite.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable Kite Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/kite.conf
+    dest: /etc/nginx/sites-enabled/kite.conf
+    state: link
+  notify: Reload nginx
+
+- name: Ensure Nginx is running
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true
+
 - name: Show next steps
   ansible.builtin.debug:
     msg:
       - "Kite VM base configuration is complete."
-      - "No application software or services were installed."
+      - "Nginx proxies http://{{ kite_domain }} to http://{{ kite_upstream_host }}:{{ kite_upstream_port }}."
+      - "No application software was installed."
       - "Connect with: ssh {{ kite_user }}@{{ ansible_host }}"
