@@ -49,7 +49,7 @@
       service-cidr:
         - "{{ k3s_service_cidr_v4 }}"
         - "{{ k3s_service_cidr_v6 }}"
-      snapshotter: native
+      snapshotter: overlayfs
       node-ip:
         - "{{ k3s_node_ip_v4 }}"
         - "{{ k3s_node_ip_v6 }}"
