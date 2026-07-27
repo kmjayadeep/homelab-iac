@@ -17,6 +17,11 @@
     shell: /bin/bash
     create_home: true
 
+- name: Enable lingering for Kite user services
+  ansible.builtin.command: "loginctl enable-linger {{ kite_user }}"
+  args:
+    creates: "/var/lib/systemd/linger/{{ kite_user }}"
+
 - name: Install SSH authorized keys for Kite user
   ansible.posix.authorized_key:
     user: "{{ kite_user }}"
