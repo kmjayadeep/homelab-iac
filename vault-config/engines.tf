@@ -1,6 +1,6 @@
 resource "vault_mount" "homelab_kv" {
   path        = "homelab/kv"
-  description = "KV Secrets used in homelab"
+  description = "KV secrets used by homelab applications"
   type        = "kv-v2"
 }
 
