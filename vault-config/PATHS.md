@@ -46,6 +46,7 @@ Optional keys:
 | Key | Meaning |
 |---|---|
 | `expires-at` | Upstream expiry as an ISO 8601 date (`YYYY-MM-DD`), or RFC 3339 UTC timestamp when time matters; omit when it does not expire |
+| `imported-at` | Date an existing credential was first imported when its original rotation date is unknown |
 | `rotation-due-at` | Planned rotation as an ISO 8601 date or RFC 3339 UTC timestamp |
 | `scope` | Concise non-secret permission summary |
 | `external-id` | Non-secret identifier used to locate/revoke the upstream credential |

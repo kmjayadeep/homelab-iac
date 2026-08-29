@@ -6,6 +6,13 @@ variable "external_secrets_roles" {
     secret_paths         = set(string)
   }))
   default = {
+    baskit-firebase = {
+      kubernetes_namespace = "baskit"
+      service_account_name = "external-secrets-vault-firebase"
+      secret_paths = [
+        "services/firebase/baskit",
+      ]
+    }
     cert-manager-cloudflare = {
       kubernetes_namespace = "cert-manager"
       secret_paths = [
