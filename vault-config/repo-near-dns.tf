@@ -6,6 +6,9 @@ resource "vault_jwt_auth_backend_role" "near-dns" {
   bound_claims = {
     repository = "kmjayadeep/near-dns"
   }
+  claim_mappings = {
+    repository = "repository"
+  }
   user_claim = "sub"
   role_type  = "jwt"
   token_ttl  = 300

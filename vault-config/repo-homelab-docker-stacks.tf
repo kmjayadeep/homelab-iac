@@ -7,8 +7,8 @@ resource "vault_ssh_secret_backend_role" "jailmaker-docker" {
   default_extensions = {
     "permit-pty" = ""
   }
-  ttl     = "30m"
-  max_ttl = "1h"
+  ttl     = "1800"
+  max_ttl = "3600"
 }
 
 resource "vault_jwt_auth_backend_role" "homelab-docker-stacks" {
