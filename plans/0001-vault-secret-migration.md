@@ -1,6 +1,6 @@
 # Plan 0001: Incremental Vault secret migration
 
-- Status: Proposed
+- Status: Completed with follow-up work
 - Related ADR: `homelab-k8s/adrs/0001-vault-external-secrets.md`
 - Kubernetes rollout plan: `homelab-k8s/plans/0001-sealed-secrets-to-vault.md`
 
@@ -189,6 +189,15 @@ rendering and reload path can be tested without exposing values.
 owner and source before adding a Vault path.
 - `psuite-restic-creds` is not currently included or referenced; do not migrate
 it until its use is confirmed.
+
+## Completion summary
+
+All active credentials inventoried from Kubernetes were imported into owner-based
+Vault paths, and exact-path Kubernetes auth roles were applied. An inactive
+Psuite Restic credential and the undeployed Dotbintask credential were also
+preserved in Vault. Follow-up work consists of trusted internal TLS, upstream
+credential rotations as expiry dates approach, and restore drills for backup and
+object-storage integrations.
 
 ## Completion criteria
 
