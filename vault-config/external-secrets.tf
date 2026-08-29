@@ -5,7 +5,20 @@ variable "external_secrets_roles" {
     service_account_name = optional(string, "external-secrets-vault")
     secret_paths         = set(string)
   }))
-  default = {}
+  default = {
+    cert-manager-cloudflare = {
+      kubernetes_namespace = "cert-manager"
+      secret_paths = [
+        "services/cloudflare/dns-cboxlab",
+      ]
+    }
+    external-dns-cloudflare = {
+      kubernetes_namespace = "external-dns"
+      secret_paths = [
+        "services/cloudflare/dns-cboxlab",
+      ]
+    }
+  }
 
   validation {
     condition = alltrue(flatten([
