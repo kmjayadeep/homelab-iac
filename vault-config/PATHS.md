@@ -85,29 +85,29 @@ path. Separate scoped identities stay grouped under their owner prefix.
 Kubernetes namespaces are authentication constraints only and never appear in
 KV paths. Vault Enterprise namespaces are not used.
 
-## Migration map
+## Canonical credential inventory
 
-This map is based on the current application and infrastructure Secrets. It
+This records the paths populated during the completed Kubernetes migration. It
 lists property names only, never values.
 
-| Current Kubernetes Secret | Proposed logical Vault path | Properties / treatment |
+| Former Kubernetes Secret | Logical Vault path | Properties / treatment |
 |---|---|---|
 | `actions-runner-secret` | `services/github/actions-runner` | `token`; reuse this path outside Kubernetes only if it is the same GitHub identity |
-| `baskit-metrics-firebase` and the Firebase item in `baskit-backup` | `services/firebase/baskit` | `service_account_json`; these look duplicated and should be verified before consolidating |
-| `baskit-backup` object-storage fields | `services/minio/baskit-backup` | `endpoint`, `bucket`, `access_key`, `secret_key`, `use_tls`; keep `GCP_PROJECT_ID` as non-secret configuration |
-| `ghcr-secret` | `services/ghcr/baskit-pull` | canonical registry credentials; ESO renders `.dockerconfigjson` |
+| `baskit-metrics-firebase` and the Firebase item in `baskit-backup` | `services/firebase/baskit` | `service_account_json`; the source documents were securely verified as identical before consolidation |
+| `baskit-backup` object-storage fields | `services/object-storage/baskit-backup` | `endpoint`, `bucket`, `access_key`, `secret_key`, `use_ssl`, and the currently retained `project_id` configuration |
+| `ghcr-secret` | `services/ghcr/baskit-pull` | `dockerconfigjson`; ESO maps it to `.dockerconfigjson` and sets the Kubernetes Secret type |
 | `fava-auth` | `apps/beancount/auth` | `auth` |
 | `dotbintask-secret` | `apps/dotbintask/api` | `tokens` |
 | `glance-secret` AdGuard item | `services/adguard/glance` | `password` or token issued for Glance |
 | `glance-secret` Immich item | `services/immich/glance` | `api_key` issued for Glance |
 | `litellm-secrets` application keys | `apps/litellm/core` | `master_key`, `salt_key` |
-| `litellm-secrets` database item | `services/postgresql/litellm` | canonical connection components; render `DATABASE_URL` for Kubernetes |
+| `litellm-secrets` database item | `services/postgresql/litellm` | `database_url`; splitting it into canonical connection components is optional follow-up work |
 | `otpcloud-secret` application item | `apps/otpcloud/core` | `app_key` |
-| `otpcloud-secret` database item | `services/postgresql/otpcloud` | canonical connection components; render `DB_CONNECTION_STRING` |
+| `otpcloud-secret` database item | `services/postgresql/otpcloud` | `connection_string`; splitting it into canonical components is optional follow-up work |
 | `psuite-wiki-creds` | `apps/psuite/wiki` | `creds` |
 | `psuite-restic-creds` | `services/object-storage/psuite-restic` | repository, access key, secret key, and Restic password |
-| `shoppinglist-config` | `services/postgresql/shoppinglist` | username/password/database/host; render the application's `POSTGRES_PASSWORD` and URL |
-| `taskplanner-config` | `services/postgresql/taskplanner` | username/password/database/host; render the application's `POSTGRES_PASSWORD` and URL |
+| `shoppinglist-config` | `services/postgresql/shoppinglist` | `password`; non-secret connection components remain in application configuration |
+| `taskplanner-config` | `services/postgresql/taskplanner` | `password`; non-secret connection components remain in application configuration |
 | `openvpn-config` | `services/vpn/deluge-openvpn` | authentication and client configuration documents |
 | `wg-config` | `services/vpn/deluge-wireguard` | WireGuard configuration document |
 | `wallabag-config` | `apps/wallabag/core` | Symfony application secret |
@@ -115,19 +115,15 @@ lists property names only, never values.
 | `grafana-creds` | `platform/monitoring/grafana-admin` | admin username and password |
 | `alertmanager-config` | `platform/monitoring/alertmanager` | configuration document; split receiver credentials later when supported cleanly |
 | `loki-minio-creds` | `services/object-storage/loki` | access key and secret key |
-| `thanos-s3` | `services/object-storage/thanos` | object-store connection components; ESO may render `objstore.yml` |
+| `thanos-s3` | `services/object-storage/thanos` | `config`; ESO maps the configuration document to `objstore.yml` |
 | `restic-config` | `platform/backup/restic-exporter` | configuration document; split backend identities into `services/object-storage/...` when practical |
 
-Inventory issues to resolve during migration:
+Known inventory exceptions:
 
-- `k8s-ai-sre` references `k8s-ai-sre-env`, but no Secret declaration exists in
-  the repository. Identify its owner and properties before assigning a path.
-- `psuite-restic-creds` exists as a plaintext manifest but is not included by the
-  psuite Kustomization and is not referenced by its workloads. Confirm whether
-  it is active before migrating it.
-- Matching property names do not prove matching values. In particular, verify
-  the Firebase and Cloudflare candidates securely without printing values or
-  placing them in migration scripts.
+- `k8s-ai-sre` references `k8s-ai-sre-env`, but no Secret declaration or live
+  Secret was found. Identify its owner and properties before creating it.
+- The inactive, unreferenced Psuite Restic credential was preserved at
+  `services/object-storage/psuite-restic`; no Kubernetes access role was added.
 
 The wildcard TLS Secret `cosmos-cboxlab-cert` is generated by cert-manager and
 is not migrated to Vault/ESO. Keeping certificate issuance outside ESO avoids a

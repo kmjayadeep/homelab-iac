@@ -1,8 +1,10 @@
 # Vault configuration
 
 This Terraform configuration manages Vault auth methods, secret engines, and
-policies. Secret values are written through a separate secure operator workflow
-and must not be added to Terraform.
+exact-path policies. The Kubernetes migration is complete and the checked-in
+`external_secrets_roles` map defines the active ESO trust boundaries. Secret
+values are written through a separate secure operator workflow and must not be
+added to Terraform.
 
 ## External Secrets access
 
@@ -36,8 +38,9 @@ consumers. Access remains isolated by path policies. A workload or VM can be
 granted access to an existing owner-based path without copying its value.
 
 Vault uses its in-cluster ServiceAccount token and CA for Kubernetes TokenReview
-requests. Ensure the Vault server ServiceAccount has the `system:auth-delegator`
-role before applying this configuration.
+requests. Its ServiceAccount must retain `system:auth-delegator`. ESO currently
+connects to Vault over the accepted temporary internal HTTP endpoint; trusted
+internal TLS remains required follow-up work.
 
 The checked-in `.envrc` loads the current administrative token from `pass` for
 Terraform operations; the token value is never committed. Prefer replacing the

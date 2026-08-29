@@ -4,6 +4,10 @@
 - Related ADR: `homelab-k8s/adrs/0001-vault-external-secrets.md`
 - Kubernetes rollout plan: `homelab-k8s/plans/0001-sealed-secrets-to-vault.md`
 
+The phase checklists below preserve the original rollout procedure. The
+completion summary and remaining gates at the end are the authoritative current
+status.
+
 ## Goal
 
 Move canonical secret values to the existing `homelab/kv` KV v2 mount without
@@ -187,8 +191,8 @@ rendering and reload path can be tested without exposing values.
 - Vault recovery keys, unseal material, and initial root token remain offline.
 - `k8s-ai-sre-env` has no declaration in the Kubernetes repository; identify its
 owner and source before adding a Vault path.
-- `psuite-restic-creds` is not currently included or referenced; do not migrate
-it until its use is confirmed.
+- `psuite-restic-creds` is not included or referenced. Its value was preserved
+at `services/object-storage/psuite-restic`, but no consumer policy was created.
 
 ## Completion summary
 
@@ -199,12 +203,13 @@ preserved in Vault. Follow-up work consists of trusted internal TLS, upstream
 credential rotations as expiry dates approach, and restore drills for backup and
 object-storage integrations.
 
-## Completion criteria
+## Outcome and remaining gates
 
-- No active application or infrastructure SealedSecret remains except an
-explicitly documented bootstrap exception.
-- Every Vault role grants exact paths only.
-- Intentionally shared credentials exist once and have multiple consumer
-  policies; independently scoped identities are separate under one owner prefix.
-- Each migrated credential has a tested rotation procedure.
-- Old upstream credentials are revoked after the rollback window.
+- [x] No active application or infrastructure SealedSecret remains.
+- [x] Every generated Vault role grants exact data paths only.
+- [x] Intentionally shared credentials use one canonical path with separate
+  consumer policies.
+- [ ] Enable trusted internal Vault TLS and update all SecretStores.
+- [ ] Complete restore drills for every backup/object-storage integration.
+- [ ] Document and test upstream rotation for each credential family as it is
+  rotated; old Cloudflare tokens are intentionally retained until expiry.

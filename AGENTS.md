@@ -112,10 +112,20 @@ consistent with the surrounding files.
 ### General
 - Prefer minimal, targeted edits.
 - Avoid introducing new tooling or lint rules without approval.
-- Avoid secrets in the repo; use `.envrc` and environment variables instead.
+- Do not commit plaintext credentials. Use `.envrc`, `pass`, and environment variables for provider authentication.
 - Keep comments concise and only when they add clarity.
-- Respect `.gitignore` and never add `.tfvars` or credentials.
+- Respect `.gitignore` and never add `.tfvars` or credential files. The existing Vault Terraform state is an explicit exception: it is tracked through `git-crypt` and must remain encrypted.
 - Keep files organized under existing directories; avoid renames unless needed.
+
+### Vault and External Secrets
+- Read `vault-config/PATHS.md`, `vault-config/README.md`, and `plans/0001-vault-secret-migration.md` before changing Vault paths, policies, or Kubernetes roles.
+- Terraform manages Vault mounts, auth methods, exact-path policies, and roles; it must not manage secret values.
+- Write or rotate values through a non-logging stdin/file workflow. Never put values in Terraform, command arguments, shell history, output, plans, or agent messages.
+- KV paths use the owner-based `apps/`, `services/`, and `platform/` taxonomy. Platform consumers share a canonical path through separate policies rather than consumer-specific copies.
+- Custom metadata is non-secret and follows `vault-config/PATHS.md`. Keep `origin`, `owner`, management, and lifecycle fields current.
+- `external_secrets_roles` must grant exact logical paths and bind a dedicated Kubernetes ServiceAccount and namespace.
+- Run `terraform fmt`, `terraform validate`, and review the full plan before apply. Commit the `git-crypt`-protected state after an apply.
+- Vault internal TLS is outstanding; do not remove the documented HTTP exception without updating the Kubernetes stores and validating the CA chain.
 
 ### Terraform
 - Use snake_case for resource names, variables, locals, and outputs.
