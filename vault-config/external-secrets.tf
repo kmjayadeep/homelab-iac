@@ -6,24 +6,103 @@ variable "external_secrets_roles" {
     secret_paths         = set(string)
   }))
   default = {
+    actions-runner = {
+      kubernetes_namespace = "actions-runner-system"
+      secret_paths         = ["services/github/actions-runner"]
+    }
     baskit-firebase = {
       kubernetes_namespace = "baskit"
       service_account_name = "external-secrets-vault-firebase"
+      secret_paths         = ["services/firebase/baskit"]
+    }
+    baskit-runtime = {
+      kubernetes_namespace = "baskit"
+      service_account_name = "external-secrets-vault-runtime"
       secret_paths = [
-        "services/firebase/baskit",
+        "services/ghcr/baskit-pull",
+        "services/object-storage/baskit-backup",
       ]
+    }
+    beancount = {
+      kubernetes_namespace = "beancount"
+      secret_paths         = ["apps/beancount/auth"]
     }
     cert-manager-cloudflare = {
       kubernetes_namespace = "cert-manager"
-      secret_paths = [
-        "services/cloudflare/dns-cboxlab",
-      ]
+      secret_paths         = ["services/cloudflare/dns-cboxlab"]
     }
     external-dns-cloudflare = {
       kubernetes_namespace = "external-dns"
+      secret_paths         = ["services/cloudflare/dns-cboxlab"]
+    }
+    glance = {
+      kubernetes_namespace = "glance"
       secret_paths = [
-        "services/cloudflare/dns-cboxlab",
+        "services/adguard/glance",
+        "services/immich/glance",
       ]
+    }
+    litellm = {
+      kubernetes_namespace = "litellm"
+      secret_paths = [
+        "apps/litellm/core",
+        "services/postgresql/litellm",
+      ]
+    }
+    monitoring-alertmanager = {
+      kubernetes_namespace = "monitoring"
+      service_account_name = "external-secrets-vault-alertmanager"
+      secret_paths         = ["platform/monitoring/alertmanager"]
+    }
+    monitoring-grafana = {
+      kubernetes_namespace = "monitoring"
+      service_account_name = "external-secrets-vault-grafana"
+      secret_paths         = ["platform/monitoring/grafana-admin"]
+    }
+    monitoring-loki = {
+      kubernetes_namespace = "monitoring"
+      service_account_name = "external-secrets-vault-loki"
+      secret_paths         = ["services/object-storage/loki"]
+    }
+    monitoring-restic = {
+      kubernetes_namespace = "monitoring"
+      service_account_name = "external-secrets-vault-restic"
+      secret_paths         = ["platform/backup/restic-exporter"]
+    }
+    monitoring-thanos = {
+      kubernetes_namespace = "monitoring"
+      service_account_name = "external-secrets-vault-thanos"
+      secret_paths         = ["services/object-storage/thanos"]
+    }
+    otpcloud = {
+      kubernetes_namespace = "totp"
+      secret_paths = [
+        "apps/otpcloud/core",
+        "services/postgresql/otpcloud",
+      ]
+    }
+    psuite = {
+      kubernetes_namespace = "psuite"
+      secret_paths         = ["apps/psuite/wiki"]
+    }
+    shoppinglist = {
+      kubernetes_namespace = "shoppinglist"
+      secret_paths         = ["services/postgresql/shoppinglist"]
+    }
+    taskplanner = {
+      kubernetes_namespace = "taskplanner"
+      secret_paths         = ["services/postgresql/taskplanner"]
+    }
+    torrents = {
+      kubernetes_namespace = "torrents"
+      secret_paths = [
+        "services/vpn/deluge-openvpn",
+        "services/vpn/deluge-wireguard",
+      ]
+    }
+    wallabag = {
+      kubernetes_namespace = "wallabag"
+      secret_paths         = ["apps/wallabag/core"]
     }
   }
 
