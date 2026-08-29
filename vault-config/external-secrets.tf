@@ -31,6 +31,10 @@ variable "external_secrets_roles" {
       kubernetes_namespace = "cert-manager"
       secret_paths         = ["services/cloudflare/dns-cboxlab"]
     }
+    dotbintask = {
+      kubernetes_namespace = "dotbintask"
+      secret_paths         = ["apps/dotbintask/api"]
+    }
     external-dns-cloudflare = {
       kubernetes_namespace = "external-dns"
       secret_paths         = ["services/cloudflare/dns-cboxlab"]
