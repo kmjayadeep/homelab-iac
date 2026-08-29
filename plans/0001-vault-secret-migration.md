@@ -59,22 +59,21 @@ it does not delete the new Vault value.
 painful to rotate safely. DNS and certificate issuance are high impact, so this
 phase must not be combined with another migration.
 
-Paths:
+Canonical path:
 
 ```text
-services/cloudflare/dns-only
-# Or, for independent rotation/blast radius:
-services/cloudflare/cert-manager-dns
-services/cloudflare/external-dns
+services/cloudflare/dns-cboxlab
 ```
 
-- [ ] Decide explicitly whether cert-manager and external-dns should share one
-  DNS-scoped token or use separate least-privilege tokens. Prefer separate
-  identities when independent revocation or reduced blast radius is valuable;
-  keeping both below `services/cloudflare/` preserves a coherent hierarchy.
-- [ ] Store property `api_token` in each selected identity document.
+- [ ] Create one token restricted to DNS editing and zone reading for
+  `cboxlab.com`. cert-manager and external-dns intentionally share this identity
+  because they require the same zone permissions.
+- [ ] Store property `api_token` once and add the required custom metadata from
+  `vault-config/PATHS.md`.
 - [ ] Add separate Vault Kubernetes roles for the `cert-manager` and
-  `external-dns` namespaces. Each role reads only its selected exact path.
+  `external-dns` namespaces. Both roles read only this exact path.
+- [ ] Add future Cloudflare identities, such as read-only or another zone, as
+  sibling documents under `services/cloudflare/`.
 - [ ] After Kubernetes cutover, issue a fresh Cloudflare token, update the one
   Vault property, validate DNS updates and a test certificate issuance, and
   revoke the old token.

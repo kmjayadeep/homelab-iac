@@ -21,13 +21,21 @@ resource "vault_policy" "external_secrets" {
   for_each = var.external_secrets_roles
 
   name = "external-secrets-${each.key}"
-  policy = join("\n\n", [
-    for secret_path in sort(tolist(each.value.secret_paths)) : <<-EOT
-      path "${vault_mount.homelab_kv.path}/data/${secret_path}" {
+  policy = join("\n\n", concat(
+    [<<-EOT
+      path "auth/token/lookup-self" {
         capabilities = ["read"]
       }
     EOT
-  ])
+    ],
+    [
+      for secret_path in sort(tolist(each.value.secret_paths)) : <<-EOT
+        path "${vault_mount.homelab_kv.path}/data/${secret_path}" {
+          capabilities = ["read"]
+        }
+      EOT
+    ]
+  ))
 }
 
 resource "vault_kubernetes_auth_backend_role" "external_secrets" {

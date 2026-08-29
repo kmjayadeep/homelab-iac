@@ -12,8 +12,9 @@ segments internally.
    and VM-specific paths.
 3. Keep independently rotated or differently scoped credentials in separate KV
    documents under the same owner prefix. For example,
-   `services/cloudflare/read-only` and `services/cloudflare/dns-only` are valid
-   distinct identities even if some consumers could technically share a token.
+   `services/cloudflare/read-only` and `services/cloudflare/dns-cboxlab` are
+   valid distinct identities even if some consumers could technically share a
+   token.
 4. Similar key names do not imply that credentials are the same. Limited
    duplication is acceptable when it reduces scope or blast radius; accidental
    copies of one credential are not.
@@ -23,6 +24,51 @@ segments internally.
 6. Store components such as database username and password once. Construct
    consumer-specific values such as connection URLs in the ExternalSecret
    target template or in application configuration.
+
+## Custom metadata
+
+Use KV v2 custom metadata for operational context. Metadata is internal but not
+secret: never put tokens, passwords, private identifiers, or credential content
+in it.
+
+Required keys:
+
+| Key | Meaning | Format/example |
+|---|---|---|
+| `description` | Short human-readable purpose | `DNS automation for cboxlab.com` |
+| `origin` | System that issued the credential | `cloudflare` |
+| `owner` | Accountable application, service, or operator group | `homelab` |
+| `managed-by` | How the upstream credential is administered | `manual`, `terraform`, or an operator name |
+| `last-rotated-at` | When the upstream credential was last replaced | ISO 8601 date (`YYYY-MM-DD`) or RFC 3339 UTC timestamp |
+
+Optional keys:
+
+| Key | Meaning |
+|---|---|
+| `expires-at` | Upstream expiry as an ISO 8601 date (`YYYY-MM-DD`), or RFC 3339 UTC timestamp when time matters; omit when it does not expire |
+| `rotation-due-at` | Planned rotation as an ISO 8601 date or RFC 3339 UTC timestamp |
+| `scope` | Concise non-secret permission summary |
+| `external-id` | Non-secret identifier used to locate/revoke the upstream credential |
+| `origin-url` | Administrative URL for the issuing system; never include embedded credentials or sensitive query parameters |
+| `runbook` | Internal documentation reference for rotation and validation |
+
+Do not record consumers in custom metadata because that list becomes stale;
+Vault policies and Git declarations are the source of truth for consumers.
+Vault automatically tracks KV version creation times, so a separate `created-at`
+field is unnecessary.
+
+Example:
+
+```bash
+vault kv metadata put -mount=homelab/kv \
+  -custom-metadata=description="DNS automation for cboxlab.com" \
+  -custom-metadata=origin=cloudflare \
+  -custom-metadata=owner=homelab \
+  -custom-metadata=managed-by=manual \
+  -custom-metadata=last-rotated-at=2026-08-29T00:00:00Z \
+  -custom-metadata=scope="zone:cboxlab.com;zone-read;dns-edit" \
+  services/cloudflare/dns-cboxlab
+```
 
 ## Top-level paths
 
@@ -64,7 +110,7 @@ lists property names only, never values.
 | `openvpn-config` | `services/vpn/deluge-openvpn` | authentication and client configuration documents |
 | `wg-config` | `services/vpn/deluge-wireguard` | WireGuard configuration document |
 | `wallabag-config` | `apps/wallabag/core` | Symfony application secret |
-| cert-manager and external-dns Cloudflare Secrets | `services/cloudflare/dns-only` when intentionally shared, or separate identities such as `services/cloudflare/cert-manager-dns` and `services/cloudflare/external-dns` | `api_token`; separate scoped tokens are preferred when they reduce blast radius or need independent rotation |
+| cert-manager and external-dns Cloudflare Secrets | `services/cloudflare/dns-cboxlab` | `api_token`; both consumers intentionally share this zone-scoped identity; future identities remain under `services/cloudflare/` |
 | `grafana-creds` | `platform/monitoring/grafana-admin` | admin username and password |
 | `alertmanager-config` | `platform/monitoring/alertmanager` | configuration document; split receiver credentials later when supported cleanly |
 | `loki-minio-creds` | `services/object-storage/loki` | access key and secret key |
