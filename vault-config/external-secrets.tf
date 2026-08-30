@@ -104,6 +104,11 @@ variable "external_secrets_roles" {
         "services/vpn/deluge-wireguard",
       ]
     }
+    vault-backup-storage = {
+      kubernetes_namespace = "vault"
+      service_account_name = "external-secrets-vault-backup"
+      secret_paths         = ["services/object-storage/vault-backup"]
+    }
     wallabag = {
       kubernetes_namespace = "wallabag"
       secret_paths         = ["apps/wallabag/core"]

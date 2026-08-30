@@ -95,6 +95,7 @@ lists property names only, never values.
 | `actions-runner-secret` | `services/github/actions-runner` | `token`; reuse this path outside Kubernetes only if it is the same GitHub identity |
 | `baskit-metrics-firebase` and the Firebase item in `baskit-backup` | `services/firebase/baskit` | `service_account_json`; the source documents were securely verified as identical before consolidation |
 | `baskit-backup` object-storage fields | `services/object-storage/baskit-backup` | `endpoint`, `bucket`, `access_key`, `secret_key`, `use_ssl`, and the currently retained `project_id` configuration |
+| Vault Raft snapshot backup | `services/object-storage/vault-backup` | `endpoint`, `bucket`, `region`, `access_key`, and `secret_key`; consumed only by the Vault backup job |
 | `ghcr-secret` | `services/ghcr/baskit-pull` | `dockerconfigjson`; ESO maps it to `.dockerconfigjson` and sets the Kubernetes Secret type |
 | `fava-auth` | `apps/beancount/auth` | `auth` |
 | `dotbintask-secret` | `apps/dotbintask/api` | `tokens` |
