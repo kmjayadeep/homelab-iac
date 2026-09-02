@@ -1,16 +1,28 @@
 resource "minio_s3_bucket" "loki-cosmos-chunks" {
   acl    = "private"
   bucket = "loki-cosmos-chunks"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "minio_s3_bucket" "loki-cosmos-ruler" {
   acl    = "private"
   bucket = "loki-cosmos-ruler"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "minio_s3_bucket" "loki-cosmos-admin" {
   acl    = "private"
   bucket = "loki-cosmos-admin"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "minio_iam_user" "loki" {

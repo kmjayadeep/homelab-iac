@@ -1,6 +1,10 @@
 resource "minio_s3_bucket" "valheim-backup" {
   acl    = "private"
   bucket = "valheim-backup"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "minio_iam_user" "valheim" {

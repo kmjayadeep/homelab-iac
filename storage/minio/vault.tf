@@ -1,6 +1,10 @@
 resource "minio_s3_bucket" "vault_backups" {
   acl    = "private"
   bucket = "vault-cosmos-backups"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "minio_ilm_policy" "vault_backups" {

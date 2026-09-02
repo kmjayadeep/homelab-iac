@@ -2,7 +2,7 @@ terraform {
   required_providers {
     minio = {
       source  = "aminueza/minio"
-      version = "2.5.0"
+      version = "3.41.0"
     }
   }
   required_version = "~> 1.15"
@@ -10,5 +10,6 @@ terraform {
 
 provider "minio" {
   minio_server = "minio.cosmos.cboxlab.com"
+  minio_region = "us-west-000"
   minio_ssl    = true
 }

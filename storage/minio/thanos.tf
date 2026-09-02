@@ -1,6 +1,10 @@
 resource "minio_s3_bucket" "thanos-cosmos" {
   acl    = "private"
   bucket = "thanos-cosmos"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "minio_iam_user" "thanos" {

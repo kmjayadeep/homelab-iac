@@ -31,10 +31,10 @@ The source state currently contains 36 resources:
 | --- | ---: | --- |
 | Loki | 3 buckets, user, policy, attachment, service account | Active |
 | Thanos | bucket, user, policy, attachment, service account | Active |
-| Monitoring/restic exporter | user, policy, attachment, service account | Active consumer; credential mapping needs confirmation |
-| NUC backups | 2 buckets, user, policy, attachment, service account | Active writes confirmed; runtime producer identity needs confirmation |
-| Backrest | user, NUC policy attachment, service account | Deployment exists; runtime repository configuration needs confirmation |
-| Legacy Valheim | bucket, user, policy, attachment, service account | No recent writes; probably superseded, but retention decision remains |
+| Monitoring/restic exporter | user, policy, attachment, service account | Active; currently uses the broader `nuc-restic` identity |
+| NUC backups | 2 buckets, user, policy, attachment, service account | Active writes confirmed; runtime producer identity remains unknown |
+| Backrest | user, NUC policy attachment, service account | Active; managed identity targets `nuc-backup` only |
+| Legacy Valheim | bucket, user, policy, attachment, service account | Retained as a protected cold archive |
 | Vault backups | bucket, lifecycle policy, user, policy, attachment, service account | Active |
 
 ### Evidence
@@ -60,12 +60,13 @@ The source state currently contains 36 resources:
   pods are running.
 - The `thanos-s3-vault` ExternalSecret is Ready.
 
-The bucket name is contained in the Vault-managed object-store configuration,
-so its exact mapping was not inspected during this inventory. It is expected
-to be `thanos-cosmos`, matching the Terraform resource, but this still needs a
-non-secret equality check or an object-store activity check.
+A non-secret comparison confirmed that the Vault-managed object-store
+configuration targets `thanos-cosmos`. Its access and secret keys do not match
+any credential value in this Terraform state, so the active Thanos credential
+is currently unmanaged. Do not remove the Terraform `thanos-restic` account or
+the active unmanaged credential until a separate rotation is planned.
 
-#### Monitoring/restic exporter — active, mapping not fully confirmed
+#### Monitoring/restic exporter — active, mapping confirmed
 
 - The restic exporter obtains its configuration from Vault path
   `platform/backup/restic-exporter`.
@@ -73,11 +74,12 @@ non-secret equality check or an object-store activity check.
 - The Terraform monitoring policy grants read access to `nuc-backup`,
   `nuc-private-backup`, and `thanos-cosmos`.
 
-The Vault-managed exporter configuration was intentionally not inspected.
-Confirm, without printing values, that it uses the Terraform-managed
-`monitoring-restic` service account before later rotating or removing it.
+A non-printing credential comparison confirmed that the Vault-managed exporter
+configuration uses `minio_iam_service_account.nuc-restic`, not the narrower
+`monitoring-restic` account. It reads both NUC repositories. Moving it to the
+read-only monitoring identity is a separate credential rotation.
 
-#### Backrest — deployment confirmed, repository mapping unknown
+#### Backrest — deployment and repository mapping confirmed
 
 - `homelab-docker-stacks/backrest/compose.yaml` defines the Backrest service.
 - Its repository configuration is stored in the runtime-mounted
@@ -85,8 +87,9 @@ Confirm, without printing values, that it uses the Terraform-managed
 - Terraform grants the `backrest` service account access to the two NUC
   buckets through `nuc-policy`.
 
-Confirm the running Backrest repositories use this account and identify which
-of the NUC buckets they access.
+A non-printing comparison against the running Backrest configuration confirmed
+that it uses `minio_iam_service_account.backrest-nuc-restic` and references
+`nuc-backup`. It does not reference `nuc-private-backup`.
 
 #### NUC backups — active writes confirmed
 
@@ -104,7 +107,7 @@ the existing Terraform administration account without printing object names
 or credential values. Confirm which process writes each bucket and whether
 Backrest reads them.
 
-#### Legacy Valheim — probably superseded, not safe to remove yet
+#### Legacy Valheim — retained cold archive
 
 - Current Valheim hosts in Ansible are `valheim-rivers` and `chillyfries`.
 - Those hosts have separately managed per-host MinIO buckets in
@@ -114,9 +117,9 @@ Backrest reads them.
   root and encrypted legacy configuration.
 
 A metadata-only MinIO audit found 484 objects totaling 5,379,597,767 bytes;
-the most recent object timestamp was 2024-11-19 20:30 UTC. This supports the
-superseded hypothesis, but the existing data still needs an explicit retention
-or archival decision. Bucket deletion is not part of the repository migration.
+the most recent object timestamp was 2024-11-19 20:30 UTC. The bucket is
+classified as a cold archive and retained until an explicit restore/export and
+deletion review. Bucket deletion is not part of this work.
 
 #### Vault backups — confirmed active
 
@@ -139,20 +142,22 @@ moved and a zero-change plan has been established from the new root.
 
 ### Remaining checks
 
-- [ ] Confirm the Thanos Vault configuration targets `thanos-cosmos` without
-      displaying the configuration or credentials.
-- [ ] Confirm the restic exporter uses the Terraform-managed monitoring
-      service account without displaying credentials.
+- [x] Confirm the Thanos Vault configuration targets `thanos-cosmos` without
+      displaying the configuration or credentials; its active credential is
+      not represented in this Terraform state.
+- [x] Confirm the restic exporter uses `nuc-restic`, rather than
+      `monitoring-restic`, without displaying credentials.
 - [x] Inspect non-secret MinIO metadata for object count and most recent write
       time in both NUC buckets.
-- [ ] Confirm the processes writing the NUC buckets and whether they use the
-      `nuc-restic` service account.
-- [ ] Confirm the running Backrest repositories use the `backrest` account and
-      identify their target buckets.
+- [ ] Confirm the process writing each NUC bucket; current object activity and
+      the exporter configuration establish that both remain active.
+- [x] Confirm the running Backrest repositories use the Terraform-managed
+      Backrest account and target `nuc-backup` only.
 - [x] Inspect non-secret activity metadata for `valheim-backup`.
-- [ ] Confirm no live host still writes to `valheim-backup` and decide how long
-      to retain its existing data.
-- [ ] Record an owner and recovery purpose for every retained bucket.
+- [x] Classify `valheim-backup` as a retained cold archive pending an explicit
+      restore/export and deletion review.
+- [x] Record an owner and recovery purpose for every retained bucket in
+      `storage/minio/README.md`.
 
 ## Phase 2: Exact state-preserving move
 
@@ -208,12 +213,26 @@ belongs to the ownership cutover phase.
 `homelab-iac/storage/minio` is now the authoritative Terraform root. Do not run
 Terraform from `homelab-infra/archived/truenas`; its retained state is stale.
 
+## Phase 4: Hardening and provider upgrade
+
+- [x] Add Terraform `prevent_destroy` lifecycle protection to all eight
+      buckets managed by this root.
+- [x] Document bucket owners, purposes, lifecycle status, and effective
+      credential mappings in `storage/minio/README.md`.
+- [x] Retain `valheim-backup` as a protected cold archive pending an explicit
+      restore/export and deletion review.
+- [x] Upgrade the MinIO provider from `2.5.0` to `3.41.0`.
+- [x] Configure provider region `us-west-000`, required by the upgraded
+      provider for this MinIO deployment.
+- [x] Confirm the upgraded provider produces zero resource and output changes.
+
 ## Follow-up work
 
-- Upgrade the MinIO provider separately.
-- Add destruction protection to retained backup buckets.
-- Move MinIO resources currently coupled to `cosmos/proxmox` into the MinIO
-  root using an explicit cross-state migration.
-- Decommission unused resources only after consumer and data-retention checks.
-- Move generated credentials to their canonical Vault paths and document
-  rotation procedures.
+- Identify the process writing each NUC repository.
+- Rotate the restic exporter from `nuc-restic` to the read-only
+  `monitoring-restic` identity.
+- Bring the effective Thanos credential under Terraform management through a
+  separately reviewed rotation.
+- Decommission unused identities only after consumer checks.
+- Keep the MinIO resources in `cosmos/proxmox` independent; cross-state
+  consolidation is intentionally out of scope.

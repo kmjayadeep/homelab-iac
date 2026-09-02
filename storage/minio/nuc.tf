@@ -1,11 +1,19 @@
 resource "minio_s3_bucket" "nuc-backup" {
   acl    = "private"
   bucket = "nuc-backup"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "minio_s3_bucket" "nuc-private-backup" {
   acl    = "private"
   bucket = "nuc-private-backup"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "minio_iam_user" "nuc" {
