@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-infra_dir="${1:-../../homelab-infra/geneva/truenas}"
+infra_dir="${1:-../storage/minio}"
 secret_path="services/object-storage/vault-backup"
 
 umask 077

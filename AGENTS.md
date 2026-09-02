@@ -5,7 +5,7 @@ Applies to the entire repository unless a deeper `AGENTS.md` exists.
 
 ## Project Overview
 Infrastructure-as-code repo with:
-- Terraform stacks (`cloudflare/`, `hetzner/terraform/`, `cosmos/proxmox/`, `cosmos/pluto/`, `vault-config/`).
+- Terraform stacks (`cloudflare/`, `hetzner/terraform/`, `cosmos/proxmox/`, `cosmos/pluto/`, `storage/minio/`, `vault-config/`).
 - Terraform modules (`terraform-modules/*`).
 - Ansible projects (`cosmos/ansible-k3s/`, `cosmos/ansible-valheim/`, `hetzner/ansible-nova/`).
 - NixOS flake images under `nixos-images/*`.
@@ -27,6 +27,7 @@ Terraform directories include:
 - `cosmos/proxmox/`
 - `cosmos/pluto/`
 - `vault-config/`
+- `storage/minio/`
 - `terraform-modules/*` (modules only; no direct apply)
 
 Single target plan/apply (single "test" equivalent):

@@ -89,6 +89,7 @@ hardware:
         - "user stated TrueNAS exists"
         - "user stated Docker jail and MinIO run on TrueNAS with mounted NAS storage"
         - "user stated nfs-templates is mounted as NFS from TrueNAS"
+        - "storage/minio"
         - "Terraform references nfs-templates and MinIO backup buckets"
       depends_on:
         - "network.switch_2_5g"
@@ -208,6 +209,7 @@ storage:
     role: "Local S3-compatible storage running in a TrueNAS Docker jail, backed by mounted NAS storage."
     known_from:
       - "user stated MinIO runs in a Docker jail on TrueNAS"
+      - "storage/minio"
       - "terraform-modules/minio_s3_bucket"
       - "cosmos/proxmox/*_s3 modules"
     depends_on:
