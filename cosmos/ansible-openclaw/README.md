@@ -53,11 +53,20 @@ five minutes. `certbot.service` requires `vault-agent.service` and waits for a
 non-empty, root-owned credential file with mode `0600` before running.
 
 The inventory-derived roles are `openclaw-certbot` and
-`openclaw-chinnu-certbot`. Before applying the role to a host, securely install
-its RoleID at `/etc/vault-agent/role-id` and its distinct SecretID at
-`/etc/vault-agent/secret-id`, both owned by `root:root` with mode `0600`. Generate
-and deliver SecretIDs only through the controlled non-logging bootstrap workflow;
-do not put them in Git, Terraform, Ansible variables, command arguments, or
+`openclaw-chinnu-certbot`. Bootstrap one host at a time using an authenticated
+Vault operator environment, then apply the Vault Agent role:
+
+```bash
+./bootstrap-vault-agent.sh openclaw
+ansible-playbook playbooks/setup-vault-agent.yml --limit openclaw
+```
+
+Repeat with `openclaw-chinnu` for the second host. The bootstrap script generates
+a distinct SecretID, keeps it only in process memory, and sends it through
+Ansible tasks protected by `no_log: true` and `diff: false`. The RoleID and
+SecretID are installed at `/etc/vault-agent/role-id` and
+`/etc/vault-agent/secret-id`, respectively, as `root:root` with mode `0600`.
+Never put a SecretID in Git, Terraform, Ansible variables, command arguments, or
 operator password stores.
 
 Runtime checks:

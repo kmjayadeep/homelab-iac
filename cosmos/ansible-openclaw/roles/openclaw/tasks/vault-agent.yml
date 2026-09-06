@@ -34,7 +34,7 @@
 - name: Update apt cache for HashiCorp repository
   ansible.builtin.apt:
     update_cache: true
-    cache_valid_time: 3600
+    cache_valid_time: 0
 
 - name: Install pinned Vault package
   ansible.builtin.apt:

@@ -159,7 +159,7 @@ Update `cosmos/ansible-openclaw` idempotently.
       after both hosts are migrated.
 - [x] Remove the `cloudflare_api_token` Ansible variable and its assertion.
       Retain the Let's Encrypt email assertion.
-- [ ] Remove `CLOUDFLARE_API_TOKEN` from
+- [x] Remove `CLOUDFLARE_API_TOKEN` from
       `cosmos/ansible-openclaw/.envrc` only after both hosts have completed the
       cutover, and document Vault bootstrap and runtime behavior in the README.
 - [x] Add handlers for `systemctl daemon-reload`, Vault Agent restart, and Nginx
@@ -169,25 +169,25 @@ Update `cosmos/ansible-openclaw` idempotently.
 
 ## Phase 4: Secure AppRole bootstrap and cutover
 
-- [ ] Generate a distinct SecretID for each AppRole using an authorized Vault
+- [x] Generate a distinct SecretID for each AppRole using an authorized Vault
       operator session. Deliver each directly into a temporary root-owned file
       on its assigned VM through a non-logging Ansible stdin/file workflow.
-- [ ] Write each non-secret RoleID and secret SecretID to the host-specific paths
+- [x] Write each non-secret RoleID and secret SecretID to the host-specific paths
       referenced by Vault Agent. Ensure Ansible output is censored and temporary
       local files are removed even on failure.
-- [ ] Start Vault Agent and wait for the Cloudflare credential template to be
+- [x] Start Vault Agent and wait for the Cloudflare credential template to be
       rendered.
-- [ ] Verify the rendered file's owner, permissions, and modification time only.
+- [x] Verify the rendered file's owner, permissions, and modification time only.
       Do not read its content into terminal or Ansible output.
-- [ ] Run `vault token lookup` through the agent identity or inspect Vault audit
+- [x] Run `vault token lookup` through the agent identity or inspect Vault audit
       data to confirm the token has only `openclaw-certbot` policy access.
-- [ ] Confirm an attempted read of an unrelated non-secret test path is denied;
+- [x] Confirm an attempted read of an unrelated non-secret test path is denied;
       do not probe or print another real secret.
-- [ ] Run `certbot renew --dry-run --cert-name openclaw.cosmos.cboxlab.com` and
+- [x] Run `certbot renew --dry-run --cert-name openclaw.cosmos.cboxlab.com` and
       confirm the DNS challenge succeeds.
-- [ ] Repeat the host-limited bootstrap and dry run for `openclaw-chinnu` using
+- [x] Repeat the host-limited bootstrap and dry run for `openclaw-chinnu` using
       its own AppRole identity and certificate name.
-- [ ] Restart each VM once during its maintenance window and verify Vault Agent
+- [x] Restart each VM once during its maintenance window and verify Vault Agent
       reauthenticates, renders the file, and leaves Certbot ready for its next
       timer invocation.
 

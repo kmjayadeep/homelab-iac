@@ -1,0 +1,46 @@
+---
+- name: Bootstrap Vault Agent identity
+  hosts: openclaw_servers
+  become: true
+  gather_facts: false
+  vars:
+    bootstrap_vault_role_id: "{{ lookup('env', 'OPENCLAW_VAULT_ROLE_ID') }}"
+    bootstrap_vault_secret_id: "{{ lookup('env', 'OPENCLAW_VAULT_SECRET_ID') }}"
+  tasks:
+    - name: Verify one host and its Vault identity were selected
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts | length == 1
+          - vault_approle_name == inventory_hostname ~ '-certbot'
+          - bootstrap_vault_role_id | length > 0
+          - bootstrap_vault_secret_id | length > 0
+        fail_msg: "Limit this playbook to one host and supply its matching Vault RoleID and SecretID."
+      no_log: true
+
+    - name: Create Vault Agent configuration directory
+      ansible.builtin.file:
+        path: "{{ vault_agent_config_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Install Vault Agent RoleID
+      ansible.builtin.copy:
+        content: "{{ bootstrap_vault_role_id }}\n"
+        dest: "{{ vault_agent_role_id_path }}"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+      diff: false
+
+    - name: Install Vault Agent SecretID
+      ansible.builtin.copy:
+        content: "{{ bootstrap_vault_secret_id }}\n"
+        dest: "{{ vault_agent_secret_id_path }}"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+      diff: false

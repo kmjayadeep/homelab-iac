@@ -1,0 +1,9 @@
+---
+- name: Configure Vault Agent for Certbot
+  hosts: openclaw_servers
+  become: true
+  tasks:
+    - name: Apply Vault Agent configuration
+      ansible.builtin.include_role:
+        name: openclaw
+        tasks_from: vault-agent
