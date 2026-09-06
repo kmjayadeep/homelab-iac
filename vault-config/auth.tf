@@ -11,6 +11,12 @@ resource "vault_auth_backend" "kubernetes" {
   description = "Authenticate Kubernetes workloads, including External Secrets"
 }
 
+resource "vault_auth_backend" "approle" {
+  type        = "approle"
+  path        = "approle"
+  description = "Authenticate non-Kubernetes homelab machines"
+}
+
 # Vault runs in the cluster, so the auth backend uses the pod's service account
 # token and CA to perform TokenReview requests. No reviewer credential is stored
 # in Terraform or Git.
