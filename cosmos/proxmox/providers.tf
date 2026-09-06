@@ -10,7 +10,7 @@ terraform {
     }
     proxmox-bpg = {
       source  = "bpg/proxmox"
-      version = "0.107.0"
+      version = "0.112.0"
     }
     cloudflare = {
       source  = "cloudflare/cloudflare"
