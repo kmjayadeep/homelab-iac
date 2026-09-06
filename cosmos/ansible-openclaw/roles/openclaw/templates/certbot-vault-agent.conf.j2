@@ -1,0 +1,6 @@
+[Unit]
+Requires=vault-agent.service
+After=vault-agent.service
+
+[Service]
+ExecStartPre=/usr/local/sbin/wait-for-certbot-credential

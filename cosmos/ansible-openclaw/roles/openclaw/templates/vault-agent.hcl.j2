@@ -1,0 +1,34 @@
+log_level = "info"
+
+vault {
+  address = "{{ vault_address }}"
+
+  retry {
+    num_retries = 12
+  }
+}
+
+auto_auth {
+  method "approle" {
+    mount_path = "auth/approle"
+
+    config = {
+      role_id_file_path                   = "{{ vault_agent_role_id_path }}"
+      secret_id_file_path                 = "{{ vault_agent_secret_id_path }}"
+      remove_secret_id_file_after_reading = false
+    }
+  }
+}
+
+template_config {
+  exit_on_retry_failure          = true
+  static_secret_render_interval = "{{ vault_agent_static_secret_render_interval }}"
+}
+
+template {
+  source               = "{{ vault_agent_cloudflare_template_path }}"
+  destination          = "{{ vault_agent_cloudflare_destination }}"
+  perms                = "0600"
+  backup               = false
+  error_on_missing_key = true
+}

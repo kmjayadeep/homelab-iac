@@ -133,38 +133,38 @@ Add dedicated non-Kubernetes access configuration under `vault-config/`.
 
 Update `cosmos/ansible-openclaw` idempotently.
 
-- [ ] Install a pinned Vault package from HashiCorp's authenticated package
+- [x] Install a pinned Vault package from HashiCorp's authenticated package
       repository, following the host's Debian release and architecture.
-- [ ] Create `/etc/vault-agent/` and `/etc/vault-agent/templates/` as
+- [x] Create `/etc/vault-agent/` and `/etc/vault-agent/templates/` as
       root-owned directories.
-- [ ] Install a Vault Agent configuration that:
+- [x] Install a Vault Agent configuration that:
   - uses `https://vault.cosmos.cboxlab.com` with TLS verification;
   - uses AppRole auto-auth with root-owned RoleID and SecretID files;
   - requests no policies beyond those attached to the role;
   - renders static KV secrets at a bounded interval, initially five minutes;
   - does not log rendered values; and
   - exits or retries visibly when authentication or rendering fails.
-- [ ] Add a Vault Agent template for
+- [x] Add a Vault Agent template for
       `/etc/letsencrypt/cloudflare.ini` that reads
       `.Data.data.api_token` from the KV v2 path and writes exactly the
       `dns_cloudflare_api_token` setting expected by Certbot.
-- [ ] Manage `vault-agent.service` as enabled and running.
-- [ ] Add a `certbot.service` systemd drop-in requiring and ordering after
+- [x] Manage `vault-agent.service` as enabled and running.
+- [x] Add a `certbot.service` systemd drop-in requiring and ordering after
       `vault-agent.service`. Its pre-start check must wait for a non-empty,
       root-owned credential file rather than racing the first template render.
-- [ ] Parameterize the Vault AppRole name and bootstrap paths per inventory host
+- [x] Parameterize the Vault AppRole name and bootstrap paths per inventory host
       so `openclaw` and `openclaw-chinnu` never share a SecretID.
-- [ ] Remove the existing Ansible template task that writes the Cloudflare token
+- [x] Remove the existing Ansible template task that writes the Cloudflare token
       directly from `CLOUDFLARE_API_TOKEN`; Vault Agent must be the sole writer
       after both hosts are migrated.
-- [ ] Remove the `cloudflare_api_token` Ansible variable and its assertion.
+- [x] Remove the `cloudflare_api_token` Ansible variable and its assertion.
       Retain the Let's Encrypt email assertion.
 - [ ] Remove `CLOUDFLARE_API_TOKEN` from
       `cosmos/ansible-openclaw/.envrc` only after both hosts have completed the
       cutover, and document Vault bootstrap and runtime behavior in the README.
-- [ ] Add handlers for `systemctl daemon-reload`, Vault Agent restart, and Nginx
+- [x] Add handlers for `systemctl daemon-reload`, Vault Agent restart, and Nginx
       reload without exposing template content.
-- [ ] Add an Ansible assertion or stat check for owner, mode, and non-zero size;
+- [x] Add an Ansible assertion or stat check for owner, mode, and non-zero size;
       never slurp or debug the credential file.
 
 ## Phase 4: Secure AppRole bootstrap and cutover

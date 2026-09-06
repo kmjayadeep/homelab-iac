@@ -1,0 +1,169 @@
+---
+- name: Verify Vault package platform is supported
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.distribution == "Debian"
+      - ansible_facts.distribution_release | length > 0
+      - ansible_facts.architecture in vault_apt_architectures
+    fail_msg: "Vault package installation requires a supported Debian architecture."
+
+- name: Install HashiCorp repository signing key
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure HashiCorp apt repository
+  ansible.builtin.deb822_repository:
+    name: hashicorp
+    types:
+      - deb
+    uris:
+      - https://apt.releases.hashicorp.com
+    suites:
+      - "{{ ansible_facts.distribution_release }}"
+    components:
+      - main
+    architectures:
+      - "{{ vault_apt_architectures[ansible_facts.architecture] }}"
+    signed_by: /usr/share/keyrings/hashicorp-archive-keyring.asc
+    state: present
+
+- name: Update apt cache for HashiCorp repository
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install pinned Vault package
+  ansible.builtin.apt:
+    name: "vault={{ vault_package_version }}"
+    state: present
+  when: not ansible_check_mode
+
+- name: Create Vault Agent directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  loop:
+    - "{{ vault_agent_config_dir }}"
+    - "{{ vault_agent_template_dir }}"
+
+- name: Install Vault Agent secret template
+  ansible.builtin.template:
+    src: vault-cloudflare.ini.ctmpl.j2
+    dest: "{{ vault_agent_cloudflare_template_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart vault agent
+
+- name: Install Vault Agent configuration
+  ansible.builtin.template:
+    src: vault-agent.hcl.j2
+    dest: "{{ vault_agent_config_dir }}/vault-agent.hcl"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart vault agent
+
+- name: Install Vault Agent systemd service
+  ansible.builtin.template:
+    src: vault-agent.service.j2
+    dest: /etc/systemd/system/vault-agent.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart vault agent
+
+- name: Install Certbot credential readiness check
+  ansible.builtin.template:
+    src: wait-for-certbot-credential.sh.j2
+    dest: /usr/local/sbin/wait-for-certbot-credential
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create Certbot service drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/certbot.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Require Vault Agent before Certbot
+  ansible.builtin.template:
+    src: certbot-vault-agent.conf.j2
+    dest: /etc/systemd/system/certbot.service.d/vault-agent.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Check Vault Agent bootstrap identity files
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+  loop:
+    - "{{ vault_agent_role_id_path }}"
+    - "{{ vault_agent_secret_id_path }}"
+  register: vault_agent_identity_files
+  no_log: true
+  when: not ansible_check_mode
+
+- name: Verify Vault Agent bootstrap identity file metadata
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists
+      - item.stat.isreg
+      - item.stat.pw_name == "root"
+      - item.stat.gr_name == "root"
+      - item.stat.mode == "0600"
+      - item.stat.size > 0
+    fail_msg: "Vault Agent identity files must be non-empty, root-owned regular files with mode 0600."
+  loop: "{{ vault_agent_identity_files.results }}"
+  no_log: true
+  when: not ansible_check_mode
+
+- name: Enable and start Vault Agent
+  ansible.builtin.systemd:
+    name: vault-agent.service
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Wait for Vault Agent to render the Certbot credential
+  ansible.builtin.wait_for:
+    path: "{{ vault_agent_cloudflare_destination }}"
+    state: present
+    timeout: "{{ vault_agent_credential_wait_seconds }}"
+  when: not ansible_check_mode
+
+- name: Check rendered Certbot credential metadata
+  ansible.builtin.stat:
+    path: "{{ vault_agent_cloudflare_destination }}"
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+  register: vault_agent_cloudflare_credential
+
+- name: Verify rendered Certbot credential metadata
+  ansible.builtin.assert:
+    that:
+      - vault_agent_cloudflare_credential.stat.exists
+      - vault_agent_cloudflare_credential.stat.isreg
+      - vault_agent_cloudflare_credential.stat.pw_name == "root"
+      - vault_agent_cloudflare_credential.stat.gr_name == "root"
+      - vault_agent_cloudflare_credential.stat.mode == "0600"
+      - vault_agent_cloudflare_credential.stat.size > 0
+    fail_msg: "The Certbot credential must be a non-empty, root-owned regular file with mode 0600."

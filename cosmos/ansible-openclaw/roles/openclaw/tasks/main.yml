@@ -10,6 +10,7 @@
       - jq
       - nginx
       - python3-certbot-dns-cloudflare
+      - python3-debian
       - ripgrep
       - sudo
       - git-crypt
@@ -77,20 +78,15 @@
         path: "/etc/sudoers.d/{{ openclaw_user }}-installer"
         state: absent
 
-- name: Ensure Cloudflare token and Let's Encrypt email are set
+- name: Ensure Let's Encrypt email and Vault AppRole name are set
   ansible.builtin.assert:
     that:
-      - cloudflare_api_token | length > 0
       - letsencrypt_email | length > 0
-    fail_msg: "CLOUDFLARE_API_TOKEN and OPENCLAW_CERTBOT_EMAIL or OPENCLAW_EMAIL must be set in the environment."
+      - vault_approle_name | length > 0
+    fail_msg: "OPENCLAW_CERTBOT_EMAIL or OPENCLAW_EMAIL and vault_approle_name must be set."
 
-- name: Install Cloudflare credentials for Certbot
-  ansible.builtin.template:
-    src: cloudflare.ini.j2
-    dest: /etc/letsencrypt/cloudflare.ini
-    owner: root
-    group: root
-    mode: "0600"
+- name: Include Vault Agent configuration tasks
+  ansible.builtin.include_tasks: vault-agent.yml
 
 - name: Obtain OpenClaw Let's Encrypt certificate via DNS challenge
   ansible.builtin.command: >-

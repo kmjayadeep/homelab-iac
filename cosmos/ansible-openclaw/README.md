@@ -38,11 +38,38 @@ The OpenClaw installer command is:
 curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install.sh | bash -s -- --no-prompt --no-onboard --verify
 ```
 
-Optional environment variable:
+Optional environment variables:
 
 - `OPENCLAW_EMAIL` - git email for the `openclaw` user. Defaults to `openclaw@localhost`.
-- `CLOUDFLARE_API_TOKEN` - Cloudflare API token used for the Let's Encrypt DNS challenge.
 - `OPENCLAW_CERTBOT_EMAIL` - Let's Encrypt registration email. Defaults to `OPENCLAW_EMAIL`, then `admin@cboxlab.com`.
+
+## Vault-backed Certbot credentials
+
+Vault Agent authenticates each VM with its own AppRole and renders the shared
+canonical Cloudflare credential from
+`homelab/kv/services/cloudflare/dns-cboxlab` to
+`/etc/letsencrypt/cloudflare.ini`. The agent refreshes the static KV secret every
+five minutes. `certbot.service` requires `vault-agent.service` and waits for a
+non-empty, root-owned credential file with mode `0600` before running.
+
+The inventory-derived roles are `openclaw-certbot` and
+`openclaw-chinnu-certbot`. Before applying the role to a host, securely install
+its RoleID at `/etc/vault-agent/role-id` and its distinct SecretID at
+`/etc/vault-agent/secret-id`, both owned by `root:root` with mode `0600`. Generate
+and deliver SecretIDs only through the controlled non-logging bootstrap workflow;
+do not put them in Git, Terraform, Ansible variables, command arguments, or
+operator password stores.
+
+Runtime checks:
+
+```bash
+sudo systemctl status vault-agent.service certbot.timer --no-pager
+sudo stat /etc/letsencrypt/cloudflare.ini
+sudo certbot renew --dry-run --cert-name openclaw.cosmos.cboxlab.com
+```
+
+Vault Agent connects only to `https://vault.cosmos.cboxlab.com` with normal TLS
+verification. Do not configure `tls_skip_verify` or the internal HTTP endpoint.
 
 ## Backups
 

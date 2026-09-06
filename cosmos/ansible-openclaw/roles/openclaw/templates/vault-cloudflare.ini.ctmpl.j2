@@ -1,0 +1,4 @@
+{% raw %}{{- with secret "homelab/kv/data/services/cloudflare/dns-cboxlab" -}}
+dns_cloudflare_api_token = {{ .Data.data.api_token }}
+{{- end -}}
+{% endraw %}

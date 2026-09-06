@@ -19,8 +19,22 @@ openclaw_gateway_host: "127.0.0.1"
 openclaw_gateway_port: 18789
 openclaw_gateway_url: "http://{{ openclaw_gateway_host }}:{{ openclaw_gateway_port }}"
 
-cloudflare_api_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
 letsencrypt_email: "{{ lookup('env', 'OPENCLAW_CERTBOT_EMAIL') | default(lookup('env', 'OPENCLAW_EMAIL') | default('admin@cboxlab.com', true), true) }}"
+
+vault_package_version: "1.21.4-1"
+vault_apt_architectures:
+  x86_64: amd64
+  aarch64: arm64
+vault_address: "https://vault.cosmos.cboxlab.com"
+vault_approle_name: "{{ inventory_hostname }}-certbot"
+vault_agent_config_dir: "/etc/vault-agent"
+vault_agent_template_dir: "{{ vault_agent_config_dir }}/templates"
+vault_agent_role_id_path: "{{ vault_agent_config_dir }}/role-id"
+vault_agent_secret_id_path: "{{ vault_agent_config_dir }}/secret-id"
+vault_agent_cloudflare_template_path: "{{ vault_agent_template_dir }}/cloudflare.ini.ctmpl"
+vault_agent_cloudflare_destination: "/etc/letsencrypt/cloudflare.ini"
+vault_agent_static_secret_render_interval: "5m"
+vault_agent_credential_wait_seconds: 60
 
 # Restic backup configuration. Repository credentials should come from the
 # environment or vault and must not be committed in plain text.

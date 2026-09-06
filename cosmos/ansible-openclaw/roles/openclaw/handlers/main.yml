@@ -14,3 +14,10 @@
   ansible.builtin.systemd:
     daemon_reload: true
   listen: Reload systemd
+
+- name: Restart Vault Agent
+  ansible.builtin.systemd:
+    name: vault-agent.service
+    state: restarted
+  listen: Restart vault agent
+  when: not ansible_check_mode
