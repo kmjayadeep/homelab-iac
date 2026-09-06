@@ -1,0 +1,8 @@
+---
+# Copy this file to vault.yml, fill it through a non-logging editor, then encrypt
+# it with ansible-vault before adding it to the repository.
+valheim_server_password: ""
+restic_password: ""
+restic_s3_access_key: ""
+restic_s3_secret_key: ""
+uptime_url: ""

@@ -2,13 +2,22 @@
 - name: Update Valheim Server
   hosts: valheim_servers
   become: true
-  
+
+  pre_tasks:
+    - name: Require an explicit single-host limit
+      ansible.builtin.assert:
+        that:
+          - ansible_limit is defined
+          - ansible_play_hosts_all | length == 1
+        fail_msg: "Run this playbook with --limit <hostname>."
+      run_once: true
+
   tasks:
     - name: Stop Valheim service
       ansible.builtin.systemd:
         name: valheim
         state: stopped
-    
+
     - name: Update Valheim server
       ansible.builtin.command:
         cmd: >
@@ -19,13 +28,44 @@
           +quit
       become_user: "{{ steam_user }}"
       register: update_result
-    
-    - name: Display update result
-      ansible.builtin.debug:
-        msg: "{{ update_result.stdout_lines }}"
-    
-    - name: Start Valheim service
+      changed_when: "'Success! App' in update_result.stdout"
+      failed_when: false
+
+    - name: Start Valheim service after update attempt
       ansible.builtin.systemd:
         name: valheim
         state: started
+      register: update_start_result
+      failed_when: false
 
+    - name: Check Valheim service after update attempt
+      ansible.builtin.command: systemctl is-active --quiet valheim
+      register: update_service_status
+      changed_when: false
+      failed_when: false
+
+    - name: Collect Valheim diagnostics
+      ansible.builtin.command: journalctl -u valheim -n 100 --no-pager
+      register: update_diagnostics
+      changed_when: false
+      failed_when: false
+
+    - name: Display update diagnostics
+      ansible.builtin.debug:
+        msg:
+          - "SteamCMD stdout: {{ update_result.stdout_lines | default([]) }}"
+          - "SteamCMD stderr: {{ update_result.stderr_lines | default([]) }}"
+          - "Service start: {{ update_start_result.msg | default('requested') }}"
+          - "Recent journal: {{ update_diagnostics.stdout_lines | default([]) }}"
+
+    - name: Fail when update or restart failed
+      ansible.builtin.assert:
+        that:
+          - update_result.rc == 0
+          - update_service_status.rc == 0
+        fail_msg: "Valheim update or restart failed; review the diagnostics above."
+
+    - name: Verify updated Valheim server health
+      ansible.builtin.include_role:
+        name: valheim
+        tasks_from: health

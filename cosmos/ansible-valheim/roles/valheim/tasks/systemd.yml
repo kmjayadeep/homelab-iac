@@ -10,18 +10,13 @@
 
 - name: Ensure systemd is reloaded
   ansible.builtin.systemd:
-    daemon_reload: yes
+    daemon_reload: true
 
 - name: Enable and start Valheim service
   ansible.builtin.systemd:
     name: valheim
-    enabled: yes
+    enabled: true
     state: started
 
-- name: Wait for Valheim server to start
-  ansible.builtin.wait_for:
-    port: "{{ valheim_server_port }}"
-    delay: 15
-    timeout: 120
-  ignore_errors: yes
-
+- name: Verify Valheim health
+  ansible.builtin.include_tasks: health.yml

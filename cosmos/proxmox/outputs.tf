@@ -47,6 +47,21 @@ output "valheim_rivers_ip" {
   description = "IP address of the Valheim Rivers server"
 }
 
+output "valheim_skadi_ip" {
+  value       = proxmox_virtual_environment_vm.valheim_skadi.ipv4_addresses[1][0]
+  description = "IP address of the Valheim Skadi server"
+}
+
+output "valheim_skadi_bucket_access_key" {
+  value     = module.valheim_skadi_s3.access_key
+  sensitive = true
+}
+
+output "valheim_skadi_bucket_secret_key" {
+  value     = module.valheim_skadi_s3.secret_key
+  sensitive = true
+}
+
 output "windrose_ip" {
   value       = proxmox_virtual_environment_vm.windrose.ipv4_addresses[1][0]
   description = "IP address of the Windrose dedicated server"

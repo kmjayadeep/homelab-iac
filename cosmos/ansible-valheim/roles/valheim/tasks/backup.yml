@@ -13,6 +13,8 @@
     owner: "{{ steam_user }}"
     group: "{{ steam_group }}"
     mode: '0600'
+  no_log: true
+  diff: false
   when: backup_enabled | default(false)
 
 - name: Create backup script

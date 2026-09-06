@@ -1,138 +1,63 @@
-# Valheim Server Quick Start Guide
+# Valheim Server Quick Start
 
-## Initial Setup
+All mutating playbooks require an explicit limit that resolves to exactly one
+host. Never run an operation against the entire `valheim_servers` group.
 
-1. **Install Ansible collections:**
-   ```bash
-   ansible-galaxy collection install -r requirements.yml
-   ```
+## Configure a host
 
-2. **Configure your server settings:**
-   Edit `group_vars/valheim_servers.yml` and change at minimum:
-   - `valheim_server_name`: Your server name
-   - `valheim_world_name`: Your world name
-   - `valheim_server_password`: **CHANGE THIS!**
+Non-secret settings belong in `inventory/host_vars/<hostname>/vars.yml`.
+Secrets belong in its encrypted `vault.yml`:
 
-3. **Test connectivity:**
-   ```bash
-   ansible all -m ping
-   ```
-
-4. **Deploy the server:**
-   ```bash
-   ./deploy.sh
-   ```
-   
-   Or manually:
-   ```bash
-   ansible-playbook playbooks/setup.yml
-   ```
-
-## Daily Operations
-
-### Start/Stop/Restart
-
-```bash
-# Start
-ansible-playbook playbooks/start.yml
-
-# Stop
-ansible-playbook playbooks/stop.yml
-
-# Restart
-ansible-playbook playbooks/restart.yml
+```yaml
+valheim_server_password: "..."
+restic_password: "..."
+restic_s3_access_key: "..."
+restic_s3_secret_key: "..."
+uptime_url: "..."
 ```
 
-### Update Server
+Create and edit the file without placing values in command arguments or shell
+history, then encrypt it with Ansible Vault. Keep the vault password file local.
+
+## Deploy one host
 
 ```bash
-ansible-playbook playbooks/update.yml
+ansible-galaxy collection install -r requirements.yml
+ansible-inventory --host valheim-skadi
+ansible-playbook --syntax-check playbooks/setup.yml
+ansible valheim-skadi -m ping
+ansible-playbook playbooks/setup.yml --limit valheim-skadi --check --diff
+ansible-playbook playbooks/setup.yml --limit valheim-skadi
 ```
 
-This will:
-1. Stop the server
-2. Update via SteamCMD
-3. Start the server
+The first successful start of `valheim-skadi` creates a fresh, randomly seeded
+`Skadi` world. Do not copy a legacy world into its data directory.
 
-### View Logs
+## Operate one host
 
 ```bash
-# Live logs
-ssh ansible@valheim-rivers.cosmos.cboxlab.com 'sudo journalctl -u valheim -f'
-
-# Recent logs
-ssh ansible@valheim-rivers.cosmos.cboxlab.com 'sudo journalctl -u valheim -n 100'
+ansible-playbook playbooks/start.yml --limit valheim-skadi
+ansible-playbook playbooks/stop.yml --limit valheim-skadi
+ansible-playbook playbooks/restart.yml --limit valheim-skadi
+ansible-playbook playbooks/update.yml --limit valheim-skadi
+ansible-playbook playbooks/backup.yml --limit valheim-skadi -e backup_operation=backup
+ansible-playbook playbooks/backup.yml --limit valheim-skadi -e backup_operation=list
+ansible-playbook playbooks/backup.yml --limit valheim-skadi -e backup_operation=restore-test
 ```
 
-## Server Connection
+The restore drill writes under `/tmp/valheim-restore-*`; it never overwrites the
+live world. Inspect the restored files and ownership before deleting the test
+copy.
 
-**In Valheim Client:**
-1. Click "Join Game"
-2. Click "Join IP"
-3. Enter: `valheim-rivers.cosmos.cboxlab.com:2456`
-4. Enter your password
-
-## File Locations
-
-| Path | Description |
-|------|-------------|
-| `/home/valheim/valheim-server/` | Server installation |
-| `/home/valheim/steamcmd/` | SteamCMD installation |
-| `/home/valheim/.config/unity3d/IronGate/Valheim/worlds/` | World save files |
-| `/etc/systemd/system/valheim.service` | Systemd service file |
-
-## Systemd Commands
+## Check health
 
 ```bash
-# Check status
+ssh ansible@valheim-skadi.cosmos.cboxlab.com
 sudo systemctl status valheim
-
-# Start/Stop/Restart
-sudo systemctl start valheim
-sudo systemctl stop valheim
-sudo systemctl restart valheim
-
-# Enable/Disable auto-start
-sudo systemctl enable valheim
-sudo systemctl disable valheim
+sudo journalctl -u valheim -n 100
+sudo ss -lunp | grep 2456
+sudo systemctl status backup-valheim.timer
 ```
 
-## Configuration Changes
-
-After modifying `group_vars/valheim_servers.yml`:
-
-```bash
-# Re-run setup to apply changes
-ansible-playbook playbooks/setup.yml
-```
-
-## Troubleshooting
-
-### Server won't start
-```bash
-ssh ansible@valheim-rivers.cosmos.cboxlab.com
-sudo systemctl status valheim
-sudo journalctl -u valheim -n 50
-```
-
-### Port not accessible
-```bash
-# Check firewall
-ssh ansible@valheim-rivers.cosmos.cboxlab.com 'sudo ufw status'
-
-# Verify server is listening
-ssh ansible@valheim-rivers.cosmos.cboxlab.com 'sudo netstat -tulpn | grep 2456'
-```
-
-### Disk space issues
-```bash
-ansible valheim_servers -m command -a "df -h /home/valheim" -b
-```
-
-## Tips
-
-- **Password Changes**: Update in `group_vars/valheim_servers.yml`, then run `ansible-playbook playbooks/setup.yml`
-- **Port Changes**: Update `valheim_server_port` in group_vars, then re-run setup
-- **Performance**: Native SteamCMD installation provides better performance than Docker
-- **Backups**: Implement your own backup strategy - world files are in `/home/valheim/.config/unity3d/IronGate/Valheim/worlds`
-
+A healthy launch has an active service and process, a UDP listener, and a
+`Game server connected` journal message.

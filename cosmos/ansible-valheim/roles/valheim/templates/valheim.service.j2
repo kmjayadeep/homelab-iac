@@ -8,13 +8,13 @@ Type=simple
 User={{ steam_user }}
 Group={{ steam_group }}
 WorkingDirectory={{ valheim_install_dir }}
-ExecStartPre={{ steamcmd_dir }}/steamcmd.sh +force_install_dir {{ valheim_install_dir }} +login anonymous +app_update {{ valheim_app_id }} +quit
 ExecStart={{ valheim_install_dir }}/start_valheim.sh
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s INT $MAINPID
 KillSignal=SIGINT
 Restart=on-failure
 RestartSec=30s
+TimeoutStopSec=120s
 
 # Resource limits
 LimitNOFILE=100000
