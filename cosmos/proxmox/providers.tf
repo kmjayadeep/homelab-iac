@@ -62,6 +62,7 @@ provider "proxmox-bpg" {
 
 provider "minio" {
   minio_server = "minio.cosmos.cboxlab.com"
+  minio_region = "us-west-000"
   minio_ssl    = true
 }
 

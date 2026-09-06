@@ -3,6 +3,7 @@ resource "proxmox_virtual_environment_vm" "hermes" {
   name      = "hermes"
   node_name = "jupiter"
   vm_id     = 103
+  started   = false
 
   machine     = "q35"
   bios        = "ovmf"
@@ -107,7 +108,7 @@ resource "cloudflare_dns_record" "hermes" {
   name    = "hermes.cosmos.cboxlab.com"
   type    = "A"
   comment = "Hermes VM"
-  content = proxmox_virtual_environment_vm.hermes.ipv4_addresses[1][0]
+  content = try(proxmox_virtual_environment_vm.hermes.ipv4_addresses[1][0], "192.168.1.116")
   proxied = false
   ttl     = 300
 }
