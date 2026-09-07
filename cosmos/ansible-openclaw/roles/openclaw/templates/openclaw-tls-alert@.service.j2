@@ -1,0 +1,6 @@
+[Unit]
+Description=Record an actionable OpenClaw TLS service failure for %i
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/logger --priority daemon.crit --tag openclaw-tls-alert "Unit %i failed; inspect systemctl status %i and journalctl -u %i"

@@ -1,0 +1,11 @@
+[Unit]
+Description=Periodically check OpenClaw Vault Agent and certificate health
+
+[Timer]
+OnCalendar={{ tls_monitor_schedule }}
+Persistent=true
+RandomizedDelaySec=5m
+Unit=openclaw-tls-monitor.service
+
+[Install]
+WantedBy=timers.target

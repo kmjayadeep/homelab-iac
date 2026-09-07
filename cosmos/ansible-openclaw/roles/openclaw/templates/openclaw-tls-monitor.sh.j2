@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -e
+
+credential={{ vault_agent_cloudflare_destination | quote }}
+render_status={{ vault_agent_status_destination | quote }}
+certificate={{ ('/etc/letsencrypt/live/' ~ openclaw_cert_domain ~ '/fullchain.pem') | quote }}
+max_template_age={{ vault_agent_max_template_age_seconds | int }}
+expiry_warning_seconds={{ (certificate_expiry_warning_days | int) * 86400 }}
+
+fail() {
+  printf 'OpenClaw TLS monitor failed: %s\n' "$1" >&2
+  exit 1
+}
+
+systemctl is-active --quiet vault-agent.service || fail 'vault-agent.service is inactive'
+
+[[ -s "$credential" ]] || fail 'Certbot credential is absent or empty'
+[[ "$(stat -c '%U:%G:%a' "$credential")" == 'root:root:600' ]] ||
+  fail 'Certbot credential ownership or mode is unsafe'
+
+[[ -s "$render_status" ]] || fail 'Vault Agent render status is absent or empty'
+[[ "$(stat -c '%U:%G:%a' "$render_status")" == 'root:root:600' ]] ||
+  fail 'Vault Agent render status ownership or mode is unsafe'
+
+now="$(date +%s)"
+rendered_at="$(stat -c '%Y' "$render_status")"
+((now - rendered_at <= max_template_age)) || fail 'Vault Agent render status is stale'
+
+[[ -s "$certificate" ]] || fail 'certificate is absent or empty'
+openssl x509 -checkend "$expiry_warning_seconds" -noout -in "$certificate" >/dev/null ||
+  fail 'certificate expires within the warning window'

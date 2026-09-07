@@ -14,6 +14,7 @@
     owner: root
     group: root
     mode: "0644"
+  register: hashicorp_signing_key
 
 - name: Configure HashiCorp apt repository
   ansible.builtin.deb822_repository:
@@ -30,11 +31,12 @@
       - "{{ vault_apt_architectures[ansible_facts.architecture] }}"
     signed_by: /usr/share/keyrings/hashicorp-archive-keyring.asc
     state: present
+  register: hashicorp_repository
 
 - name: Update apt cache for HashiCorp repository
   ansible.builtin.apt:
     update_cache: true
-    cache_valid_time: 0
+  when: hashicorp_signing_key.changed or hashicorp_repository.changed
 
 - name: Install pinned Vault package
   ansible.builtin.apt:
@@ -57,6 +59,15 @@
   ansible.builtin.template:
     src: vault-cloudflare.ini.ctmpl.j2
     dest: "{{ vault_agent_cloudflare_template_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart vault agent
+
+- name: Install Vault Agent render status template
+  ansible.builtin.template:
+    src: vault-render-status.ctmpl.j2
+    dest: "{{ vault_agent_status_template_path }}"
     owner: root
     group: root
     mode: "0600"
@@ -107,6 +118,41 @@
     mode: "0644"
   notify: Reload systemd
 
+- name: Install OpenClaw TLS failure alert unit
+  ansible.builtin.template:
+    src: openclaw-tls-alert@.service.j2
+    dest: /etc/systemd/system/openclaw-tls-alert@.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Install OpenClaw TLS health check
+  ansible.builtin.template:
+    src: openclaw-tls-monitor.sh.j2
+    dest: /usr/local/sbin/check-openclaw-tls
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install OpenClaw TLS monitor service
+  ansible.builtin.template:
+    src: openclaw-tls-monitor.service.j2
+    dest: /etc/systemd/system/openclaw-tls-monitor.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Install OpenClaw TLS monitor timer
+  ansible.builtin.template:
+    src: openclaw-tls-monitor.timer.j2
+    dest: /etc/systemd/system/openclaw-tls-monitor.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
 - name: Check Vault Agent bootstrap identity files
   ansible.builtin.stat:
     path: "{{ item }}"
@@ -134,6 +180,9 @@
   no_log: true
   when: not ansible_check_mode
 
+- name: Apply Vault Agent and systemd configuration changes
+  ansible.builtin.meta: flush_handlers
+
 - name: Enable and start Vault Agent
   ansible.builtin.systemd:
     name: vault-agent.service
@@ -145,6 +194,13 @@
 - name: Wait for Vault Agent to render the Certbot credential
   ansible.builtin.wait_for:
     path: "{{ vault_agent_cloudflare_destination }}"
+    state: present
+    timeout: "{{ vault_agent_credential_wait_seconds }}"
+  when: not ansible_check_mode
+
+- name: Wait for Vault Agent render status
+  ansible.builtin.wait_for:
+    path: "{{ vault_agent_status_destination }}"
     state: present
     timeout: "{{ vault_agent_credential_wait_seconds }}"
   when: not ansible_check_mode
@@ -167,3 +223,16 @@
       - vault_agent_cloudflare_credential.stat.mode == "0600"
       - vault_agent_cloudflare_credential.stat.size > 0
     fail_msg: "The Certbot credential must be a non-empty, root-owned regular file with mode 0600."
+
+- name: Enable and start OpenClaw TLS monitor timer
+  ansible.builtin.systemd:
+    name: openclaw-tls-monitor.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: not ansible_check_mode
+
+- name: Run OpenClaw TLS health check
+  ansible.builtin.command: /usr/local/sbin/check-openclaw-tls
+  changed_when: false
+  when: not ansible_check_mode

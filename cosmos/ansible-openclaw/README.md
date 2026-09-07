@@ -80,6 +80,39 @@ sudo certbot renew --dry-run --cert-name openclaw.cosmos.cboxlab.com
 Vault Agent connects only to `https://vault.cosmos.cboxlab.com` with normal TLS
 verification. Do not configure `tls_skip_verify` or the internal HTTP endpoint.
 
+### Cloudflare token rotation
+
+Rotate the shared production identity without creating another Vault path:
+
+1. Create a replacement Cloudflare token with zone-read and DNS-edit access only
+   for `cboxlab.com`, then validate its scope without revoking the current token.
+2. Write only `api_token` to `services/cloudflare/dns-cboxlab` through the
+   approved non-logging Vault stdin/file workflow.
+3. Update the KV custom metadata required by `vault-config/PATHS.md`, including
+   `last-rotated-at`, `expires-at`, and the current non-secret scope details.
+4. Wait at least five minutes for Vault Agent and the other consumers to
+   reconcile. Confirm each VM's render-status timestamp advances without reading
+   `/etc/letsencrypt/cloudflare.ini`.
+5. Validate external-dns, cert-manager certificate issuance, and a Certbot dry
+   run on both OpenClaw hosts.
+6. Revoke the old Cloudflare token only after every consumer passes validation.
+
+### TLS monitoring
+
+`openclaw-tls-monitor.timer` runs hourly and checks that Vault Agent is active,
+its non-secret render-status file is no older than 15 minutes, the Certbot
+credential has safe metadata, and the certificate remains valid for more than
+21 days. It never reads or logs the credential content.
+
+Failures of `vault-agent.service`, `certbot.service`, or the TLS monitor trigger
+`openclaw-tls-alert@.service`, which records a critical, actionable journal
+entry. Inspect failures with:
+
+```bash
+sudo journalctl -t openclaw-tls-alert --no-pager
+sudo systemctl status vault-agent.service certbot.service openclaw-tls-monitor.service
+```
+
 ## Backups
 
 Setup installs a restic systemd timer that periodically backs up `/home/openclaw/.openclaw/` to the MinIO bucket `openclaw-backup`.

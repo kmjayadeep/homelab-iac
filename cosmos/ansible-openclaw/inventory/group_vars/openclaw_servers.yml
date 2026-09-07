@@ -33,8 +33,13 @@ vault_agent_role_id_path: "{{ vault_agent_config_dir }}/role-id"
 vault_agent_secret_id_path: "{{ vault_agent_config_dir }}/secret-id"
 vault_agent_cloudflare_template_path: "{{ vault_agent_template_dir }}/cloudflare.ini.ctmpl"
 vault_agent_cloudflare_destination: "/etc/letsencrypt/cloudflare.ini"
+vault_agent_status_template_path: "{{ vault_agent_template_dir }}/render-status.ctmpl"
+vault_agent_status_destination: "/run/vault-agent/cloudflare-rendered"
 vault_agent_static_secret_render_interval: "5m"
 vault_agent_credential_wait_seconds: 60
+vault_agent_max_template_age_seconds: 900
+certificate_expiry_warning_days: 21
+tls_monitor_schedule: hourly
 
 # Restic backup configuration. Repository credentials should come from the
 # environment or vault and must not be committed in plain text.

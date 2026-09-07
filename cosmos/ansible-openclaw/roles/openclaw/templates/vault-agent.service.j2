@@ -2,6 +2,7 @@
 Description=Vault Agent for Certbot credentials
 Wants=network-online.target
 After=network-online.target
+OnFailure=openclaw-tls-alert@%n.service
 
 [Service]
 Type=simple
@@ -10,6 +11,8 @@ Group=root
 ExecStart=/usr/bin/vault agent -config={{ vault_agent_config_dir }}/vault-agent.hcl
 Restart=on-failure
 RestartSec=5s
+RuntimeDirectory=vault-agent
+RuntimeDirectoryMode=0700
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true

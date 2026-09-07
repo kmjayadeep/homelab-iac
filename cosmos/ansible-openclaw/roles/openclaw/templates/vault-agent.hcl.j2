@@ -32,3 +32,11 @@ template {
   backup               = false
   error_on_missing_key = true
 }
+
+template {
+  source               = "{{ vault_agent_status_template_path }}"
+  destination          = "{{ vault_agent_status_destination }}"
+  perms                = "0600"
+  backup               = false
+  error_on_missing_key = true
+}

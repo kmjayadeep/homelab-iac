@@ -193,10 +193,10 @@ Update `cosmos/ansible-openclaw` idempotently.
 
 ## Phase 5: Rotation and failure monitoring
 
-- [ ] Perform a rotation propagation drill without changing the production
+- [x] Perform a rotation propagation drill without changing the production
       token: trigger a Vault Agent template refresh and verify the rendered
       file's timestamp changes while its contents remain undisclosed.
-- [ ] Document the production rotation workflow:
+- [x] Document the production rotation workflow:
   1. create and verify a replacement Cloudflare token;
   2. write `api_token` to the same Vault path through the approved non-logging
      workflow;
@@ -204,11 +204,11 @@ Update `cosmos/ansible-openclaw` idempotently.
   4. wait for all consumers, including OpenClaw, to reconcile;
   5. validate external-dns, cert-manager, and an OpenClaw Certbot dry run; and
   6. revoke the old token only after every consumer passes.
-- [ ] Alert on `certbot.service` failure using the existing monitoring pattern or
+- [x] Alert on `certbot.service` failure using the existing monitoring pattern or
       a systemd `OnFailure` unit.
-- [ ] Add a certificate-expiry monitor that warns at least 21 days before expiry
+- [x] Add a certificate-expiry monitor that warns at least 21 days before expiry
       so a failed renewal cannot remain unnoticed.
-- [ ] Monitor `vault-agent.service` availability and template age without
+- [x] Monitor `vault-agent.service` availability and template age without
       exposing the rendered secret.
 
 ## Validation commands
@@ -259,15 +259,15 @@ curl -I https://openclaw.cosmos.cboxlab.com/
 
 ## Completion criteria
 
-- [ ] `https://openclaw.cosmos.cboxlab.com` serves a currently valid certificate.
-- [ ] Certbot's DNS challenge succeeds using the Vault-rendered credential.
-- [ ] Both OpenClaw AppRoles have exact-path read access and cannot read
+- [x] `https://openclaw.cosmos.cboxlab.com` serves a currently valid certificate.
+- [x] Certbot's DNS challenge succeeds using the Vault-rendered credential.
+- [x] Both OpenClaw AppRoles have exact-path read access and cannot read
       unrelated Vault paths.
-- [ ] No Cloudflare token or Vault SecretID exists in Git, Terraform state,
+- [x] No Cloudflare token or Vault SecretID exists in Git, Terraform state,
       Ansible output, shell history, or command arguments.
-- [ ] Updating the canonical Vault property reaches the VM without rerunning
+- [x] Updating the canonical Vault property reaches the VM without rerunning
       Ansible.
-- [ ] Vault Agent and Certbot recover automatically after VM reboot.
-- [ ] Renewal and certificate-expiry failures produce actionable alerts.
-- [ ] Kubernetes cert-manager and external-dns continue working throughout the
+- [x] Vault Agent and Certbot recover automatically after VM reboot.
+- [x] Renewal and certificate-expiry failures produce actionable alerts.
+- [x] Kubernetes cert-manager and external-dns continue working throughout the
       rollout.

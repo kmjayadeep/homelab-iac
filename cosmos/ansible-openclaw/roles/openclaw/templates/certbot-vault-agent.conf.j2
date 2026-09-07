@@ -1,6 +1,7 @@
 [Unit]
 Requires=vault-agent.service
 After=vault-agent.service
+OnFailure=openclaw-tls-alert@%n.service
 
 [Service]
 ExecStartPre=/usr/local/sbin/wait-for-certbot-credential
