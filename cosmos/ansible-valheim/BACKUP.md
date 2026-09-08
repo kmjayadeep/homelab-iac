@@ -30,6 +30,8 @@ ansible-playbook playbooks/backup.yml --limit valheim-nordlys -e backup_operatio
 ansible-playbook playbooks/backup.yml --limit valheim-nordlys -e backup_operation=backup
 ansible-playbook playbooks/backup.yml --limit valheim-nordlys -e backup_operation=list
 ansible-playbook playbooks/backup.yml --limit valheim-nordlys -e backup_operation=restore-test
+# Non-interactive restore drill:
+ansible-playbook playbooks/backup.yml --limit valheim-nordlys -e backup_operation=restore-test -e backup_snapshot=latest
 ```
 
 `restore-test` prompts for a snapshot and restores it to an isolated

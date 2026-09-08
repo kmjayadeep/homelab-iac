@@ -76,21 +76,27 @@
           ansible.builtin.pause:
             prompt: "Enter a snapshot ID or latest"
           register: snapshot_choice
+          when: backup_snapshot is not defined
+
+        - name: Select snapshot for restore drill
+          ansible.builtin.set_fact:
+            selected_backup_snapshot: >-
+              {{ backup_snapshot if backup_snapshot is defined else snapshot_choice.user_input }}
 
         - name: Validate snapshot ID
           ansible.builtin.assert:
-            that: snapshot_choice.user_input == 'latest' or snapshot_choice.user_input is match('^[a-fA-F0-9]+$')
+            that: selected_backup_snapshot == 'latest' or selected_backup_snapshot is match('^[a-fA-F0-9]+$')
             fail_msg: "Snapshot ID must be a hexadecimal restic ID or latest."
 
         - name: Set isolated restore path
           ansible.builtin.set_fact:
-            valheim_restore_path: "/tmp/valheim-restore-{{ ansible_date_time.epoch }}"
+            valheim_restore_path: "/tmp/valheim-restore-{{ ansible_facts.date_time.epoch }}"
 
         - name: Restore snapshot to the isolated path
           ansible.builtin.shell: |
             set -o pipefail
             source /etc/restic-env
-            restic restore "{{ snapshot_choice.user_input }}" --target "{{ valheim_restore_path }}"
+            restic restore "{{ selected_backup_snapshot }}" --target "{{ valheim_restore_path }}"
           args:
             executable: /bin/bash
           become_user: "{{ steam_user }}"

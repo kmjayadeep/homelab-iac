@@ -44,19 +44,23 @@
       changed_when: false
       failed_when: false
 
-    - name: Collect Valheim diagnostics
-      ansible.builtin.command: journalctl -u valheim -n 100 --no-pager
-      register: update_diagnostics
+    - name: Preserve Valheim diagnostics on the host
+      ansible.builtin.shell: |
+        install -m 0600 /dev/null /var/log/valheim-update-diagnostics.log
+        journalctl -u valheim -n 100 --no-pager > /var/log/valheim-update-diagnostics.log
+      args:
+        executable: /bin/bash
       changed_when: false
       failed_when: false
+      no_log: true
 
-    - name: Display update diagnostics
+    - name: Display update result
       ansible.builtin.debug:
         msg:
           - "SteamCMD stdout: {{ update_result.stdout_lines | default([]) }}"
           - "SteamCMD stderr: {{ update_result.stderr_lines | default([]) }}"
           - "Service start: {{ update_start_result.msg | default('requested') }}"
-          - "Recent journal: {{ update_diagnostics.stdout_lines | default([]) }}"
+          - "Host diagnostics: /var/log/valheim-update-diagnostics.log"
 
     - name: Fail when update or restart failed
       ansible.builtin.assert:

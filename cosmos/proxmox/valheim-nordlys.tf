@@ -68,9 +68,7 @@ resource "proxmox_virtual_environment_file" "valheim_nordlys_user_data" {
         groups:
           - games
         shell: /bin/bash
-        create_home: true
-        home: /home/valheim
-        system: false
+        homedir: /home/valheim
         ssh_authorized_keys:
           - "${var.cloudinit_ssh_public_key}"
       - name: ansible
