@@ -2,7 +2,7 @@ resource "proxmox_virtual_environment_vm" "windrose" {
   provider  = proxmox-bpg.jupiter-bpg
   name      = "windrose"
   node_name = "jupiter"
-  started   = true
+  started   = false
 
   machine     = "q35"
   bios        = "ovmf"
@@ -101,7 +101,7 @@ resource "cloudflare_dns_record" "windrose" {
   name    = "windrose.cosmos.cboxlab.com"
   type    = "A"
   comment = "Windrose dedicated server"
-  content = proxmox_virtual_environment_vm.windrose.ipv4_addresses[1][0]
+  content = try(proxmox_virtual_environment_vm.windrose.ipv4_addresses[1][0], "192.168.1.114")
   proxied = false
   ttl     = 300
 }

@@ -63,7 +63,7 @@ output "valheim_nordlys_bucket_secret_key" {
 }
 
 output "windrose_ip" {
-  value       = proxmox_virtual_environment_vm.windrose.ipv4_addresses[1][0]
+  value       = try(proxmox_virtual_environment_vm.windrose.ipv4_addresses[1][0], "192.168.1.114")
   description = "IP address of the Windrose dedicated server"
 }
 

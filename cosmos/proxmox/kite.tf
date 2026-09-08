@@ -2,7 +2,7 @@ resource "proxmox_virtual_environment_vm" "kite" {
   provider  = proxmox-bpg.jupiter-bpg
   name      = "kite"
   node_name = "jupiter"
-  started   = true
+  started   = false
 
   machine     = "q35"
   bios        = "ovmf"
@@ -100,7 +100,7 @@ resource "cloudflare_dns_record" "kite" {
   name    = "kite.cosmos.cboxlab.com"
   type    = "A"
   comment = "Kite VM"
-  content = proxmox_virtual_environment_vm.kite.ipv4_addresses[1][0]
+  content = try(proxmox_virtual_environment_vm.kite.ipv4_addresses[1][0], "192.168.1.127")
   proxied = false
   ttl     = 300
 }
