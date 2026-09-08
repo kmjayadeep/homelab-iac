@@ -17,6 +17,9 @@ valheim_modifiers:
 valheim_admin_ids: []
 valheim_permitted_list_enabled: false
 valheim_permitted_ids: []
+tailscale_enabled: false
+tailscale_accept_dns: false
+valheim_game_interface: ""
 
 # Installation paths
 valheim_install_dir: "/home/valheim/valheim-server"

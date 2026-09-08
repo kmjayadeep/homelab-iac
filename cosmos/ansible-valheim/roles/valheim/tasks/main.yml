@@ -13,6 +13,10 @@
 - name: Include prerequisite tasks
   include_tasks: prerequisites.yml
 
+- name: Include Tailscale setup tasks
+  ansible.builtin.include_tasks: tailscale.yml
+  when: tailscale_enabled | default(false) | bool
+
 - name: Include SteamCMD installation tasks
   include_tasks: steamcmd.yml
 

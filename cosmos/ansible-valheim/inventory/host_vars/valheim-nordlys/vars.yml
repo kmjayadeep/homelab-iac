@@ -3,12 +3,16 @@ valheim_server_name: "Valheim Nordlys"
 valheim_world_name: "Nordlys"
 valheim_server_password: "{{ vault_valheim_server_password }}"
 valheim_server_port: 2456
-valheim_public: 1
-valheim_crossplay: true
-valheim_instance_id: "valheim-nordlys-1"
+valheim_public: 0
+valheim_crossplay: false
+valheim_instance_id: ""
 valheim_preset: ""
 valheim_modifiers: []
 valheim_mods_enabled: false
+valheim_game_interface: "tailscale0"
+
+tailscale_enabled: true
+tailscale_accept_dns: false
 
 valheim_admin_ids: []
 valheim_permitted_list_enabled: false

@@ -31,7 +31,9 @@ ansible-playbook playbooks/setup.yml --limit valheim-nordlys
 ```
 
 The first successful start of `valheim-nordlys` creates a fresh, randomly seeded
-`Nordlys` world. Do not copy a legacy world into its data directory.
+`Nordlys` world. Do not copy a legacy world into its data directory. Nordlys
+uses the Steam backend; connect to Tailscale first, then join
+`valheim-nordlys-tailscale.cosmos.cboxlab.com:2456`.
 
 ## Operate one host
 
@@ -57,6 +59,7 @@ sudo systemctl status valheim
 sudo journalctl -u valheim -n 100
 sudo ss -lunp | grep 2456
 sudo systemctl status backup-valheim.timer
+sudo tailscale status
 ```
 
 A healthy launch has an active service and process, a UDP listener, and a

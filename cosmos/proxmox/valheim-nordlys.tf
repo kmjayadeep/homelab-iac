@@ -97,8 +97,18 @@ resource "cloudflare_dns_record" "valheim_nordlys" {
   zone_id = var.cloudflare_zone_id
   name    = "valheim-nordlys.cosmos.cboxlab.com"
   type    = "A"
-  comment = "Vanilla Valheim 1.0 server"
+  comment = "Valheim Nordlys LAN address"
   content = proxmox_virtual_environment_vm.valheim_nordlys.ipv4_addresses[1][0]
+  proxied = false
+  ttl     = 300
+}
+
+resource "cloudflare_dns_record" "valheim_nordlys_tailscale" {
+  zone_id = var.cloudflare_zone_id
+  name    = "valheim-nordlys-tailscale.cosmos.cboxlab.com"
+  type    = "A"
+  comment = "Valheim Nordlys Tailscale address"
+  content = "100.112.8.25"
   proxied = false
   ttl     = 300
 }

@@ -14,7 +14,7 @@ See [QUICKSTART.md](QUICKSTART.md) for deployment and routine operations and
 | --- | --- | --- |
 | `valheim-rivers` | Legacy world | Existing host settings |
 | `chillyfries` | Legacy world | Existing host settings |
-| `valheim-nordlys` | Fresh Valheim 1.0 world | Vanilla defaults, crossplay |
+| `valheim-nordlys` | Fresh Valheim 1.0 world | Vanilla defaults, Steam over Tailscale |
 
 ## Configuration
 
@@ -39,7 +39,10 @@ Platform IDs use the case-sensitive `[Platform]_[User ID]` form. Enabling a
 permitted list denies access to everyone not listed.
 
 `valheim-nordlys` intentionally sets no preset or modifiers and enables no
-mods, so Valheim's vanilla defaults apply.
+mods, so Valheim's vanilla defaults apply. It is unlisted, uses the Steam
+backend, and restricts game UDP traffic to `tailscale0`. Connect through
+`valheim-nordlys-tailscale.cosmos.cboxlab.com:2456` while connected to the
+Tailscale network.
 
 ## Release and rollback procedure
 
@@ -48,8 +51,8 @@ mods, so Valheim's vanilla defaults apply.
    or manifest ID.
 3. Provision and deploy only `valheim-nordlys` using the commands in the
    quickstart.
-4. Confirm `Game server connected`, perform Steam and external/crossplay joins,
-   and verify a clean restart and world persistence.
+4. Confirm `Game server connected`, perform a Steam join over Tailscale, and
+   verify a clean restart and world persistence.
 5. Run an on-demand backup and an isolated `restore-test`, then confirm the
    hourly timer.
 6. Keep the legacy hosts as rollback targets until Nordlys has run for 48 hours
