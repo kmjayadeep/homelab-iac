@@ -1,6 +1,21 @@
 ---
+- name: Require host-specific Valheim credentials
+  ansible.builtin.assert:
+    that:
+      - valheim_server_password is defined
+      - valheim_server_password | length >= 5
+      - (not (valheim_crossplay | bool)) or (valheim_instance_id | length > 0)
+    fail_msg: >-
+      Define valheim_server_password in the encrypted host vault and set a
+      unique valheim_instance_id when crossplay is enabled.
+  no_log: true
+
 - name: Include prerequisite tasks
   include_tasks: prerequisites.yml
+
+- name: Include Tailscale setup tasks
+  ansible.builtin.include_tasks: tailscale.yml
+  when: tailscale_enabled | default(false) | bool
 
 - name: Include SteamCMD installation tasks
   include_tasks: steamcmd.yml

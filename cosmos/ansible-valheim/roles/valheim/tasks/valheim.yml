@@ -28,7 +28,36 @@
     dest: "{{ valheim_install_dir }}/start_valheim.sh"
     owner: "{{ steam_user }}"
     group: "{{ steam_group }}"
-    mode: '0755'
+    mode: '0700'
+  no_log: true
+  diff: false
+
+- name: Configure Valheim administrators
+  ansible.builtin.template:
+    src: platform-list.txt.j2
+    dest: "{{ valheim_data_dir }}/adminlist.txt"
+    owner: "{{ steam_user }}"
+    group: "{{ steam_group }}"
+    mode: '0644'
+  vars:
+    valheim_platform_ids: "{{ valheim_admin_ids | default([]) }}"
+
+- name: Configure Valheim permitted players
+  ansible.builtin.template:
+    src: platform-list.txt.j2
+    dest: "{{ valheim_data_dir }}/permittedlist.txt"
+    owner: "{{ steam_user }}"
+    group: "{{ steam_group }}"
+    mode: '0644'
+  vars:
+    valheim_platform_ids: "{{ valheim_permitted_ids | default([]) }}"
+  when: valheim_permitted_list_enabled | bool
+
+- name: Disable the Valheim permitted-player list
+  ansible.builtin.file:
+    path: "{{ valheim_data_dir }}/permittedlist.txt"
+    state: absent
+  when: not valheim_permitted_list_enabled | bool
 
 - name: Set proper permissions for Valheim server files
   ansible.builtin.file:

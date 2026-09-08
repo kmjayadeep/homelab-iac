@@ -1,16 +1,25 @@
 ---
 # Shared Valheim Server Configuration
+# Temporary legacy fallback; remove after both legacy host vaults are rotated.
 valheim_server_password: "12345"
 
-# Server settings
+# Names, networking mode, and gameplay settings belong in host_vars.
 valheim_server_port: 2456
-
-# Server modifiers (game difficulty/gameplay tweaks)
+valheim_public: 1
+valheim_crossplay: false
+valheim_instance_id: ""
+valheim_preset: ""
 valheim_modifiers:
   - "-modifier deathpenalty casual"
   - "-modifier combat hard"
   - "-modifier resources most"
   - "-setkey StaminaRate 50"
+valheim_admin_ids: []
+valheim_permitted_list_enabled: false
+valheim_permitted_ids: []
+tailscale_enabled: false
+tailscale_accept_dns: false
+valheim_game_interface: ""
 
 # Installation paths
 valheim_install_dir: "/home/valheim/valheim-server"
@@ -25,7 +34,7 @@ steam_home: "/home/valheim"
 valheim_authorized_keys:
   - "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_rsa.pub') }}"
 
-# Server mods (optional, requires manual setup)
+# Server mods are opt-in per host.
 valheim_mods_enabled: false
 
 # Backup Configuration

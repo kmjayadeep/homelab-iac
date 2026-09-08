@@ -1,15 +1,22 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-export templdpath=$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH={{ valheim_install_dir }}/linux64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH="{{ valheim_install_dir }}/linux64:${LD_LIBRARY_PATH:-}"
 export SteamAppId=892970
 
-# Start Valheim server
-{{ valheim_install_dir }}/valheim_server.x86_64 \
-  -name "{{ valheim_server_name }}" \
+exec {{ valheim_install_dir }}/valheim_server.x86_64 \
+  -name {{ valheim_server_name | quote }} \
   -port {{ valheim_server_port }} \
-  -world "{{ valheim_world_name }}" \
-  -password "{{ valheim_server_password }}" \
+  -world {{ valheim_world_name | quote }} \
+  -password {{ valheim_server_password | quote }} \
+  -public {{ valheim_public | int }} \
+{% if valheim_crossplay | bool %}
+  -crossplay \
+  -instanceid {{ valheim_instance_id | quote }} \
+{% endif %}
+{% if valheim_preset | default('') | length > 0 %}
+  -preset {{ valheim_preset | lower }} \
+{% endif %}
 {% if valheim_modifiers is defined and valheim_modifiers | length > 0 %}
 {% for modifier in valheim_modifiers %}
   {{ modifier }} \
@@ -17,6 +24,4 @@ export SteamAppId=892970
 {% endif %}
   -nographics \
   -batchmode
-
-export LD_LIBRARY_PATH=$templdpath
 

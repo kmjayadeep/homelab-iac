@@ -2,9 +2,17 @@
 - name: Setup Valheim Server
   hosts: valheim_servers
   become: true
-  
+
+  pre_tasks:
+    - name: Require an explicit single-host limit
+      ansible.builtin.assert:
+        that:
+          - ansible_limit is defined
+          - ansible_play_hosts_all | length == 1
+        fail_msg: "Run this playbook with --limit <hostname>."
+      run_once: true
+
   tasks:
     - name: Include valheim role
-      include_role:
+      ansible.builtin.include_role:
         name: valheim
-
