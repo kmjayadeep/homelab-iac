@@ -28,10 +28,40 @@
   delay: 5
   until: valheim_socket_health.rc == 0
 
-- name: Wait for Valheim connection-ready log message
-  ansible.builtin.command: journalctl -u valheim -b --no-pager
+- name: Read current Valheim service activation time
+  ansible.builtin.command:
+    argv:
+      - systemctl
+      - show
+      - valheim
+      - --property=ActiveEnterTimestamp
+      - --value
+  register: valheim_active_since
+  changed_when: false
+
+- name: Wait for current Valheim process connection-ready log message
+  ansible.builtin.command:
+    argv:
+      - journalctl
+      - -u
+      - valheim
+      - --since
+      - "{{ valheim_active_since.stdout }}"
+      - --no-pager
   register: valheim_log_health
   changed_when: false
   retries: 24
   delay: 5
   until: "'Game server connected' in valheim_log_health.stdout"
+
+- name: Confirm Valheim service did not restart during readiness checks
+  ansible.builtin.command:
+    argv:
+      - systemctl
+      - show
+      - valheim
+      - --property=ActiveEnterTimestamp
+      - --value
+  register: valheim_active_after_health
+  changed_when: false
+  failed_when: valheim_active_after_health.stdout != valheim_active_since.stdout

@@ -1,6 +1,6 @@
-resource "proxmox_virtual_environment_vm" "valheim_skadi" {
+resource "proxmox_virtual_environment_vm" "valheim_nordlys" {
   provider  = proxmox-bpg.jupiter-bpg
-  name      = "valheim-skadi"
+  name      = "valheim-nordlys"
   node_name = "jupiter"
   started   = true
 
@@ -36,7 +36,7 @@ resource "proxmox_virtual_environment_vm" "valheim_skadi" {
         address = "dhcp"
       }
     }
-    user_data_file_id = proxmox_virtual_environment_file.valheim_skadi_user_data.id
+    user_data_file_id = proxmox_virtual_environment_file.valheim_nordlys_user_data.id
   }
 
   network_device {
@@ -52,7 +52,7 @@ resource "proxmox_virtual_environment_vm" "valheim_skadi" {
   }
 }
 
-resource "proxmox_virtual_environment_file" "valheim_skadi_user_data" {
+resource "proxmox_virtual_environment_file" "valheim_nordlys_user_data" {
   provider     = proxmox-bpg.jupiter-bpg
   content_type = "snippets"
   datastore_id = "nfs-templates"
@@ -61,7 +61,7 @@ resource "proxmox_virtual_environment_file" "valheim_skadi_user_data" {
   source_raw {
     data = <<-EOF
     #cloud-config
-    hostname: valheim-skadi
+    hostname: valheim-nordlys
     timezone: Europe/Berlin
     users:
       - name: valheim
@@ -91,22 +91,22 @@ resource "proxmox_virtual_environment_file" "valheim_skadi_user_data" {
       - echo "done" > /tmp/cloud-config.done
     EOF
 
-    file_name = "valheim_skadi_cloudinit.yaml"
+    file_name = "valheim_nordlys_cloudinit.yaml"
   }
 }
 
-resource "cloudflare_dns_record" "valheim_skadi" {
+resource "cloudflare_dns_record" "valheim_nordlys" {
   zone_id = var.cloudflare_zone_id
-  name    = "valheim-skadi.cosmos.cboxlab.com"
+  name    = "valheim-nordlys.cosmos.cboxlab.com"
   type    = "A"
   comment = "Vanilla Valheim 1.0 server"
-  content = proxmox_virtual_environment_vm.valheim_skadi.ipv4_addresses[1][0]
+  content = proxmox_virtual_environment_vm.valheim_nordlys.ipv4_addresses[1][0]
   proxied = false
   ttl     = 300
 }
 
-module "valheim_skadi_s3" {
+module "valheim_nordlys_s3" {
   source      = "../../terraform-modules/minio_s3_bucket"
-  name        = "valheim-skadi-backup"
+  name        = "valheim-nordlys-backup"
   create_user = true
 }

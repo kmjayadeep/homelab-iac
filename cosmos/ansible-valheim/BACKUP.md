@@ -26,10 +26,10 @@ file is mode `0600`, and secret-bearing template tasks suppress logs and diffs.
 ## Host-limited operations
 
 ```bash
-ansible-playbook playbooks/backup.yml --limit valheim-skadi -e backup_operation=setup
-ansible-playbook playbooks/backup.yml --limit valheim-skadi -e backup_operation=backup
-ansible-playbook playbooks/backup.yml --limit valheim-skadi -e backup_operation=list
-ansible-playbook playbooks/backup.yml --limit valheim-skadi -e backup_operation=restore-test
+ansible-playbook playbooks/backup.yml --limit valheim-nordlys -e backup_operation=setup
+ansible-playbook playbooks/backup.yml --limit valheim-nordlys -e backup_operation=backup
+ansible-playbook playbooks/backup.yml --limit valheim-nordlys -e backup_operation=list
+ansible-playbook playbooks/backup.yml --limit valheim-nordlys -e backup_operation=restore-test
 ```
 
 `restore-test` prompts for a snapshot and restores it to an isolated

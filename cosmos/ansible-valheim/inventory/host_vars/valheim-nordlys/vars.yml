@@ -1,10 +1,11 @@
 ---
-valheim_server_name: "Valheim Skadi"
-valheim_world_name: "Skadi"
+valheim_server_name: "Valheim Nordlys"
+valheim_world_name: "Nordlys"
+valheim_server_password: "{{ vault_valheim_server_password }}"
 valheim_server_port: 2456
 valheim_public: 1
 valheim_crossplay: true
-valheim_instance_id: "valheim-skadi-1"
+valheim_instance_id: "valheim-nordlys-1"
 valheim_preset: ""
 valheim_modifiers: []
 valheim_mods_enabled: false
@@ -21,4 +22,4 @@ backup_retention:
   keep_monthly: 12
 backup_paths:
   - "{{ valheim_data_dir }}/worlds_local"
-restic_repository: "s3:https://minio.cosmos.cboxlab.com/valheim-skadi-backup"
+restic_repository: "s3:https://minio.cosmos.cboxlab.com/valheim-nordlys-backup"
