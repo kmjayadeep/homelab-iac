@@ -15,7 +15,7 @@ resource "proxmox_virtual_environment_vm" "valheim_nordlys" {
   }
 
   memory {
-    dedicated = 8192
+    dedicated = 6144
   }
 
   efi_disk {
