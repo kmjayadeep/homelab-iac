@@ -1,0 +1,22 @@
+[Unit]
+Description=Read-only HTTP server for Valheim world downloads
+After=network-online.target valheim.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ steam_user }}
+Group={{ steam_group }}
+WorkingDirectory={{ valheim_data_dir }}/worlds_local
+ExecStart=/usr/bin/python3 -m http.server {{ world_download_port }} --bind 0.0.0.0 --directory {{ valheim_data_dir }}/worlds_local
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadOnlyPaths={{ valheim_data_dir }}/worlds_local
+
+[Install]
+WantedBy=multi-user.target

@@ -26,6 +26,10 @@
 - name: Include systemd service tasks
   include_tasks: systemd-fast.yml
 
+- name: Include world download server tasks
+  ansible.builtin.include_tasks: world-download.yml
+  when: world_download_enabled | default(false) | bool
+
 - name: Include firewall configuration tasks
   include_tasks: firewall.yml
 

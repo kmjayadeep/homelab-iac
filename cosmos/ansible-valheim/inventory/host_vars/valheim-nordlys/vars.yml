@@ -10,6 +10,9 @@ valheim_preset: ""
 valheim_modifiers: []
 valheim_mods_enabled: false
 valheim_game_interface: "tailscale0"
+world_download_enabled: true
+world_download_port: 8000
+world_download_interface: "tailscale0"
 
 tailscale_enabled: true
 tailscale_accept_dns: false

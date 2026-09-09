@@ -1,0 +1,33 @@
+---
+- name: Require a private interface for world downloads
+  ansible.builtin.assert:
+    that:
+      - world_download_interface | default('') | length > 0
+    fail_msg: Set world_download_interface to a private interface such as tailscale0.
+
+- name: Install world download server dependency
+  ansible.builtin.apt:
+    name: python3
+    state: present
+
+- name: Create Valheim world download service
+  ansible.builtin.template:
+    src: valheim-world-download.service.j2
+    dest: /etc/systemd/system/valheim-world-download.service
+    owner: root
+    group: root
+    mode: "0644"
+  register: world_download_service
+
+- name: Enable and start Valheim world download service
+  ansible.builtin.systemd:
+    name: valheim-world-download.service
+    daemon_reload: true
+    enabled: true
+    state: started
+
+- name: Restart Valheim world download service after configuration changes
+  ansible.builtin.systemd:
+    name: valheim-world-download.service
+    state: restarted
+  when: world_download_service.changed
