@@ -44,6 +44,10 @@ backend, and restricts game UDP traffic to `tailscale0`. Connect through
 `valheim-nordlys-tailscale.cosmos.cboxlab.com:2456` while connected to the
 Tailscale network.
 
+`valheim-speedrun` hosts the imported local `speedrun` world with the same
+private Steam-over-Tailscale configuration. Connect through
+`valheim-speedrun-tailscale.cosmos.cboxlab.com:2456`.
+
 ## Release and rollback procedure
 
 1. Keep both legacy hosts stopped or unchanged; never deploy this work to them.
