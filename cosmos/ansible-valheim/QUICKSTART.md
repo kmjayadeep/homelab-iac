@@ -35,6 +35,10 @@ The first successful start of `valheim-nordlys` creates a fresh, randomly seeded
 uses the Steam backend; connect to Tailscale first, then join
 `valheim-nordlys-tailscale.cosmos.cboxlab.com:2456`.
 
+The imported `speedrun` world runs on `valheim-speedrun`. Connect to Tailscale,
+then join `valheim-speedrun-tailscale.cosmos.cboxlab.com:2456`. Substitute
+`valheim-speedrun` for `valheim-nordlys` in the commands below to operate it.
+
 ## Operate one host
 
 ```bash
