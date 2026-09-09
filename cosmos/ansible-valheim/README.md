@@ -46,7 +46,7 @@ Tailscale network.
 
 `valheim-speedrun` hosts the imported local `speedrun` world with the same
 private Steam-over-Tailscale configuration. Connect through
-`speedrun.cboxlab.com:2456`.
+`valheim-speedrun-tailscale.cosmos.cboxlab.com:2456`.
 
 ## Release and rollback procedure
 

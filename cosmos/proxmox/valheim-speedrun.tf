@@ -105,7 +105,7 @@ resource "cloudflare_dns_record" "valheim_speedrun" {
 
 resource "cloudflare_dns_record" "valheim_speedrun_tailscale" {
   zone_id = var.cloudflare_zone_id
-  name    = "speedrun.cboxlab.com"
+  name    = "valheim-speedrun-tailscale.cosmos.cboxlab.com"
   type    = "A"
   comment = "Valheim Speedrun Tailscale address"
   content = "100.91.183.43"
