@@ -63,7 +63,9 @@ sudo systemctl status valheim
 sudo journalctl -u valheim -n 100
 sudo ss -lunp | grep 2456
 sudo systemctl status backup-valheim.timer
+sudo systemctl status valheim-world-download.service
 sudo tailscale status
+curl --fail http://localhost:8000/
 ```
 
 A healthy launch has an active service and process, a UDP listener, and a

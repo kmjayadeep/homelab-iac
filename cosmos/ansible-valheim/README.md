@@ -48,6 +48,17 @@ Tailscale network.
 private Steam-over-Tailscale configuration. Connect through
 `valheim-speedrun-tailscale.cosmos.cboxlab.com:2456`.
 
+## Download worlds
+
+Authenticated Tailscale users can download the read-only world files from:
+
+- `http://valheim-nordlys-tailscale.cosmos.cboxlab.com:8000/`
+- `http://valheim-speedrun-tailscale.cosmos.cboxlab.com:8000/`
+
+Download the matching `.db` and `.fwl` files together. The directory may also
+contain Valheim's automatic and `.old` recovery copies. HTTP port 8000 is
+restricted to `tailscale0`; it is not exposed to the LAN or public internet.
+
 ## Release and rollback procedure
 
 1. Keep both legacy hosts stopped or unchanged; never deploy this work to them.

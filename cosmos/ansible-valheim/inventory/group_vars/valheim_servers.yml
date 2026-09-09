@@ -20,6 +20,9 @@ valheim_permitted_ids: []
 tailscale_enabled: false
 tailscale_accept_dns: false
 valheim_game_interface: ""
+world_download_enabled: false
+world_download_port: 8000
+world_download_interface: ""
 
 # Installation paths
 valheim_install_dir: "/home/valheim/valheim-server"
