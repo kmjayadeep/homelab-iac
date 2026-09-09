@@ -13,6 +13,9 @@ valheim_game_interface: "tailscale0"
 world_download_enabled: true
 world_download_port: 8000
 world_download_interface: "tailscale0"
+valheim_lan_access_enabled: true
+valheim_lan_interface: "eth0"
+valheim_lan_cidr: "192.168.1.0/24"
 
 tailscale_enabled: true
 tailscale_accept_dns: false

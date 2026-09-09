@@ -10,6 +10,14 @@
     port: '22'
     proto: tcp
 
+- name: Validate LAN access configuration
+  ansible.builtin.assert:
+    that:
+      - valheim_lan_interface | default('') | length > 0
+      - valheim_lan_cidr | default('') | length > 0
+    fail_msg: Define valheim_lan_interface and valheim_lan_cidr when LAN access is enabled.
+  when: valheim_lan_access_enabled | default(false) | bool
+
 - name: Remove unrestricted Valheim server ports
   community.general.ufw:
     rule: allow
@@ -30,6 +38,18 @@
   loop:
     - "{{ valheim_server_port }}"
     - "{{ valheim_server_port + 1 }}"
+
+- name: Allow Valheim server ports from the LAN
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: udp
+    interface_in: "{{ valheim_lan_interface }}"
+    from_ip: "{{ valheim_lan_cidr }}"
+  loop:
+    - "{{ valheim_server_port }}"
+    - "{{ valheim_server_port + 1 }}"
+  when: valheim_lan_access_enabled | default(false) | bool
 
 - name: Remove legacy world download port
   community.general.ufw:
@@ -59,6 +79,17 @@
     proto: tcp
     interface_in: "{{ world_download_interface }}"
   when: world_download_enabled | default(false) | bool
+
+- name: Allow world downloads from the LAN
+  community.general.ufw:
+    rule: allow
+    port: "{{ world_download_port }}"
+    proto: tcp
+    interface_in: "{{ valheim_lan_interface }}"
+    from_ip: "{{ valheim_lan_cidr }}"
+  when:
+    - valheim_lan_access_enabled | default(false) | bool
+    - world_download_enabled | default(false) | bool
 
 - name: Reload UFW
   community.general.ufw:
