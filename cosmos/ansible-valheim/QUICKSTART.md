@@ -30,10 +30,9 @@ ansible-playbook playbooks/setup.yml --limit valheim-nordlys --check --diff
 ansible-playbook playbooks/setup.yml --limit valheim-nordlys
 ```
 
-The first successful start of `valheim-nordlys` creates a fresh, randomly seeded
-`Nordlys` world. Do not copy a legacy world into its data directory. Nordlys
-uses the Steam backend; connect to Tailscale first, then join
-`valheim-nordlys-tailscale.cosmos.cboxlab.com:2456`.
+`valheim-nordlys` runs the imported Valheim 1.0 chunked `Nordlys` world using
+the Steam backend. Join `valheim-nordlys-tailscale.cosmos.cboxlab.com:2456`
+over Tailscale or `valheim-nordlys.cosmos.cboxlab.com:2456` from the LAN.
 
 The imported `speedrun` world runs on `valheim-speedrun`. Connect to Tailscale,
 then join `valheim-speedrun-tailscale.cosmos.cboxlab.com:2456`. Substitute

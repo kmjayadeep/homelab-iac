@@ -40,9 +40,10 @@ permitted list denies access to everyone not listed.
 
 `valheim-nordlys` intentionally sets no preset or modifiers and enables no
 mods, so Valheim's vanilla defaults apply. It is unlisted, uses the Steam
-backend, and restricts game UDP traffic to `tailscale0`. Connect through
-`valheim-nordlys-tailscale.cosmos.cboxlab.com:2456` while connected to the
-Tailscale network.
+backend, and allows game traffic through Tailscale and the local
+`192.168.1.0/24` network. Connect through
+`valheim-nordlys-tailscale.cosmos.cboxlab.com:2456` on Tailscale or
+`valheim-nordlys.cosmos.cboxlab.com:2456` on the LAN.
 
 `valheim-speedrun` hosts the imported local `speedrun` world with the same
 private Steam-over-Tailscale configuration. Connect through
@@ -50,14 +51,17 @@ private Steam-over-Tailscale configuration. Connect through
 
 ## Download worlds
 
-Authenticated Tailscale users can download the read-only world files from:
+Download the read-only world files from the applicable private network:
 
-- `http://valheim-nordlys-tailscale.cosmos.cboxlab.com:8000/`
-- `http://valheim-speedrun-tailscale.cosmos.cboxlab.com:8000/`
+- Nordlys over Tailscale: `http://valheim-nordlys-tailscale.cosmos.cboxlab.com:8000/`
+- Nordlys over LAN: `http://valheim-nordlys.cosmos.cboxlab.com:8000/`
+- Speedrun over Tailscale: `http://valheim-speedrun-tailscale.cosmos.cboxlab.com:8000/`
 
-Download the matching `.db` and `.fwl` files together. The directory may also
-contain Valheim's automatic and `.old` recovery copies. HTTP port 8000 is
-restricted to `tailscale0`; it is not exposed to the LAN or public internet.
+For legacy saves, download the matching `.db` and `.fwl` files together. For
+Valheim 1.0 chunked saves, download the complete named world directory. The
+listing may also contain automatic and `.old` recovery copies. Port 8000 is
+restricted to the configured Tailscale and LAN interfaces; it is not exposed
+to the public internet.
 
 ## Release and rollback procedure
 
