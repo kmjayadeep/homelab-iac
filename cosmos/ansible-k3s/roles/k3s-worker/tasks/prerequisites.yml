@@ -39,6 +39,17 @@
     shell: /bin/bash
     state: present
 
+- name: Create model directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: '1000'
+    group: '1000'
+    mode: '0770'
+  loop:
+    - /models
+    - /models/models
+
 - name: Enable and start rpcbind for NFS
   ansible.builtin.systemd:
     name: rpcbind
