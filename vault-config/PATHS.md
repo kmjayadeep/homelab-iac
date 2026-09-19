@@ -103,6 +103,7 @@ lists property names only, never values.
 | `glance-secret` Immich item | `services/immich/glance` | `api_key` issued for Glance |
 | `litellm-secrets` application keys | `apps/litellm/core` | `master_key`, `salt_key` |
 | `litellm-secrets` database item | `services/postgresql/litellm` | `database_url`; splitting it into canonical connection components is optional follow-up work |
+| Hugging Face model-serving identity | `services/huggingface/model-serving` | `token`; ESO maps it to `HF_TOKEN` in each authorized workload namespace |
 | `otpcloud-secret` application item | `apps/otpcloud/core` | `app_key` |
 | `otpcloud-secret` database item | `services/postgresql/otpcloud` | `connection_string`; splitting it into canonical components is optional follow-up work |
 | `psuite-wiki-creds` | `apps/psuite/wiki` | `creds` |
