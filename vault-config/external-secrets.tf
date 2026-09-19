@@ -53,8 +53,8 @@ variable "external_secrets_roles" {
         "services/postgresql/litellm",
       ]
     }
-    llm-serving-huggingface = {
-      kubernetes_namespace = "llm-serving"
+    kserve-localmodel-huggingface = {
+      kubernetes_namespace = "kserve-localmodel-jobs"
       service_account_name = "external-secrets-vault-huggingface"
       secret_paths         = ["services/huggingface/model-serving"]
     }
