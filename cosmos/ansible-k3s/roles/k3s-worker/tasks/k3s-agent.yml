@@ -41,6 +41,8 @@
     content: |
       server: https://{{ k3s_master_host }}:{{ k3s_master_port }}
       token: {{ k3s_token.content | b64decode | trim }}
+      node-label:
+        - "kserve/localmodel=worker"
       kubelet-arg:
         - "allowed-unsafe-sysctls=net.ipv6.*,net.ipv4.*"
   notify: restart k3s-agent
