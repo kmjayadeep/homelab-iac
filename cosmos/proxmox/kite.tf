@@ -3,7 +3,7 @@ resource "proxmox_virtual_environment_vm" "kite" {
   name      = "kite"
   node_name = "jupiter"
   started   = false
-  on_boot = false
+  on_boot   = false
 
   machine     = "q35"
   bios        = "ovmf"

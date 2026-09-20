@@ -3,7 +3,7 @@ resource "proxmox_virtual_environment_vm" "windrose" {
   name      = "windrose"
   node_name = "jupiter"
   started   = false
-  on_boot = false
+  on_boot   = false
 
   machine     = "q35"
   bios        = "ovmf"
