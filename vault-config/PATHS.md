@@ -101,8 +101,7 @@ lists property names only, never values.
 | `dotbintask-secret` | `apps/dotbintask/api` | `tokens` |
 | `glance-secret` AdGuard item | `services/adguard/glance` | `password` or token issued for Glance |
 | `glance-secret` Immich item | `services/immich/glance` | `api_key` issued for Glance |
-| `litellm-secrets` application keys | `apps/litellm/core` | `master_key`, `salt_key` |
-| `litellm-secrets` database item | `services/postgresql/litellm` | `database_url`; splitting it into canonical connection components is optional follow-up work |
+| LLM gateway client API keys | `apps/llm-gateway/core` | `api_key`; Envoy Gateway validates this key for the stable OpenAI-compatible endpoint |
 | Hugging Face model-serving identity | `services/huggingface/model-serving` | `token`; ESO maps it to `HF_TOKEN` in each authorized workload namespace |
 | `otpcloud-secret` application item | `apps/otpcloud/core` | `app_key` |
 | `otpcloud-secret` database item | `services/postgresql/otpcloud` | `connection_string`; splitting it into canonical components is optional follow-up work |
