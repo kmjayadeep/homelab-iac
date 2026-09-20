@@ -3,6 +3,7 @@ resource "proxmox_virtual_environment_vm" "chillyfries" {
   name      = "chillyfries"
   node_name = "mars"
   started   = false
+  on_boot = false
   vm_id     = 207
 
   machine     = "q35"

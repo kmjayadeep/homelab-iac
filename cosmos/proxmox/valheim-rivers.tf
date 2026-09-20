@@ -3,6 +3,7 @@ resource "proxmox_virtual_environment_vm" "valheim_rivers" {
   name      = "valheim-rivers"
   node_name = "mars"
   started   = false
+  on_boot = false
 
   machine     = "q35"
   bios        = "ovmf"

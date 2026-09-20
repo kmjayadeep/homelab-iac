@@ -3,6 +3,7 @@ resource "proxmox_virtual_environment_vm" "agent0" {
   name      = "agent0"
   node_name = "jupiter"
   started   = false
+  on_boot = false
 
   machine     = "q35"
   bios        = "ovmf"
