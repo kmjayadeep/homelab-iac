@@ -91,6 +91,14 @@
       extensions = [];
       restorePriority = "high";
     };
+
+    wallabag = {
+      owner = "wallabag";
+      backup = true;
+      criticality = "P2";
+      extensions = [];
+      restorePriority = "normal";
+    };
   };
 
   extraUsers = [

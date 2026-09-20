@@ -114,6 +114,7 @@ lists property names only, never values.
 | `openvpn-config` | `services/vpn/deluge-openvpn` | authentication and client configuration documents |
 | `wg-config` | `services/vpn/deluge-wireguard` | WireGuard configuration document |
 | `wallabag-config` | `apps/wallabag/core` | Symfony application secret |
+| Wallabag PostgreSQL identity | `services/postgresql/wallabag` | `password`; host, port, database, and username remain in application configuration |
 | cert-manager and external-dns Cloudflare Secrets | `services/cloudflare/dns-cboxlab` | `api_token`; both consumers intentionally share this zone-scoped identity; future identities remain under `services/cloudflare/` |
 | `grafana-creds` | `platform/monitoring/grafana-admin` | admin username and password |
 | `alertmanager-config` | `platform/monitoring/alertmanager` | configuration document; split receiver credentials later when supported cleanly |

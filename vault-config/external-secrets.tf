@@ -127,7 +127,10 @@ variable "external_secrets_roles" {
     }
     wallabag = {
       kubernetes_namespace = "wallabag"
-      secret_paths         = ["apps/wallabag/core"]
+      secret_paths = [
+        "apps/wallabag/core",
+        "services/postgresql/wallabag",
+      ]
     }
   }
 
