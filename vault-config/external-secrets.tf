@@ -57,6 +57,13 @@ variable "external_secrets_roles" {
       kubernetes_namespace = "llm-gateway"
       secret_paths         = ["apps/llm-gateway/core"]
     }
+    litellm = {
+      kubernetes_namespace = "litellm"
+      secret_paths = [
+        "apps/litellm/core",
+        "services/postgresql/litellm",
+      ]
+    }
     kserve-localmodel-huggingface = {
       kubernetes_namespace = "kserve-localmodel-jobs"
       service_account_name = "external-secrets-vault-huggingface"
