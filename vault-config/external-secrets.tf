@@ -23,6 +23,13 @@ variable "external_secrets_roles" {
         "services/object-storage/baskit-backup",
       ]
     }
+    bookorbit = {
+      kubernetes_namespace = "bookorbit"
+      secret_paths = [
+        "apps/bookorbit/core",
+        "services/postgresql/bookorbit",
+      ]
+    }
     beancount = {
       kubernetes_namespace = "beancount"
       secret_paths         = ["apps/beancount/auth"]

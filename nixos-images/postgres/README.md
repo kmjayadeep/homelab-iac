@@ -23,7 +23,7 @@ The database catalog is the source of truth for app databases, owners, backup po
 
 - [`modules/postgres-catalog.nix`](modules/postgres-catalog.nix)
 
-`modules/postgres.nix` uses the catalog to generate `ensureDatabases` and `ensureUsers`.
+`modules/postgres.nix` uses the catalog to generate `ensureDatabases` and `ensureUsers`, and reconciles each entry's declared extensions after PostgreSQL starts.
 `modules/backup.nix` uses the same catalog to back up databases where `backup = true`.
 
 To onboard a database manually through infrastructure-as-code:
@@ -32,8 +32,8 @@ To onboard a database manually through infrastructure-as-code:
 2. Set `owner`, `backup`, `criticality`, `extensions`, and `restorePriority`.
 3. Keep credentials out of the catalog.
 4. Run `nix flake check`.
-5. Rebuild Helios with `just rebuild`.
-6. Deliver credentials manually for now.
+5. Rebuild Helios with `just rebuild`; this creates the database and owner role, then enables its declared extensions.
+6. Deliver credentials manually for now. For BookOrbit, import its PostgreSQL password and app secrets with `../../vault-config/import-bookorbit-secrets.sh` using stdin, then set the Helios `bookorbit` role to the same password through a secure admin session before deploying the application.
 
 If a database should not be backed up, set `backup = false` and add a comment explaining why.
 

@@ -4,6 +4,14 @@
 # relevant app secret store and use this catalog for platform metadata only.
 {
   databases = {
+    bookorbit = {
+      owner = "bookorbit";
+      backup = true;
+      criticality = "P2";
+      extensions = [ "uuid-ossp" "pg_trgm" "unaccent" "vector" ];
+      restorePriority = "normal";
+    };
+
     coder = {
       owner = "coder";
       backup = true;
@@ -16,7 +24,7 @@
       owner = "immich";
       backup = true;
       criticality = "P1";
-      extensions = [ "pgvector" ];
+      extensions = [ "vector" ];
       restorePriority = "high";
     };
 

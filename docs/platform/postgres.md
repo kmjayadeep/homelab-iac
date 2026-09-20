@@ -36,6 +36,7 @@ Important platform databases:
 
 Other current databases are supported while present, but may be cleaned up later:
 
+- `bookorbit`
 - `planka`
 - `totp`
 - `coder`
