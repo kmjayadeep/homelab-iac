@@ -60,6 +60,16 @@ provider "proxmox-bpg" {
   }
 }
 
+provider "proxmox-bpg" {
+  alias    = "orion-bpg"
+  endpoint = "https://orion.cosmos.cboxlab.com:8006/"
+  insecure = true
+  ssh {
+    agent    = true
+    username = "root"
+  }
+}
+
 provider "minio" {
   minio_server = "minio.cosmos.cboxlab.com"
   minio_region = "us-west-000"
