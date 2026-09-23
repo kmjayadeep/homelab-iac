@@ -1,0 +1,9 @@
+---
+# CPU-only AI inference and LLM proxy worker. Intel Arc passthrough is managed separately.
+k3s_node_labels:
+  - "kserve/localmodel=worker"
+  - "workload=ai"
+  - "inference=cpu"
+
+k3s_node_taints:
+  - "workload=ai:NoSchedule"

@@ -169,19 +169,27 @@ The firewall is configured to allow the following ports:
 
 ## Adding Worker Nodes
 
-To add worker nodes to the cluster:
+To add a worker, add it to `inventory/hosts.yml` and deploy it. The playbook securely retrieves the join token from the master.
 
-1. Retrieve the node token from the master:
 ```bash
-ssh ansible@titania.cosmos.cboxlab.com
-sudo cat /var/lib/rancher/k3s/server/node-token
+ansible-playbook playbooks/setup-workers.yml -l <worker-name>
 ```
 
-2. Install K3s on the worker node:
-```bash
-curl -sfL https://get.k3s.io | K3S_URL=https://titania.cosmos.cboxlab.com:6443 \
-  K3S_TOKEN=<node-token> sh -
+### AI worker scheduling
+
+`titania-gpu` is currently a CPU-only node for AI inference and LLM proxy workloads. It has the `workload=ai` and `inference=cpu` labels and the `workload=ai:NoSchedule` taint. AI workloads targeting it must include:
+
+```yaml
+nodeSelector:
+  workload: ai
+tolerations:
+  - key: workload
+    operator: Equal
+    value: ai
+    effect: NoSchedule
 ```
+
+Intel Arc passthrough and GPU runtime configuration are managed separately and are not installed on this node yet.
 
 ## Storage Configuration
 

@@ -11,6 +11,11 @@ k3s_master_port: "6443"
 # Kubeconfig Configuration
 k3s_user: "cosmos"
 
+# Node Scheduling
+# Labels and taints are configured per worker where required.
+k3s_node_labels: []
+k3s_node_taints: []
+
 # System Configuration
 # Sysctl settings
 sysctl_settings:
