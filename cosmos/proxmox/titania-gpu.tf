@@ -1,12 +1,12 @@
-resource "proxmox_download_file" "debian_13_orion_qcow2_img" {
+resource "proxmox_download_file" "ubuntu_26_04_orion_cloudimg" {
   provider = proxmox-bpg.orion-bpg
 
-  url = "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
+  url = "https://cloud-images.ubuntu.com/releases/resolute/release/ubuntu-26.04-server-cloudimg-amd64.img"
 
   content_type = "import"
   datastore_id = "local"
   node_name    = "orion"
-  file_name    = "debian-13-genericcloud-amd64.qcow2"
+  file_name    = "ubuntu-26.04-server-cloudimg-amd64.qcow2"
   overwrite    = false
 }
 
@@ -38,7 +38,7 @@ resource "proxmox_virtual_environment_vm" "titania_gpu" {
 
   disk {
     datastore_id = "local-lvm"
-    import_from  = proxmox_download_file.debian_13_orion_qcow2_img.id
+    import_from  = proxmox_download_file.ubuntu_26_04_orion_cloudimg.id
     interface    = "virtio0"
     size         = 512
   }
@@ -101,6 +101,9 @@ resource "proxmox_virtual_environment_file" "titania_gpu_user_data" {
       - qemu-guest-agent
       - net-tools
       - curl
+      - linux-firmware
+      - mesa-utils
+      - intel-media-va-driver
     runcmd:
       - systemctl enable qemu-guest-agent
       - systemctl start qemu-guest-agent
