@@ -59,6 +59,12 @@ resource "proxmox_virtual_environment_vm" "titania_gpu" {
   agent {
     enabled = true
   }
+
+  hostpci {
+    device = "hostpci0"
+    id     = "0000:03:00.0"
+    pcie   = true
+  }
 }
 
 resource "proxmox_virtual_environment_file" "titania_gpu_user_data" {
