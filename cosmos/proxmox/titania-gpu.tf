@@ -77,37 +77,59 @@ resource "proxmox_virtual_environment_file" "titania_gpu_user_data" {
     data = <<-EOF
     #cloud-config
     hostname: titania-gpu
-    timezone: Europe/Berlin
+    timezone: Europe/Zurich
+
     users:
       - name: "${var.cloudinit_username}"
-        groups:
-          - sudo
+        groups: [sudo, video, render]
         shell: /bin/bash
         ssh_authorized_keys:
           - "${var.cloudinit_ssh_public_key}"
-        sudo: ALL=(ALL) NOPASSWD:ALL
-        plain_text_passwd: "${var.cloudinit_password}"
+        sudo: "ALL=(ALL) NOPASSWD:ALL"
         lock_passwd: false
+        plain_text_passwd: "${var.cloudinit_password}"
+
       - name: ansible
         gecos: Ansible User
-        groups: users,admin,wheel
+        groups: [sudo, video, render]
         sudo: "ALL=(ALL) NOPASSWD:ALL"
         shell: /bin/bash
         lock_passwd: true
         ssh_authorized_keys:
           - "${var.cloudinit_ssh_public_key}"
+
     package_update: true
+    package_upgrade: false
+
     packages:
+      # Proxmox integration
       - qemu-guest-agent
-      - net-tools
+
+      # Administration and troubleshooting
       - curl
+      - ca-certificates
+      - git
+      - pciutils
+      - kmod
+      - jq
+      - htop
+
+      # Intel GPU firmware and diagnostics
       - linux-firmware
-      - mesa-utils
-      - intel-media-va-driver
+      - clinfo
+      - intel-gpu-tools
+
+      # Intel GPU compute runtime
+      - intel-opencl-icd
+      - libze1
+      - libze-intel-gpu1
+
     runcmd:
-      - systemctl enable qemu-guest-agent
-      - systemctl start qemu-guest-agent
-      - echo "done" > /tmp/cloud-config.done
+      - systemctl enable --now qemu-guest-agent
+      - [sh, -c, 'lspci -nnk -d 8086:e211 > /var/log/gpu-pci.log']
+      - [sh, -c, 'clinfo -l > /var/log/gpu-opencl.log 2>&1']
+
+    final_message: "GPU VM cloud-init completed."
     EOF
 
     file_name = "titania_gpu_cloudinit.yaml"
