@@ -116,6 +116,7 @@ resource "proxmox_virtual_environment_file" "titania_gpu_user_data" {
 
       # Intel GPU firmware and diagnostics
       - linux-firmware
+      - linux-firmware-intel-graphics
       - clinfo
       - intel-gpu-tools
 
