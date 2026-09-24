@@ -1,9 +1,10 @@
 ---
-# CPU-only AI inference and LLM proxy worker. Intel Arc passthrough is managed separately.
+# Intel Arc Pro B60 AI inference and LLM proxy worker.
 k3s_node_labels:
   - "kserve/localmodel=worker"
   - "workload=ai"
-  - "inference=cpu"
+  - "inference=gpu"
+  - "gpu.intel.com/product=arc-pro-b60"
 
 k3s_node_taints:
   - "workload=ai:NoSchedule"

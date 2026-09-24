@@ -177,7 +177,7 @@ ansible-playbook playbooks/setup-workers.yml -l <worker-name>
 
 ### AI worker scheduling
 
-`titania-gpu` is currently a CPU-only node for AI inference and LLM proxy workloads. It has the `workload=ai` and `inference=cpu` labels and the `workload=ai:NoSchedule` taint. AI workloads targeting it must include:
+`titania-gpu` is an Intel Arc Pro B60 node for AI inference and LLM proxy workloads. It has the `workload=ai`, `inference=gpu`, and `gpu.intel.com/product=arc-pro-b60` labels, plus the `workload=ai:NoSchedule` taint. AI workloads targeting it must include:
 
 ```yaml
 nodeSelector:
@@ -189,7 +189,7 @@ tolerations:
     effect: NoSchedule
 ```
 
-Intel Arc passthrough and GPU runtime configuration are managed separately and are not installed on this node yet.
+Intel Arc passthrough and the host GPU runtime are configured separately from this Ansible project.
 
 ## Storage Configuration
 

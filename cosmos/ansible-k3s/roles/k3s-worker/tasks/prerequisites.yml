@@ -50,6 +50,13 @@
     - /models
     - /models/models
 
+- name: Ensure model cache contents are writable by KServe jobs
+  ansible.builtin.file:
+    path: /models/models
+    owner: '1000'
+    group: '1000'
+    recurse: true
+
 - name: Enable and start rpcbind for NFS
   ansible.builtin.systemd:
     name: rpcbind
