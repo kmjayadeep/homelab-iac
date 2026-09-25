@@ -104,6 +104,7 @@ lists property names only, never values.
 | `glance-secret` AdGuard item | `services/adguard/glance` | `password` or token issued for Glance |
 | `glance-secret` Immich item | `services/immich/glance` | `api_key` issued for Glance |
 | LLM gateway client API keys | `apps/llm-gateway/core` | `api_key`; Envoy Gateway validates this key for the stable OpenAI-compatible endpoint |
+| Open WebUI application secret | `apps/open-webui/core` | `webui_secret_key`; stable random key used to sign sessions and encrypt application data |
 | Hugging Face model-serving identity | `services/huggingface/model-serving` | `token`; ESO maps it to `HF_TOKEN` in each authorized workload namespace |
 | `otpcloud-secret` application item | `apps/otpcloud/core` | `app_key` |
 | `otpcloud-secret` database item | `services/postgresql/otpcloud` | `connection_string`; splitting it into canonical components is optional follow-up work |

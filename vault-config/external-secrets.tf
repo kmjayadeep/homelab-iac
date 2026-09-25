@@ -94,6 +94,13 @@ variable "external_secrets_roles" {
       service_account_name = "external-secrets-vault-thanos"
       secret_paths         = ["services/object-storage/thanos"]
     }
+    open-webui = {
+      kubernetes_namespace = "open-webui"
+      secret_paths = [
+        "apps/litellm/core",
+        "apps/open-webui/core",
+      ]
+    }
     otpcloud = {
       kubernetes_namespace = "totp"
       secret_paths = [
