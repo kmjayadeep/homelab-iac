@@ -191,6 +191,19 @@ tolerations:
 
 Intel Arc passthrough and the host GPU runtime are configured separately from this Ansible project.
 
+### GPU telemetry
+
+The `titania-gpu` host installs the Intel graphics PPA plus checksum-pinned XPU-SMI 2.0.0 packages through its host variables. The pinned release is compatible with the host's Level Zero runtime and reports the Arc Pro B60's VRAM allocation, engine utilization, power, and clocks.
+
+After applying the worker playbook, collect a point-in-time, non-destructive sample with:
+
+```bash
+ssh ansible@titania-gpu.cosmos.cboxlab.com \
+  'sudo xpu-smi --query-gpu=timestamp,name,memory.total,memory.used,memory.free,utilization.gpu,utilization.compute,power.draw,clocks.current.graphics --device 0 --format=csv,noheader,nounits'
+```
+
+Use `sudo xpu-smi ps -d 0` to attribute allocated GPU memory to processes. Do not use XPU-SMI configuration, reset, firmware, or RAS-drain commands during routine monitoring.
+
 `titania-gpu` also reserves 2 GiB for node services and uses early kubelet memory eviction thresholds. This is intended to evict an inference workload before GPU/host-memory pressure can kill containerd or k3s-agent. Applying the worker playbook restarts `k3s-agent` and therefore interrupts workloads on that node.
 
 ## Storage Configuration

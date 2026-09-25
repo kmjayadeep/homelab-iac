@@ -1,5 +1,15 @@
 ---
 # Intel Arc Pro B60 AI inference and LLM proxy worker.
+intel_gpu_monitoring_enabled: true
+intel_graphics_ppa: "ppa:kobuk-team/intel-graphics"
+xpu_smi_packages:
+  - name: "libxpum2_2.0.0-238.26.04_amd64.deb"
+    url: "https://github.com/intel/xpumanager/releases/download/v2.0.0/libxpum2_2.0.0-238.26.04_amd64.deb"
+    checksum: "sha256:5e810bb820c7bc081d7af0ef772439b5dc2b1a945bec8d00893d810f5354ed90"
+  - name: "xpu-smi_2.0.0-238.26.04_amd64.deb"
+    url: "https://github.com/intel/xpumanager/releases/download/v2.0.0/xpu-smi_2.0.0-238.26.04_amd64.deb"
+    checksum: "sha256:05bce5ea480e6167a94cca51d26b5a587b18f3d6e215d7b7206da5f9b556a374"
+
 k3s_node_labels:
   - "kserve/localmodel=worker"
   - "workload=ai"

@@ -16,6 +16,35 @@
       - open-iscsi
     state: present
 
+- name: Configure Intel graphics package repository
+  ansible.builtin.apt_repository:
+    repo: "{{ intel_graphics_ppa }}"
+    state: present
+    update_cache: true
+  when: intel_gpu_monitoring_enabled | default(false)
+
+- name: Download Intel XPU-SMI packages
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "/var/tmp/{{ item.name }}"
+    checksum: "{{ item.checksum }}"
+    mode: '0644'
+  loop: "{{ xpu_smi_packages }}"
+  when: intel_gpu_monitoring_enabled | default(false)
+
+- name: Install Intel XPU-SMI packages
+  ansible.builtin.apt:
+    deb: "/var/tmp/{{ item.name }}"
+    state: present
+    allow_downgrade: true
+  loop: "{{ xpu_smi_packages }}"
+  when: intel_gpu_monitoring_enabled | default(false)
+
+- name: Verify Intel XPU-SMI detects the GPU
+  ansible.builtin.command: xpu-smi discovery
+  changed_when: false
+  when: intel_gpu_monitoring_enabled | default(false)
+
 - name: Load kernel modules
   community.general.modprobe:
     name: "{{ item }}"
