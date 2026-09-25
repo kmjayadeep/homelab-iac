@@ -191,6 +191,8 @@ tolerations:
 
 Intel Arc passthrough and the host GPU runtime are configured separately from this Ansible project.
 
+`titania-gpu` also reserves 2 GiB for node services and uses early kubelet memory eviction thresholds. This is intended to evict an inference workload before GPU/host-memory pressure can kill containerd or k3s-agent. Applying the worker playbook restarts `k3s-agent` and therefore interrupts workloads on that node.
+
 ## Storage Configuration
 
 ### iSCSI (Longhorn)

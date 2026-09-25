@@ -8,3 +8,14 @@ k3s_node_labels:
 
 k3s_node_taints:
   - "workload=ai:NoSchedule"
+
+# Reserve 2 GiB of the 24 GiB guest for the OS and K3s, then evict workloads
+# before memory pressure can kill containerd or k3s-agent. These values were
+# derived from stable-node measurements: ~1.68 GiB system.slice and ~466 MiB
+# k3s-agent memory, with no sustained PSI pressure.
+k3s_extra_kubelet_args:
+  - "system-reserved=memory=1280Mi"
+  - "kube-reserved=memory=768Mi"
+  - "eviction-soft=memory.available<1536Mi"
+  - "eviction-soft-grace-period=memory.available=30s"
+  - "eviction-hard=memory.available<1024Mi"

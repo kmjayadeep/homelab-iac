@@ -16,6 +16,10 @@ k3s_user: "cosmos"
 k3s_node_labels: []
 k3s_node_taints: []
 
+# Additional kubelet arguments for a specific worker. Keep node-wide defaults
+# separate from host-specific resource protection settings.
+k3s_extra_kubelet_args: []
+
 # System Configuration
 # Sysctl settings
 sysctl_settings:

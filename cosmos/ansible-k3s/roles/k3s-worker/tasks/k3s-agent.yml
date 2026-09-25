@@ -55,4 +55,7 @@
       {% endif %}
       kubelet-arg:
         - "allowed-unsafe-sysctls=net.ipv6.*,net.ipv4.*"
+      {% for arg in k3s_extra_kubelet_args %}
+        - "{{ arg }}"
+      {% endfor %}
   notify: restart k3s-agent
