@@ -97,12 +97,12 @@ variable "external_secrets_roles" {
     open-webui = {
       kubernetes_namespace = "open-webui"
       secret_paths = [
-        "apps/litellm/core",
+        "apps/litellm/open-webui",
         "apps/open-webui/core",
       ]
     }
     otpcloud = {
-      kubernetes_namespace = "totp"
+      kubernetes_namespace = "otpcloud"
       secret_paths = [
         "apps/otpcloud/core",
         "services/postgresql/otpcloud",
