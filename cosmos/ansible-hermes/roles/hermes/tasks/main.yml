@@ -257,7 +257,7 @@
 
 - name: Deploy dashboard htpasswd file
   ansible.builtin.copy:
-    src: dashboard-creds
+    src: "{{ playbook_dir }}/../dashboard-creds"
     dest: /etc/nginx/.htpasswd
     owner: root
     group: www-data

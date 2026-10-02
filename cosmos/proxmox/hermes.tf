@@ -3,8 +3,8 @@ resource "proxmox_virtual_environment_vm" "hermes" {
   name      = "hermes"
   node_name = "jupiter"
   vm_id     = 103
-  started   = false
-  on_boot   = false
+  started   = true
+  on_boot   = true
 
   machine     = "q35"
   bios        = "ovmf"
