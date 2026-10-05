@@ -1,3 +1,13 @@
+map $http_upgrade $hermes_connection_upgrade {
+  default upgrade;
+  '' close;
+}
+
+map $http_origin $hermes_upstream_origin {
+  default $http_origin;
+  "https://{{ hermes_nginx_server_name }}" "http://127.0.0.1:8642";
+}
+
 upstream hermes {
   server 127.0.0.1:8642;
   keepalive 32;
@@ -40,8 +50,9 @@ server {
     proxy_pass http://hermes;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
+    proxy_set_header Connection $hermes_connection_upgrade;
     proxy_set_header Host 127.0.0.1:8642;
+    proxy_set_header Origin $hermes_upstream_origin;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
