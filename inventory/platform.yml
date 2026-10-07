@@ -36,10 +36,7 @@ hardware:
       supports:
         - "vm.gatekeeper"
         - "vm.helios"
-        - "vm.jd_vm"
         - "vm.titania_worker1"
-        - "vm.valheim_rivers"
-        - "vm.chillyfries"
       ha_status: "single_node_for_listed_vms"
       todos:
         - "Record CPU, RAM, disk layout, boot media, NICs, UPS/power, and Proxmox cluster membership."
@@ -58,9 +55,8 @@ hardware:
         - "vm.titania_master"
         - "vm.home_assistant"
         - "vm.hermes"
-        - "vm.agent0"
-        - "vm.windrose"
         - "vm.openclaw"
+        - "vm.pi_remote"
       ha_status: "single_node_for_listed_vms"
       todos:
         - "Record CPU, RAM, disk layout, boot media, NICs, UPS/power, and Proxmox cluster membership."
@@ -466,18 +462,21 @@ vms:
       - "service.psuite_wiki"
       - "service.psuite_fava"
     backup: "unknown"
-  jd_vm:
+  pi_remote:
     kind: "vm"
     tier: "P3"
-    role: "Development/workspace VM."
-    host: "mars"
-    ip: "192.168.1.74"
+    role: "Pi coding-agent workspace VM."
+    host: "jupiter"
+    ip: "192.168.1.148"
+    dns:
+      - "pi-remote.cosmos.cboxlab.com"
     known_from:
-      - "cosmos/proxmox/jd-vm.tf"
-      - "nixos-images/jd-workspace"
+      - "cosmos/proxmox/pi-remote.tf"
+      - "cosmos/ansible-pi-remote"
     depends_on:
-      - "hardware.compute.mars"
+      - "hardware.compute.jupiter"
       - "network.switch_2_5g"
+      - "external.cloudflare"
     backup: "unknown"
   hermes:
     kind: "vm"
@@ -489,21 +488,6 @@ vms:
     known_from:
       - "cosmos/proxmox/hermes.tf"
       - "cosmos/ansible-hermes"
-    depends_on:
-      - "hardware.compute.jupiter"
-      - "network.switch_2_5g"
-      - "external.cloudflare"
-    backup: "unknown"
-  agent0:
-    kind: "vm"
-    tier: "P3"
-    role: "AI orchestrator VM."
-    host: "jupiter"
-    dns:
-      - "agent0.cosmos.cboxlab.com"
-    known_from:
-      - "cosmos/proxmox/agent0.tf"
-      - "cosmos/ansible-agent0"
     depends_on:
       - "hardware.compute.jupiter"
       - "network.switch_2_5g"
@@ -524,51 +508,6 @@ vms:
       - "network.switch_2_5g"
       - "external.cloudflare"
     backup: "unknown"
-  windrose:
-    kind: "vm"
-    tier: "P3"
-    role: "Windrose dedicated server."
-    host: "jupiter"
-    dns:
-      - "windrose.cosmos.cboxlab.com"
-    known_from:
-      - "cosmos/proxmox/windrose.tf"
-      - "cosmos/ansible-windrose"
-    depends_on:
-      - "hardware.compute.jupiter"
-      - "network.switch_2_5g"
-      - "storage.minio"
-    backup: "backup.windrose_minio"
-  valheim_rivers:
-    kind: "vm"
-    tier: "P3"
-    role: "Valheim server."
-    host: "mars"
-    dns:
-      - "valheim-rivers.cosmos.cboxlab.com"
-    known_from:
-      - "cosmos/proxmox/valheim-rivers.tf"
-      - "cosmos/ansible-valheim"
-    depends_on:
-      - "hardware.compute.mars"
-      - "network.switch_2_5g"
-      - "storage.minio"
-    backup: "backup.valheim_minio"
-  chillyfries:
-    kind: "vm"
-    tier: "P3"
-    role: "Valheim server."
-    host: "mars"
-    dns:
-      - "chillyfries.cosmos.cboxlab.com"
-    known_from:
-      - "cosmos/proxmox/chillyfries.tf"
-      - "cosmos/ansible-valheim"
-    depends_on:
-      - "hardware.compute.mars"
-      - "network.switch_2_5g"
-      - "storage.minio"
-    backup: "backup.valheim_minio"
 
 services:
   adguard_home:
@@ -654,23 +593,23 @@ backups:
     known_from:
       - "cosmos/ansible-valheim"
       - "nixos-images/valheim/modules/backup.nix"
-      - "cosmos/proxmox/valheim-rivers.tf"
-      - "cosmos/proxmox/chillyfries.tf"
+      - "cosmos/proxmox/valheim-nordlys.tf"
+      - "cosmos/proxmox/archived-s3.tf"
     todos:
       - "Confirm whether each active Valheim host uses Ansible or NixOS backup path."
       - "Confirm MinIO bucket replication/offsite coverage."
   windrose_minio:
     tier: "P3"
-    source: "Windrose server data"
-    mechanism: "MinIO bucket provisioned; backup job details unknown"
-    schedule: "unknown"
+    source: "Retired Windrose server data"
+    mechanism: "Retained MinIO bucket; previous backup job details unknown"
+    schedule: "inactive (VM retired)"
     destination: "storage.minio"
     offsite: false
     restore_confidence: "low"
     known_from:
-      - "cosmos/proxmox/windrose.tf"
+      - "cosmos/proxmox/archived-s3.tf"
     todos:
-      - "Find or add actual backup job and restore procedure."
+      - "Document restore procedure for retained backups."
   nas_remote_bucket:
     tier: "P0"
     source: "TrueNAS datasets"

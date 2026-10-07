@@ -1,0 +1,11 @@
+---
+- name: Restart Remote Pi supervisor
+  ansible.builtin.systemd_service:
+    name: remote-pi-supervisord.service
+    scope: user
+    daemon_reload: true
+    state: restarted
+  become_user: "{{ pi_remote_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ pi_remote_user_uid.stdout }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ pi_remote_user_uid.stdout }}/bus"

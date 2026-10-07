@@ -1,0 +1,100 @@
+---
+- name: Read Remote Pi plugin installation version
+  ansible.builtin.command:
+    argv:
+      - node
+      - -e
+      - "try { console.log(JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8')).version) } catch (e) { if (e.code !== 'ENOENT') throw e }"
+      - "/home/{{ pi_remote_user }}/.pi/agent/npm/node_modules/remote-pi/package.json"
+  become_user: "{{ pi_remote_user }}"
+  register: pi_remote_plugin_installed_version
+  changed_when: false
+
+- name: Read registered Pi packages
+  ansible.builtin.command: pi list
+  become_user: "{{ pi_remote_user }}"
+  register: pi_remote_registered_packages
+  changed_when: false
+
+- name: Install pinned Remote Pi extension through Pi
+  ansible.builtin.command:
+    argv:
+      - pi
+      - install
+      - "npm:remote-pi@{{ pi_remote_plugin_version }}"
+  become_user: "{{ pi_remote_user }}"
+  environment:
+    npm_config_ignore_scripts: "true"
+  when: >-
+    pi_remote_plugin_installed_version.stdout != pi_remote_plugin_version or
+    ('npm:remote-pi@' ~ pi_remote_plugin_version) not in pi_remote_registered_packages.stdout
+  notify: Restart Remote Pi supervisor
+
+- name: Ensure Remote Pi CLI entry is executable
+  ansible.builtin.file:
+    path: "/home/{{ pi_remote_user }}/.pi/agent/npm/node_modules/remote-pi/dist/index.js"
+    mode: "0755"
+
+- name: Ensure user bin and service directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    mode: "0755"
+  loop:
+    - "/home/{{ pi_remote_user }}/.local/bin"
+    - "/home/{{ pi_remote_user }}/.config/systemd/user"
+
+- name: Link Remote Pi CLI
+  ansible.builtin.file:
+    src: "/home/{{ pi_remote_user }}/.pi/agent/npm/node_modules/remote-pi/dist/index.js"
+    dest: "/home/{{ pi_remote_user }}/.local/bin/remote-pi"
+    state: link
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+
+- name: Add user binaries to Bash PATH
+  ansible.builtin.lineinfile:
+    path: "/home/{{ pi_remote_user }}/.bashrc"
+    line: 'export PATH="$HOME/.local/bin:$PATH"'
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    create: true
+    mode: "0644"
+
+- name: Enable lingering for the always-on user supervisor
+  ansible.builtin.command: "loginctl enable-linger {{ pi_remote_user }}"
+  args:
+    creates: "/var/lib/systemd/linger/{{ pi_remote_user }}"
+
+- name: Read workspace user UID
+  ansible.builtin.command: "id -u {{ pi_remote_user }}"
+  register: pi_remote_user_uid
+  changed_when: false
+
+- name: Ensure user service manager is running
+  ansible.builtin.systemd_service:
+    name: "user@{{ pi_remote_user_uid.stdout }}.service"
+    state: started
+
+- name: Install Remote Pi supervisor unit
+  ansible.builtin.template:
+    src: remote-pi-supervisord.service.j2
+    dest: "/home/{{ pi_remote_user }}/.config/systemd/user/remote-pi-supervisord.service"
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    mode: "0644"
+  notify: Restart Remote Pi supervisor
+
+- name: Enable and start Remote Pi supervisor
+  ansible.builtin.systemd_service:
+    name: remote-pi-supervisord.service
+    scope: user
+    daemon_reload: true
+    enabled: true
+    state: started
+  become_user: "{{ pi_remote_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ pi_remote_user_uid.stdout }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ pi_remote_user_uid.stdout }}/bus"

@@ -1,0 +1,23 @@
+---
+pi_remote_user: "pi-remote"
+pi_remote_group: "pi-remote"
+pi_remote_authorized_keys:
+  - "{{ lookup('file', ansible_ssh_private_key_file + '.pub') }}"
+pi_remote_git_user_name: "{{ lookup('env', 'PI_REMOTE_GIT_USER_NAME') | default('Pi Remote', true) }}"
+pi_remote_git_user_email: "{{ lookup('env', 'PI_REMOTE_EMAIL') | default('pi-remote@localhost', true) }}"
+pi_remote_nodejs_version: "24.x"
+pi_remote_npm_package: "@earendil-works/pi-coding-agent"
+pi_remote_npm_version: "1.0.4"
+pi_remote_models_source_file: "{{ lookup('env', 'HOME') }}/.pi/agent/models.json"
+pi_remote_model_provider: "litellm"
+pi_remote_model_id: "qwen-intel"
+pi_remote_litellm_api_key: "{{ lookup('pipe', 'pass litellm/pi-remote') | trim }}"
+pi_remote_plugin_version: "0.7.0"
+pi_remote_base_packages:
+  - ca-certificates
+  - curl
+  - git
+  - gnupg
+  - jq
+  - ripgrep
+  - sudo

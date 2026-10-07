@@ -1,0 +1,18 @@
+[Unit]
+Description=Remote Pi daemon supervisor
+Documentation=https://remote-pi.jacobmoura.work
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /home/{{ pi_remote_user }}/.pi/agent/npm/node_modules/remote-pi/dist/bin/supervisord.js
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+Environment="PATH=/home/{{ pi_remote_user }}/.local/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="HOME=/home/{{ pi_remote_user }}"
+UMask=0077
+
+[Install]
+WantedBy=default.target

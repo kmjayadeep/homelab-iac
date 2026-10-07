@@ -1,0 +1,6 @@
+---
+- name: Configure Pi Remote VM
+  hosts: pi_remote_servers
+  become: true
+  roles:
+    - pi_remote

@@ -1,0 +1,169 @@
+---
+- name: Install base packages
+  ansible.builtin.apt:
+    name: "{{ pi_remote_base_packages }}"
+    state: present
+    update_cache: true
+
+- name: Ensure Pi Remote group exists
+  ansible.builtin.group:
+    name: "{{ pi_remote_group }}"
+    state: present
+
+- name: Ensure Pi Remote user exists
+  ansible.builtin.user:
+    name: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    shell: /bin/bash
+    create_home: true
+
+- name: Install SSH authorized keys
+  ansible.posix.authorized_key:
+    user: "{{ pi_remote_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ pi_remote_authorized_keys }}"
+
+- name: Configure Git user name
+  community.general.git_config:
+    name: user.name
+    scope: global
+    value: "{{ pi_remote_git_user_name }}"
+  become_user: "{{ pi_remote_user }}"
+
+- name: Configure Git user email
+  community.general.git_config:
+    name: user.email
+    scope: global
+    value: "{{ pi_remote_git_user_email }}"
+  become_user: "{{ pi_remote_user }}"
+
+- name: Download NodeSource signing key
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    dest: /usr/share/keyrings/nodesource.asc
+    mode: "0644"
+
+- name: Add NodeSource repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/nodesource.asc] https://deb.nodesource.com/node_{{ pi_remote_nodejs_version }} nodistro main"
+    filename: nodesource
+    state: present
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+- name: Verify Node.js meets Pi requirements
+  ansible.builtin.command:
+    argv:
+      - node
+      - -e
+      - "const [major, minor] = process.versions.node.split('.').map(Number); process.exit(major > 22 || (major === 22 && minor >= 19) ? 0 : 1)"
+  changed_when: false
+
+- name: Install Pi CLI without dependency lifecycle scripts
+  community.general.npm:
+    name: "{{ pi_remote_npm_package }}"
+    version: "{{ pi_remote_npm_version }}"
+    global: true
+    state: present
+    ignore_scripts: true
+
+- name: Verify Pi CLI as workspace user
+  ansible.builtin.command: pi --version
+  become_user: "{{ pi_remote_user }}"
+  register: pi_remote_installed_version
+  changed_when: false
+
+- name: Read controller Pi provider configuration
+  ansible.builtin.set_fact:
+    pi_remote_source_provider: "{{ (lookup('file', pi_remote_models_source_file) | from_json).providers[pi_remote_model_provider] }}"
+  no_log: true
+
+- name: Validate Qwen configuration
+  ansible.builtin.assert:
+    that:
+      - pi_remote_source_provider.models | selectattr('id', 'equalto', pi_remote_model_id) | list | length == 1
+    fail_msg: "The source must contain the selected model."
+  no_log: true
+
+- name: Validate dedicated LiteLLM credential
+  ansible.builtin.assert:
+    that:
+      - pi_remote_litellm_api_key is string
+      - pi_remote_litellm_api_key | length > 0
+  no_log: true
+  tags: pi_remote_credential
+
+- name: Ensure private Pi configuration directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    mode: "0700"
+  loop:
+    - "/home/{{ pi_remote_user }}/.pi"
+    - "/home/{{ pi_remote_user }}/.pi/agent"
+
+- name: Install private LiteLLM credential
+  ansible.builtin.copy:
+    content: "{{ pi_remote_litellm_api_key }}"
+    dest: "/home/{{ pi_remote_user }}/.pi/agent/litellm-api-key"
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    mode: "0600"
+  no_log: true
+  diff: false
+  tags: pi_remote_credential
+
+- name: Mirror Qwen model with file-based credential lookup
+  ansible.builtin.copy:
+    content: >-
+      {{ {'providers': {pi_remote_model_provider:
+           pi_remote_source_provider | combine({
+             'apiKey': '!cat /home/' ~ pi_remote_user ~ '/.pi/agent/litellm-api-key',
+             'models': pi_remote_source_provider.models | selectattr('id', 'equalto', pi_remote_model_id) | list
+           })}} | to_nice_json }}
+    dest: "/home/{{ pi_remote_user }}/.pi/agent/models.json"
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    mode: "0600"
+  no_log: true
+  diff: false
+
+- name: Check for existing Pi settings
+  ansible.builtin.stat:
+    path: "/home/{{ pi_remote_user }}/.pi/agent/settings.json"
+  register: pi_remote_settings_file
+
+- name: Read existing Pi settings
+  ansible.builtin.slurp:
+    src: "/home/{{ pi_remote_user }}/.pi/agent/settings.json"
+  register: pi_remote_settings_content
+  when: pi_remote_settings_file.stat.exists
+  no_log: true
+
+- name: Set default Qwen model while preserving other settings
+  ansible.builtin.copy:
+    content: >-
+      {{ (pi_remote_settings_content.content | default('e30=') | b64decode | from_json)
+         | combine({'defaultProvider': pi_remote_model_provider, 'defaultModel': pi_remote_model_id})
+         | to_nice_json }}
+    dest: "/home/{{ pi_remote_user }}/.pi/agent/settings.json"
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    mode: "0600"
+  no_log: true
+  diff: false
+
+- name: Configure Remote Pi plugin and supervisor
+  ansible.builtin.import_tasks: remote_pi.yml
+  tags: remote_pi
+
+- name: Print next steps
+  ansible.builtin.debug:
+    msg: "Pi {{ pi_remote_installed_version.stdout }} installed with default {{ pi_remote_model_provider }}/{{ pi_remote_model_id }}. Connect as {{ pi_remote_user }}@{{ ansible_host }} and run pi."

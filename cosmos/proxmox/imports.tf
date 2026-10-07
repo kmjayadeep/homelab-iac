@@ -6,7 +6,3 @@ import {
   to = module.helios.proxmox_vm_qemu.this
   id = "mars/qemu/208"
 }
-import {
-  to = module.jd-vm.proxmox_vm_qemu.this
-  id = "mars/qemu/204"
-}

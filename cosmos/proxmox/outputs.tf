@@ -42,11 +42,6 @@ output "chillyfries_bucket_secret_key" {
   sensitive = true
 }
 
-output "valheim_rivers_ip" {
-  value       = try(proxmox_virtual_environment_vm.valheim_rivers.ipv4_addresses[1][0], "192.168.1.98")
-  description = "IP address of the Valheim Rivers server"
-}
-
 output "valheim_nordlys_ip" {
   value       = proxmox_virtual_environment_vm.valheim_nordlys.ipv4_addresses[1][0]
   description = "IP address of the Valheim Nordlys server"
@@ -62,11 +57,6 @@ output "valheim_nordlys_bucket_secret_key" {
   sensitive = true
 }
 
-output "valheim_speedrun_ip" {
-  value       = proxmox_virtual_environment_vm.valheim_speedrun.ipv4_addresses[1][0]
-  description = "IP address of the Valheim Speedrun server"
-}
-
 output "valheim_speedrun_bucket_access_key" {
   value     = module.valheim_speedrun_s3.access_key
   sensitive = true
@@ -75,11 +65,6 @@ output "valheim_speedrun_bucket_access_key" {
 output "valheim_speedrun_bucket_secret_key" {
   value     = module.valheim_speedrun_s3.secret_key
   sensitive = true
-}
-
-output "windrose_ip" {
-  value       = try(proxmox_virtual_environment_vm.windrose.ipv4_addresses[1][0], "192.168.1.114")
-  description = "IP address of the Windrose dedicated server"
 }
 
 output "windrose_bucket_access_key" {

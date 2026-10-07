@@ -1,22 +1,22 @@
-resource "proxmox_virtual_environment_vm" "agent0" {
+resource "proxmox_virtual_environment_vm" "pi_remote" {
   provider  = proxmox-bpg.jupiter-bpg
-  name      = "agent0"
+  name      = "pi-remote"
   node_name = "jupiter"
-  started   = false
-  on_boot   = false
+  started   = true
+  on_boot   = true
 
   machine     = "q35"
   bios        = "ovmf"
-  description = "agent0 - AI Orchestrator"
-  tags        = ["paperclip", "AI"]
+  description = "Pi Remote VM"
+  tags        = ["development", "pi-remote"]
 
   cpu {
-    cores = 8
+    cores = 2
     type  = "host"
   }
 
   memory {
-    dedicated = 8192
+    dedicated = 2048
   }
 
   efi_disk {
@@ -28,7 +28,7 @@ resource "proxmox_virtual_environment_vm" "agent0" {
     datastore_id = "local-lvm"
     import_from  = proxmox_download_file.latest_debian_13_qcow2_img.id
     interface    = "virtio0"
-    size         = 200
+    size         = 100
   }
 
   initialization {
@@ -37,7 +37,7 @@ resource "proxmox_virtual_environment_vm" "agent0" {
         address = "dhcp"
       }
     }
-    user_data_file_id = proxmox_virtual_environment_file.agent0_user_data.id
+    user_data_file_id = proxmox_virtual_environment_file.pi_remote_user_data.id
   }
 
   network_device {
@@ -49,7 +49,7 @@ resource "proxmox_virtual_environment_vm" "agent0" {
   }
 }
 
-resource "proxmox_virtual_environment_file" "agent0_user_data" {
+resource "proxmox_virtual_environment_file" "pi_remote_user_data" {
   provider     = proxmox-bpg.jupiter-bpg
   content_type = "snippets"
   datastore_id = "nfs-templates"
@@ -58,21 +58,19 @@ resource "proxmox_virtual_environment_file" "agent0_user_data" {
   source_raw {
     data = <<-EOF
     #cloud-config
-    hostname: agent0
+    hostname: pi-remote
     timezone: Europe/Berlin
     users:
       - name: "${var.cloudinit_username}"
-        groups:
-          - sudo
+        groups: [sudo]
         shell: /bin/bash
         ssh_authorized_keys:
           - "${var.cloudinit_ssh_public_key}"
         sudo: ALL=(ALL) NOPASSWD:ALL
-        plain_text_passwd: "${var.cloudinit_password}"
-        lock_passwd: false
+        lock_passwd: true
       - name: ansible
         gecos: Ansible User
-        groups: users,admin,wheel
+        groups: [sudo]
         sudo: "ALL=(ALL) NOPASSWD:ALL"
         shell: /bin/bash
         lock_passwd: true
@@ -81,29 +79,22 @@ resource "proxmox_virtual_environment_file" "agent0_user_data" {
     package_update: true
     packages:
       - qemu-guest-agent
-      - net-tools
       - curl
     runcmd:
-      - systemctl enable qemu-guest-agent
-      - systemctl start qemu-guest-agent
-
-
-      # Final setup indicator
+      - systemctl enable --now qemu-guest-agent
       - echo "done" > /tmp/cloud-config.done
     EOF
 
-    file_name = "agent0_cloudinit.yaml"
+    file_name = "pi-remote_cloudinit.yaml"
   }
 }
 
-resource "cloudflare_dns_record" "agent0" {
-  count = 0
-
+resource "cloudflare_dns_record" "pi_remote" {
   zone_id = var.cloudflare_zone_id
-  name    = "agent0.cosmos.cboxlab.com"
+  name    = "pi-remote.cosmos.cboxlab.com"
   type    = "A"
-  comment = "agent0 VM"
-  content = try(proxmox_virtual_environment_vm.agent0.ipv4_addresses[1][0], "0.0.0.0")
+  comment = "Pi Remote VM"
+  content = proxmox_virtual_environment_vm.pi_remote.ipv4_addresses[1][0]
   proxied = false
   ttl     = 300
 }
