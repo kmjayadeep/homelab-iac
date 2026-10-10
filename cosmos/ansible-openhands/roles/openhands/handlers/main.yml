@@ -1,0 +1,23 @@
+---
+- name: Restart OpenHands ingress protection
+  ansible.builtin.systemd:
+    name: openhands-docker-ingress
+    daemon_reload: true
+    state: restarted
+
+- name: Restart OpenHands
+  ansible.builtin.systemd:
+    name: openhands
+    daemon_reload: true
+    state: restarted
+
+- name: Validate Nginx configuration
+  ansible.builtin.command: nginx -t
+  changed_when: false
+  listen: Validate and reload Nginx
+
+- name: Reload Nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded
+  listen: Validate and reload Nginx

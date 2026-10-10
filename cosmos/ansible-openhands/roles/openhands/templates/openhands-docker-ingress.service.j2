@@ -1,0 +1,14 @@
+[Unit]
+Description=Block direct LAN ingress to OpenHands Docker ports
+Requires=docker.service
+After=docker.service
+PartOf=docker.service
+Before=openhands.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/openhands-docker-ingress
+RemainAfterExit=yes
+
+[Install]
+WantedBy=docker.service

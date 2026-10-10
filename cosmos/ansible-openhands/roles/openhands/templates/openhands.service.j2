@@ -1,0 +1,26 @@
+[Unit]
+Description=OpenHands Agent Canvas
+Requires=docker.service openhands-docker-ingress.service
+After=docker.service openhands-docker-ingress.service network-online.target
+Wants=network-online.target
+
+[Service]
+Restart=always
+RestartSec=10
+TimeoutStartSec=0
+TimeoutStopSec=60
+ExecStartPre=-/usr/bin/docker rm -f openhands-canvas
+ExecStart=/usr/bin/docker run --rm --name openhands-canvas \
+  --log-opt max-size=10m --log-opt max-file=3 \
+  --publish 127.0.0.1:8000:8000 \
+  --env-file /etc/openhands/agent-canvas.env \
+  --env AGENT_CANVAS_DISABLE_TELEMETRY=1 \
+  --env DO_NOT_TRACK=1 \
+  --env VITE_DO_NOT_TRACK=1 \
+  --volume {{ openhands_data_dir }}:/home/openhands/.openhands \
+  --volume {{ openhands_projects_dir }}:/projects \
+  {{ openhands_image }}
+ExecStop=/usr/bin/docker stop --time 30 openhands-canvas
+
+[Install]
+WantedBy=multi-user.target

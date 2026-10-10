@@ -1,0 +1,248 @@
+---
+- name: Require deployment credentials
+  ansible.builtin.assert:
+    that:
+      - cloudflare_api_token | length > 0
+      - openhands_http_password | length >= 24
+      - openhands_llm_api_key | length > 0
+      - openhands_backend_api_key | length >= 32
+    fail_msg: "Load all deployment credentials from .envrc before running setup."
+  no_log: true
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name: "{{ openhands_base_packages }}"
+    state: present
+    update_cache: true
+
+- name: Ensure OpenHands group exists
+  ansible.builtin.group:
+    name: "{{ openhands_group }}"
+    state: present
+
+- name: Ensure OpenHands user exists
+  ansible.builtin.user:
+    name: "{{ openhands_user }}"
+    group: "{{ openhands_group }}"
+    shell: /bin/bash
+    create_home: true
+
+- name: Install SSH authorized keys for OpenHands user
+  ansible.posix.authorized_key:
+    user: "{{ openhands_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ openhands_authorized_keys }}"
+
+- name: Configure Git user name for OpenHands
+  community.general.git_config:
+    name: user.name
+    scope: global
+    value: "{{ openhands_git_user_name }}"
+  become_user: "{{ openhands_user }}"
+
+- name: Configure Git user email for OpenHands
+  community.general.git_config:
+    name: user.email
+    scope: global
+    value: "{{ openhands_git_user_email }}"
+  become_user: "{{ openhands_user }}"
+
+- name: Enable Docker
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Install sandbox ingress protection script
+  ansible.builtin.template:
+    src: docker-ingress.sh.j2
+    dest: /usr/local/sbin/openhands-docker-ingress
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart OpenHands ingress protection
+
+- name: Install sandbox ingress protection service
+  ansible.builtin.template:
+    src: openhands-docker-ingress.service.j2
+    dest: /etc/systemd/system/openhands-docker-ingress.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart OpenHands ingress protection
+
+- name: Enable sandbox ingress protection
+  ansible.builtin.systemd:
+    name: openhands-docker-ingress
+    daemon_reload: true
+    enabled: true
+    state: started
+
+- name: Create persistent Agent Canvas directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ openhands_container_uid }}"
+    group: "{{ openhands_container_gid }}"
+    mode: "0700"
+  loop:
+    - "{{ openhands_data_dir }}"
+    - "{{ openhands_projects_dir }}"
+
+- name: Create Agent Canvas configuration directory
+  ansible.builtin.file:
+    path: /etc/openhands
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Install private Agent Canvas environment
+  ansible.builtin.template:
+    src: agent-canvas.env.j2
+    dest: /etc/openhands/agent-canvas.env
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  diff: false
+  notify: Restart OpenHands
+
+- name: Pull Agent Canvas image
+  ansible.builtin.command:
+    argv: [docker, pull, "{{ openhands_image }}"]
+  register: openhands_image_pull
+  changed_when: "'Downloaded newer image' in openhands_image_pull.stdout"
+  notify: Restart OpenHands
+
+- name: Install OpenHands service
+  ansible.builtin.template:
+    src: openhands.service.j2
+    dest: /etc/systemd/system/openhands.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart OpenHands
+
+- name: Enable OpenHands service
+  ansible.builtin.systemd:
+    name: openhands
+    daemon_reload: true
+    enabled: true
+    state: started
+
+- name: Create Certbot credentials directory
+  ansible.builtin.file:
+    path: /etc/letsencrypt
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install Cloudflare credentials for DNS challenge
+  ansible.builtin.template:
+    src: cloudflare.ini.j2
+    dest: /etc/letsencrypt/cloudflare.ini
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  diff: false
+
+- name: Obtain OpenHands certificate
+  ansible.builtin.command:
+    argv:
+      - certbot
+      - certonly
+      - --dns-cloudflare
+      - --dns-cloudflare-credentials
+      - /etc/letsencrypt/cloudflare.ini
+      - --non-interactive
+      - --agree-tos
+      - --email
+      - "{{ letsencrypt_email }}"
+      - --domain
+      - "{{ openhands_domain }}"
+  args:
+    creates: "/etc/letsencrypt/live/{{ openhands_domain }}/fullchain.pem"
+
+- name: Install certificate renewal deploy hook
+  ansible.builtin.copy:
+    dest: /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+    owner: root
+    group: root
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -e
+      nginx -t
+      systemctl reload nginx
+
+- name: Enable certificate renewal
+  ansible.builtin.systemd:
+    name: certbot.timer
+    enabled: true
+    state: started
+
+- name: Configure OpenHands HTTP authentication
+  community.general.htpasswd:
+    path: /etc/nginx/openhands.htpasswd
+    name: "{{ openhands_http_user }}"
+    password: "{{ openhands_http_password }}"
+    crypt_scheme: bcrypt
+    owner: root
+    group: www-data
+    mode: "0640"
+  no_log: true
+  diff: false
+
+- name: Disable default Nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Validate and reload Nginx
+
+- name: Configure OpenHands HTTPS proxy
+  ansible.builtin.template:
+    src: openhands-nginx.conf.j2
+    dest: /etc/nginx/sites-available/openhands.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Validate and reload Nginx
+
+- name: Enable OpenHands HTTPS site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/openhands.conf
+    dest: /etc/nginx/sites-enabled/openhands.conf
+    state: link
+  notify: Validate and reload Nginx
+
+- name: Enable Nginx
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started
+
+- name: Apply pending configuration changes
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for OpenHands UI
+  ansible.builtin.uri:
+    url: http://127.0.0.1:8000/canvas
+    status_code: 200
+  register: openhands_health
+  until: openhands_health.status == 200
+  retries: 60
+  delay: 5
+
+- name: Configure Agent Canvas model
+  ansible.builtin.include_tasks: model.yml
+
+- name: Show Agent Canvas URL
+  ansible.builtin.debug:
+    msg:
+      - "Open https://{{ openhands_domain }}/canvas and authenticate as {{ openhands_http_user }}."
+      - "Backend key: retrieve from pass homelab/openhands/canvas-backend."
+      - "LLM profile: {{ openhands_llm_profile }} via {{ openhands_llm_base_url }}."

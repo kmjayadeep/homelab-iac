@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -e
+# Docker publishes sandbox ports dynamically. Only Nginx and Docker peers may
+# reach them; never allow new connections arriving from the VM's LAN interface.
+if ! iptables -C DOCKER-USER -i {{ ansible_facts['default_ipv4']['interface'] }} -m conntrack --ctstate NEW -j DROP 2>/dev/null; then
+  iptables -I DOCKER-USER 1 -i {{ ansible_facts['default_ipv4']['interface'] }} -m conntrack --ctstate NEW -j DROP
+fi
+# Docker's userland proxy can expose bridge ports on IPv6 via INPUT rather than
+# FORWARD. Protect both families using the host's ephemeral sandbox port range.
+read -r port_min port_max < /proc/sys/net/ipv4/ip_local_port_range
+for firewall in iptables ip6tables; do
+  if ! "$firewall" -C INPUT -i {{ ansible_facts['default_ipv4']['interface'] }} -p tcp --dport "$port_min:$port_max" -m conntrack --ctstate NEW -j DROP 2>/dev/null; then
+    "$firewall" -I INPUT 1 -i {{ ansible_facts['default_ipv4']['interface'] }} -p tcp --dport "$port_min:$port_max" -m conntrack --ctstate NEW -j DROP
+  fi
+done

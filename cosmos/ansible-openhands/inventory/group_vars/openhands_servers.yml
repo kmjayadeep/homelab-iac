@@ -1,0 +1,46 @@
+---
+openhands_user: "openhands"
+openhands_group: "openhands"
+
+openhands_authorized_keys:
+  - "{{ lookup('file', ansible_ssh_private_key_file + '.pub') }}"
+
+openhands_git_user_name: "{{ lookup('env', 'OPENHANDS_GIT_USER_NAME') | default('OpenHands', true) }}"
+openhands_git_user_email: "{{ lookup('env', 'OPENHANDS_EMAIL') | default('openhands@localhost', true) }}"
+
+openhands_domain: "openhands.cosmos.cboxlab.com"
+openhands_image: "ghcr.io/openhands/agent-canvas:1.26.0@sha256:ce4526401c08b47d74fd0be5ebf97e8219d6a02955cb6710e8cc3335f01291a6"
+openhands_data_dir: "/var/lib/agent-canvas"
+openhands_projects_dir: "/var/lib/agent-canvas-projects"
+openhands_container_uid: "10001"
+openhands_container_gid: "10001"
+openhands_backend_api_key: "{{ lookup('env', 'OPENHANDS_BACKEND_API_KEY') }}"
+openhands_http_user: "openhands"
+openhands_http_password: "{{ lookup('env', 'OPENHANDS_HTTP_PASSWORD') }}"
+openhands_llm_profile: "qwen-intel"
+openhands_llm_model: "litellm_proxy/qwen-intel"
+openhands_llm_base_url: "https://litellm.cosmos.cboxlab.com/v1"
+openhands_llm_api_key: "{{ lookup('env', 'OPENHANDS_LITELLM_API_KEY') }}"
+openhands_llm_rotate_key: false
+openhands_llm_max_input_tokens: 114688
+openhands_llm_max_output_tokens: 16384
+openhands_condenser_max_tokens: 100000
+cloudflare_api_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
+letsencrypt_email: "{{ lookup('env', 'OPENHANDS_CERTBOT_EMAIL') | default('admin@cboxlab.com', true) }}"
+
+openhands_base_packages:
+  - acl
+  - ca-certificates
+  - certbot
+  - curl
+  - docker.io
+  - git
+  - gnupg
+  - jq
+  - nginx
+  - python3
+  - python3-bcrypt
+  - python3-certbot-dns-cloudflare
+  - python3-passlib
+  - ripgrep
+  - sudo

@@ -1,0 +1,90 @@
+---
+- name: Read current Agent Canvas LLM profile
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:8000/api/profiles/{{ openhands_llm_profile }}"
+    headers:
+      X-Session-API-Key: "{{ openhands_backend_api_key }}"
+    status_code: [200, 404]
+    return_content: true
+  register: openhands_current_profile
+  no_log: true
+
+- name: Save Agent Canvas LiteLLM profile
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:8000/api/profiles/{{ openhands_llm_profile }}"
+    method: POST
+    headers:
+      X-Session-API-Key: "{{ openhands_backend_api_key }}"
+    body_format: json
+    body:
+      llm:
+        model: "{{ openhands_llm_model }}"
+        base_url: "{{ openhands_llm_base_url }}"
+        api_key: "{{ openhands_llm_api_key }}"
+        max_input_tokens: "{{ openhands_llm_max_input_tokens }}"
+        max_output_tokens: "{{ openhands_llm_max_output_tokens }}"
+      include_secrets: true
+    status_code: 201
+  when: >-
+    openhands_llm_rotate_key | bool or
+    openhands_current_profile.status == 404 or
+    (openhands_current_profile.json | default({})).get('config', {}).get('model') != openhands_llm_model or
+    (openhands_current_profile.json | default({})).get('config', {}).get('base_url') != openhands_llm_base_url or
+    (openhands_current_profile.json | default({})).get('config', {}).get('max_input_tokens') != openhands_llm_max_input_tokens or
+    (openhands_current_profile.json | default({})).get('config', {}).get('max_output_tokens') != openhands_llm_max_output_tokens or
+    not (openhands_current_profile.json | default({})).get('api_key_set', false)
+  changed_when: true
+  no_log: true
+  diff: false
+
+- name: Read current Agent Canvas settings
+  ansible.builtin.uri:
+    url: http://127.0.0.1:8000/api/settings
+    headers:
+      X-Session-API-Key: "{{ openhands_backend_api_key }}"
+    status_code: 200
+    return_content: true
+  register: openhands_current_settings
+  no_log: true
+
+- name: Configure Agent Canvas model and condenser
+  ansible.builtin.uri:
+    url: http://127.0.0.1:8000/api/settings
+    method: PATCH
+    headers:
+      X-Session-API-Key: "{{ openhands_backend_api_key }}"
+    body_format: json
+    body:
+      active_profile: "{{ openhands_llm_profile }}"
+      agent_settings_diff:
+        llm:
+          model: "{{ openhands_llm_model }}"
+          base_url: "{{ openhands_llm_base_url }}"
+          api_key: "{{ openhands_llm_api_key }}"
+          max_input_tokens: "{{ openhands_llm_max_input_tokens }}"
+          max_output_tokens: "{{ openhands_llm_max_output_tokens }}"
+        condenser:
+          enabled: true
+          max_tokens: "{{ openhands_condenser_max_tokens }}"
+    status_code: 200
+  when: >-
+    openhands_llm_rotate_key | bool or
+    openhands_current_settings.json.get('active_profile') != openhands_llm_profile or
+    openhands_current_settings.json.get('agent_settings', {}).get('llm', {}).get('model') != openhands_llm_model or
+    openhands_current_settings.json.get('agent_settings', {}).get('llm', {}).get('base_url') != openhands_llm_base_url or
+    openhands_current_settings.json.get('agent_settings', {}).get('llm', {}).get('max_input_tokens') != openhands_llm_max_input_tokens or
+    openhands_current_settings.json.get('agent_settings', {}).get('llm', {}).get('max_output_tokens') != openhands_llm_max_output_tokens or
+    openhands_current_settings.json.get('agent_settings', {}).get('condenser', {}).get('max_tokens') != openhands_condenser_max_tokens or
+    not openhands_current_settings.json.get('agent_settings', {}).get('condenser', {}).get('enabled', false) or
+    not openhands_current_settings.json.get('llm_api_key_is_set', false)
+  changed_when: true
+  no_log: true
+  diff: false
+
+- name: Verify Automation Server health
+  ansible.builtin.uri:
+    url: http://127.0.0.1:8000/api/automation/health
+    headers:
+      X-Session-API-Key: "{{ openhands_backend_api_key }}"
+    status_code: 200
+  no_log: true

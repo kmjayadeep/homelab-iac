@@ -1,0 +1,5 @@
+---
+- name: Prepare OpenHands VM
+  hosts: openhands_servers
+  roles:
+    - openhands
