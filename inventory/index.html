@@ -635,8 +635,8 @@
       { id: "heliosVm", name: "helios VM", tier: "P1", kind: "vm", layer: "vm", x: 55, y: 420, role: "Dedicated VM for the Postgres platform.", known: "cosmos/proxmox/helios.tf + nixos-images/postgres" },
       { id: "postgres", name: "Postgres platform", tier: "P1", kind: "platform", layer: "platform", x: 170, y: 420, role: "Database platform inside helios. Apps should depend on this black-box platform, not directly on the VM.", known: "nixos-images/postgres" },
       { id: "titaniaWorker1", name: "titania-worker1 VM", tier: "P1", kind: "vm", layer: "vm", x: 55, y: 525, role: "K3s worker node VM on mars.", known: "cosmos/proxmox/titania-worker1.tf + ansible-k3s" },
-      { id: "gameVms", name: "game VMs", tier: "P3", kind: "vm-group", layer: "vm", x: 55, y: 630, role: "Dedicated VMs for Valheim and Windrose game servers.", known: "cosmos/proxmox/*valheim* + windrose.tf" },
-      { id: "gameApps", name: "Game servers", tier: "P3", kind: "app-group", layer: "app", x: 170, y: 630, role: "Valheim and Windrose apps inside dedicated game VMs.", known: "cosmos/ansible-valheim + ansible-windrose" },
+      { id: "gameVms", name: "game VMs", tier: "P3", kind: "vm-group", layer: "vm", x: 55, y: 630, role: "Dedicated VMs for Valheim game servers.", known: "cosmos/proxmox/*valheim*" },
+      { id: "gameApps", name: "Game servers", tier: "P3", kind: "app-group", layer: "app", x: 170, y: 630, role: "Valheim app inside dedicated game VMs.", known: "cosmos/ansible-valheim" },
 
       { id: "jupiter", name: "jupiter hardware", tier: "P0", kind: "hardware", layer: "hardware", groupOnly: true, x: 540, y: 380, role: "Proxmox hardware container for VMs on jupiter.", known: "cosmos/proxmox/*.tf + user network note", todos: ["Record hardware specs, disks, NICs, UPS, and cluster membership."] },
       { id: "titaniaMaster", name: "titania-master VM", tier: "P1", kind: "vm", layer: "vm", x: 405, y: 315, role: "K3s master node VM on jupiter.", known: "cosmos/proxmox/titania-master.tf + ansible-k3s" },

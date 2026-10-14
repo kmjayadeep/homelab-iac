@@ -37,12 +37,12 @@ Normalize identifiers consistently:
 1. Read repository instructions and check for deeper `AGENTS.md` files.
 2. Inspect `git status`; preserve unrelated work.
 3. Inspect the closest current examples, especially:
-   - `cosmos/proxmox/kite.tf`
+   - `cosmos/proxmox/pi-remote.tf`
    - another VM on the selected node
    - `cosmos/proxmox/providers.tf`
    - `cosmos/proxmox/debian.tf`
    - `cosmos/proxmox/outputs.tf`
-   - `cosmos/ansible-kite/`
+   - `cosmos/ansible-pi-remote/`
 4. Search for the requested hostname, DNS name, Terraform label, Ansible directory, bucket name, and outputs. Stop and report conflicts rather than duplicating resources.
 5. Check that the selected node has a matching `proxmox-bpg` provider alias. Do not invent a provider configuration.
 
