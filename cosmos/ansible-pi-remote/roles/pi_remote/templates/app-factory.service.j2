@@ -1,0 +1,24 @@
+[Unit]
+Description=App factory controller ({{ app_factory_repo }})
+Documentation=https://github.com/kmjayadeep/app-factory
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ app_factory_user }}
+Group={{ app_factory_user }}
+UMask=0002
+WorkingDirectory={{ app_factory_code_dir }}
+Environment=PYTHONPATH={{ app_factory_code_dir }}
+Environment=FACTORY_CONFIG=/etc/app-factory/factory.toml
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 -m factory run
+Restart=always
+RestartSec=30
+# A graceful stop lets the controller save state; Pi sessions are restarted on the next start.
+TimeoutStopSec=60
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target

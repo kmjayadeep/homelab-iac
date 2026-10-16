@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Run a command as the factory sandbox user ({{ pi_remote_user }}) with its toolchain on PATH.
+# Called by the app factory controller through sudo; see /etc/sudoers.d/app-factory.
+umask 0002
+export HOME="/home/{{ pi_remote_user }}"
+export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
+export CHROMIUM_PATH=/usr/bin/chromium
+export NPM_CONFIG_UPDATE_NOTIFIER=false
+
+"$@" &
+child=$!
+trap 'kill -TERM "$child" 2>/dev/null' TERM INT HUP
+wait "$child"
+rc=$?
+while kill -0 "$child" 2>/dev/null; do
+  wait "$child"
+  rc=$?
+done
+
+# Files copied or created with restrictive modes must stay writable by the controller's group.
+case "$PWD" in
+  {{ app_factory_home }}/work/*|{{ app_factory_home }}/runs/*) chmod -R g+rwX . 2>/dev/null || true ;;
+esac
+exit "$rc"

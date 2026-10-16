@@ -168,6 +168,14 @@
   ansible.builtin.import_tasks: remote_pi.yml
   tags: remote_pi
 
+- name: Configure self-hosted GitHub Actions runner
+  ansible.builtin.import_tasks: gh_runner.yml
+  tags: gh_runner
+
+- name: Configure app factory
+  ansible.builtin.import_tasks: app_factory.yml
+  tags: app_factory
+
 - name: Print next steps
   ansible.builtin.debug:
     msg: "Pi {{ pi_remote_installed_version.stdout }} installed with default {{ pi_remote_model_provider }}/{{ pi_remote_model_id }}. Connect as {{ pi_remote_user }}@{{ ansible_host }} and run pi."

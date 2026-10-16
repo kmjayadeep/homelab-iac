@@ -9,3 +9,10 @@
   environment:
     XDG_RUNTIME_DIR: "/run/user/{{ pi_remote_user_uid.stdout }}"
     DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ pi_remote_user_uid.stdout }}/bus"
+
+- name: Restart app factory
+  ansible.builtin.systemd_service:
+    name: app-factory.service
+    daemon_reload: true
+    state: restarted
+  when: app_factory_enabled

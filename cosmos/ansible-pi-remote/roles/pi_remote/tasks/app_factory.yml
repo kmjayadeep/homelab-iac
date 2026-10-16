@@ -1,0 +1,210 @@
+---
+# App factory controller. Trust split:
+# - `factory` runs the controller and alone holds the GitHub App key.
+# - `pi-remote` (sandbox) runs Pi sessions and app commands via factory-sandbox; no GitHub credentials.
+- name: Install app factory packages
+  ansible.builtin.apt:
+    name: "{{ app_factory_packages }}"
+    state: present
+
+- name: Ensure factory group exists
+  ansible.builtin.group:
+    name: "{{ app_factory_user }}"
+    system: true
+
+- name: Ensure factory user exists
+  ansible.builtin.user:
+    name: "{{ app_factory_user }}"
+    group: "{{ app_factory_user }}"
+    system: true
+    home: "{{ app_factory_home }}"
+    create_home: false
+    shell: /bin/bash
+
+- name: Add sandbox user to the factory group for shared worktrees
+  ansible.builtin.user:
+    name: "{{ pi_remote_user }}"
+    groups: "{{ app_factory_user }}"
+    append: true
+
+- name: Create factory home
+  ansible.builtin.file:
+    path: "{{ app_factory_home }}"
+    state: directory
+    owner: "{{ app_factory_user }}"
+    group: "{{ app_factory_user }}"
+    mode: "0750"
+
+- name: Create private factory directories
+  ansible.builtin.file:
+    path: "{{ app_factory_home }}/{{ item }}"
+    state: directory
+    owner: "{{ app_factory_user }}"
+    group: "{{ app_factory_user }}"
+    mode: "0700"
+  loop:
+    - secrets
+    - state
+
+- name: Create shared factory directories
+  ansible.builtin.file:
+    path: "{{ app_factory_home }}/{{ item }}"
+    state: directory
+    owner: "{{ app_factory_user }}"
+    group: "{{ app_factory_user }}"
+    mode: "2775"
+  loop:
+    - work
+    - runs
+    - evidence
+
+- name: Install GitHub App ID
+  ansible.builtin.copy:
+    content: "{{ app_factory_github_app_id }}"
+    dest: "{{ app_factory_home }}/secrets/github-app-id"
+    owner: "{{ app_factory_user }}"
+    group: "{{ app_factory_user }}"
+    mode: "0600"
+  no_log: true
+  diff: false
+  tags: app_factory_credentials
+
+- name: Install GitHub App private key
+  ansible.builtin.copy:
+    content: "{{ app_factory_github_app_key }}"
+    dest: "{{ app_factory_home }}/secrets/github-app-key"
+    owner: "{{ app_factory_user }}"
+    group: "{{ app_factory_user }}"
+    mode: "0600"
+  no_log: true
+  diff: false
+  tags: app_factory_credentials
+
+- name: Install LiteLLM key for health checks
+  ansible.builtin.copy:
+    content: "{{ pi_remote_litellm_api_key }}"
+    dest: "{{ app_factory_home }}/secrets/litellm-api-key"
+    owner: "{{ app_factory_user }}"
+    group: "{{ app_factory_user }}"
+    mode: "0600"
+  no_log: true
+  diff: false
+  tags: app_factory_credentials
+
+- name: Deploy factory code
+  ansible.builtin.copy:
+    src: "{{ app_factory_src }}/{{ item }}"
+    dest: "{{ app_factory_code_dir }}/"
+    owner: root
+    group: root
+    mode: u=rwX,go=rX
+  loop:
+    - factory
+    - prompts
+    - schemas
+    - stacks
+    - extension
+  notify: Restart app factory
+
+- name: Create factory config directory
+  ansible.builtin.file:
+    path: /etc/app-factory
+    state: directory
+    owner: root
+    group: "{{ app_factory_user }}"
+    mode: "0750"
+
+- name: Install factory config
+  ansible.builtin.template:
+    src: factory.toml.j2
+    dest: /etc/app-factory/factory.toml
+    owner: root
+    group: "{{ app_factory_user }}"
+    mode: "0640"
+  notify: Restart app factory
+
+- name: Install sandbox wrapper
+  ansible.builtin.template:
+    src: factory-sandbox.j2
+    dest: /usr/local/bin/factory-sandbox
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Allow the controller to run the sandbox wrapper as the sandbox user
+  ansible.builtin.copy:
+    content: |
+      {{ app_factory_user }} ALL=({{ pi_remote_user }}) NOPASSWD:SETENV: /usr/local/bin/factory-sandbox
+    dest: /etc/sudoers.d/app-factory
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Install factory CLI
+  ansible.builtin.copy:
+    content: |
+      #!/usr/bin/env bash
+      # factory pause [--now] [3h] | resume | status
+      set -e
+      cd {{ app_factory_code_dir }}
+      exec sudo -u {{ app_factory_user }} -H env PYTHONPATH={{ app_factory_code_dir }} FACTORY_CONFIG=/etc/app-factory/factory.toml python3 -m factory "$@"
+    dest: /usr/local/bin/factory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create sandbox Pi directory for factory sessions
+  ansible.builtin.file:
+    path: "{{ app_factory_sandbox_pi_dir }}"
+    state: directory
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    mode: "0700"
+
+- name: Read the sandbox user's Pi model configuration
+  ansible.builtin.slurp:
+    src: "/home/{{ pi_remote_user }}/.pi/agent/models.json"
+  register: app_factory_source_models
+  no_log: true
+
+- name: Configure the factory Pi model with the LiteLLM input cap
+  ansible.builtin.copy:
+    content: >-
+      {{ (app_factory_source_models.content | b64decode | from_json)
+         | combine({'providers': {pi_remote_model_provider:
+             ((app_factory_source_models.content | b64decode | from_json).providers[pi_remote_model_provider])
+             | combine({'models': ((app_factory_source_models.content | b64decode | from_json).providers[pi_remote_model_provider].models)
+                        | map('combine', {'contextWindow': app_factory_context_window, 'maxTokens': app_factory_max_output_tokens})
+                        | list})}}, recursive=true)
+         | to_nice_json }}
+    dest: "{{ app_factory_sandbox_pi_dir }}/models.json"
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    mode: "0600"
+  no_log: true
+  diff: false
+
+- name: Configure factory Pi settings
+  ansible.builtin.copy:
+    content: "{{ app_factory_pi_settings | to_nice_json }}"
+    dest: "{{ app_factory_sandbox_pi_dir }}/settings.json"
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    mode: "0600"
+
+- name: Install app factory service
+  ansible.builtin.template:
+    src: app-factory.service.j2
+    dest: /etc/systemd/system/app-factory.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart app factory
+
+- name: Enable app factory service
+  ansible.builtin.systemd_service:
+    name: app-factory.service
+    daemon_reload: true
+    enabled: "{{ app_factory_enabled }}"
+    state: "{{ 'started' if app_factory_enabled else 'stopped' }}"

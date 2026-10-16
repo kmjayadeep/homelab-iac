@@ -1,0 +1,83 @@
+---
+# Self-hosted GitHub Actions runner for the factory's target repo, as an isolated user.
+- name: Ensure runner user exists
+  ansible.builtin.user:
+    name: "{{ gh_runner_user }}"
+    system: true
+    home: "/home/{{ gh_runner_user }}"
+    create_home: true
+    shell: /bin/bash
+
+- name: Create runner directory
+  ansible.builtin.file:
+    path: "{{ gh_runner_dir }}"
+    state: directory
+    owner: "{{ gh_runner_user }}"
+    group: "{{ gh_runner_user }}"
+    mode: "0755"
+
+- name: Download and unpack the Actions runner
+  ansible.builtin.unarchive:
+    src: "https://github.com/actions/runner/releases/download/v{{ gh_runner_version }}/actions-runner-linux-x64-{{ gh_runner_version }}.tar.gz"
+    dest: "{{ gh_runner_dir }}"
+    remote_src: true
+    owner: "{{ gh_runner_user }}"
+    group: "{{ gh_runner_user }}"
+    creates: "{{ gh_runner_dir }}/config.sh"
+
+- name: Install runner dependencies
+  ansible.builtin.command: "{{ gh_runner_dir }}/bin/installdependencies.sh"
+  args:
+    creates: /var/lib/app-factory-runner-deps.done
+  register: gh_runner_deps
+
+- name: Record runner dependency install
+  ansible.builtin.file:
+    path: /var/lib/app-factory-runner-deps.done
+    state: touch
+    mode: "0644"
+  when: gh_runner_deps.changed
+
+- name: Check runner registration
+  ansible.builtin.stat:
+    path: "{{ gh_runner_dir }}/.runner"
+  register: gh_runner_registered
+
+- name: Register the runner with the target repository
+  ansible.builtin.command:
+    argv:
+      - "{{ gh_runner_dir }}/config.sh"
+      - --unattended
+      - --url
+      - "https://github.com/{{ app_factory_repo }}"
+      - --token
+      - "{{ gh_runner_registration_token }}"
+      - --name
+      - "{{ inventory_hostname }}"
+      - --labels
+      - factory
+      - --work
+      - _work
+      - --replace
+  args:
+    chdir: "{{ gh_runner_dir }}"
+  become_user: "{{ gh_runner_user }}"
+  when: not gh_runner_registered.stat.exists
+  no_log: true
+
+- name: Install runner service
+  ansible.builtin.command: "./svc.sh install {{ gh_runner_user }}"
+  args:
+    chdir: "{{ gh_runner_dir }}"
+    creates: "{{ gh_runner_dir }}/.service"
+
+- name: Read runner service name
+  ansible.builtin.slurp:
+    src: "{{ gh_runner_dir }}/.service"
+  register: gh_runner_service
+
+- name: Start runner service
+  ansible.builtin.systemd_service:
+    name: "{{ gh_runner_service.content | b64decode | trim }}"
+    enabled: true
+    state: started

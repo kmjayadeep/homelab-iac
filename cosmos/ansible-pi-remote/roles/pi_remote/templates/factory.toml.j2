@@ -1,0 +1,33 @@
+# Managed by Ansible (cosmos/ansible-pi-remote). Point `target.repo` at another repo to reuse the factory.
+[target]
+repo = "{{ app_factory_repo }}"
+prd = ".factory/PRD.md"
+stack = "flutter"
+app_name = "{{ app_factory_app_name }}"
+package_name = "{{ app_factory_package_name }}"
+org = "{{ app_factory_org }}"
+operators = {{ app_factory_operators | to_json }}
+
+[llm]
+base_url = "https://litellm.cosmos.cboxlab.com/v1"
+api_key_file = "{{ app_factory_home }}/secrets/litellm-api-key"
+pi_model = "{{ pi_remote_model_provider }}/{{ pi_remote_model_id }}"
+
+[github]
+app_id_file = "{{ app_factory_home }}/secrets/github-app-id"
+private_key_file = "{{ app_factory_home }}/secrets/github-app-key"
+
+[paths]
+home = "{{ app_factory_home }}"
+sandbox_user = "{{ pi_remote_user }}"
+sandbox_pi_dir = "{{ app_factory_sandbox_pi_dir }}"
+
+[cadence]
+garden_every = 5
+refactor_every = 8
+architect_every = 15
+scout_every = 20
+
+[limits]
+max_attempts = 3
+max_ready = 2

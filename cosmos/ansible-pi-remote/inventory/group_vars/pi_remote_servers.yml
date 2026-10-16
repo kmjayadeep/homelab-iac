@@ -33,3 +33,46 @@ pi_remote_dev_packages:
   - unzip
   - xz-utils
   - zip
+app_factory_enabled: true
+app_factory_repo: "kmjayadeep/fitness-app"
+app_factory_app_name: "RepCoach"
+app_factory_package_name: "repcoach"
+app_factory_org: "dev.factory"
+app_factory_operators:
+  - kmjayadeep
+app_factory_user: "factory"
+app_factory_home: "/var/lib/app-factory"
+app_factory_code_dir: "/opt/app-factory"
+app_factory_src: "{{ playbook_dir }}/../../../../app-factory"
+app_factory_sandbox_pi_dir: "/home/{{ pi_remote_user }}/.pi-factory"
+app_factory_github_app_id: "{{ lookup('pipe', 'pass show github/ai-orchestrator/app-id') | trim }}"
+app_factory_github_app_key: "{{ lookup('pipe', 'pass show github/ai-orchestrator/private-key') | trim }}"
+# LiteLLM rejects inputs above 114,688 tokens even though llama-server runs 131,072.
+app_factory_context_window: 114688
+app_factory_max_output_tokens: 16384
+app_factory_pi_settings:
+  defaultProvider: "{{ pi_remote_model_provider }}"
+  defaultModel: "{{ pi_remote_model_id }}"
+  quietStartup: true
+  httpIdleTimeoutMs: 600000
+  # Compact at ~80K so decode stays near 30+ tok/s: 114,688 - 34,688.
+  compaction:
+    enabled: true
+    reserveTokens: 34688
+    keepRecentTokens: 20000
+  retry:
+    enabled: true
+    maxRetries: 4
+    baseDelayMs: 5000
+    maxAgentDelayMs: 120000
+app_factory_packages:
+  - chromium
+  - fonts-noto-core
+  - fonts-noto-color-emoji
+  - python3-cryptography
+  - python3-jsonschema
+  - python3-jwt
+gh_runner_user: "ghrunner"
+gh_runner_dir: "/opt/actions-runner"
+gh_runner_version: "2.337.0"
+gh_runner_registration_token: "{{ lookup('env', 'GH_RUNNER_TOKEN') }}"
