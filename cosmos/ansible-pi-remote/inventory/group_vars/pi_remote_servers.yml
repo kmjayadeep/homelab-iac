@@ -21,3 +21,15 @@ pi_remote_base_packages:
   - jq
   - ripgrep
   - sudo
+pi_remote_flutter_version: "3.47.7"
+pi_remote_swap_size: "4G"
+pi_remote_github_host_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+pi_remote_dev_packages:
+  - build-essential
+  - gh
+  - git-lfs
+  - libglu1-mesa
+  - tmux
+  - unzip
+  - xz-utils
+  - zip

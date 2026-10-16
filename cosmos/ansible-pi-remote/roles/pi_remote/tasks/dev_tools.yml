@@ -1,0 +1,179 @@
+---
+- name: Install development packages
+  ansible.builtin.apt:
+    name: "{{ pi_remote_dev_packages }}"
+    state: present
+    update_cache: true
+
+- name: Create swap file
+  ansible.builtin.command:
+    argv:
+      - fallocate
+      - -l
+      - "{{ pi_remote_swap_size }}"
+      - /swapfile
+  args:
+    creates: /swapfile
+  register: pi_remote_swap_created
+
+- name: Restrict swap file permissions
+  ansible.builtin.file:
+    path: /swapfile
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Format swap file
+  ansible.builtin.command: mkswap /swapfile
+  when: pi_remote_swap_created.changed
+
+- name: Persist swap file
+  ansible.posix.mount:
+    src: /swapfile
+    path: none
+    fstype: swap
+    opts: sw
+    state: present
+
+- name: Read active swap devices
+  ansible.builtin.command: swapon --show=NAME --noheadings
+  register: pi_remote_active_swap
+  changed_when: false
+
+- name: Enable swap file
+  ansible.builtin.command: swapon /swapfile
+  when: "'/swapfile' not in pi_remote_active_swap.stdout_lines"
+
+- name: Prefer RAM over swap
+  ansible.posix.sysctl:
+    name: vm.swappiness
+    value: "10"
+    sysctl_file: /etc/sysctl.d/99-swap.conf
+
+- name: Download mise signing key
+  ansible.builtin.get_url:
+    url: https://mise.jdx.dev/gpg-key.pub
+    dest: /etc/apt/keyrings/mise-archive-keyring.asc
+    mode: "0644"
+
+- name: Add mise repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.asc] https://mise.jdx.dev/deb stable main"
+    filename: mise
+    state: present
+
+- name: Install mise
+  ansible.builtin.apt:
+    name: mise
+    state: present
+    update_cache: true
+
+- name: Remove manually installed mise binary
+  ansible.builtin.file:
+    path: "/home/{{ pi_remote_user }}/.local/bin/mise"
+    state: absent
+
+- name: Remove manual mise activation from Bash
+  ansible.builtin.lineinfile:
+    path: "/home/{{ pi_remote_user }}/.bashrc"
+    line: 'eval "$(/home/{{ pi_remote_user }}/.local/bin/mise activate bash)"'
+    state: absent
+
+- name: Activate mise in interactive Bash
+  ansible.builtin.lineinfile:
+    path: "/home/{{ pi_remote_user }}/.bashrc"
+    line: 'eval "$(mise activate bash)"'
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    create: true
+    mode: "0644"
+
+- name: Add mise shims to login PATH
+  ansible.builtin.lineinfile:
+    path: "/home/{{ pi_remote_user }}/.profile"
+    line: 'export PATH="$HOME/.local/share/mise/shims:$PATH"'
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    create: true
+    mode: "0644"
+
+- name: Read global mise tools
+  ansible.builtin.command: mise ls --global --current flutter
+  become_user: "{{ pi_remote_user }}"
+  register: pi_remote_mise_flutter
+  changed_when: false
+
+- name: Install pinned Flutter as the global default
+  ansible.builtin.command:
+    argv:
+      - mise
+      - use
+      - --global
+      - "flutter@{{ pi_remote_flutter_version }}"
+  become_user: "{{ pi_remote_user }}"
+  when: pi_remote_flutter_version not in pi_remote_mise_flutter.stdout
+
+- name: Ensure Dart tool directory exists
+  ansible.builtin.file:
+    path: "/home/{{ pi_remote_user }}/.dart-tool"
+    state: directory
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    mode: "0700"
+
+- name: Disable Flutter and Dart telemetry
+  ansible.builtin.lineinfile:
+    path: "/home/{{ pi_remote_user }}/.dart-tool/dart-flutter-telemetry.config"
+    regexp: "^reporting="
+    line: reporting=0
+    owner: "{{ pi_remote_user }}"
+    group: "{{ pi_remote_group }}"
+    mode: "0600"
+    create: true
+
+- name: Configure default Git branch
+  community.general.git_config:
+    name: init.defaultBranch
+    scope: global
+    value: main
+  become_user: "{{ pi_remote_user }}"
+
+- name: Trust GitHub SSH host key
+  ansible.builtin.known_hosts:
+    path: "/home/{{ pi_remote_user }}/.ssh/known_hosts"
+    name: github.com
+    key: "github.com {{ pi_remote_github_host_key }}"
+  become_user: "{{ pi_remote_user }}"
+
+- name: Generate Git SSH key
+  ansible.builtin.command:
+    argv:
+      - ssh-keygen
+      - -t
+      - ed25519
+      - -N
+      - ""
+      - -C
+      - "{{ pi_remote_user }}@{{ inventory_hostname }}"
+      - -f
+      - "/home/{{ pi_remote_user }}/.ssh/id_ed25519"
+  args:
+    creates: "/home/{{ pi_remote_user }}/.ssh/id_ed25519"
+  become_user: "{{ pi_remote_user }}"
+
+- name: Read Git SSH public key
+  ansible.builtin.command: "cat /home/{{ pi_remote_user }}/.ssh/id_ed25519.pub"
+  register: pi_remote_git_public_key
+  changed_when: false
+
+- name: Verify Flutter and Dart
+  ansible.builtin.command: "/home/{{ pi_remote_user }}/.local/share/mise/shims/flutter --version --machine"
+  become_user: "{{ pi_remote_user }}"
+  register: pi_remote_flutter_version_info
+  changed_when: false
+
+- name: Print development tool status
+  ansible.builtin.debug:
+    msg:
+      - "Flutter {{ (pi_remote_flutter_version_info.stdout | from_json).frameworkVersion }}, Dart {{ (pi_remote_flutter_version_info.stdout | from_json).dartSdkVersion }}"
+      - "Git SSH public key (add to GitHub): {{ pi_remote_git_public_key.stdout }}"

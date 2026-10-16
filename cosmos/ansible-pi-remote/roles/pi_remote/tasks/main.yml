@@ -160,6 +160,10 @@
   no_log: true
   diff: false
 
+- name: Configure development tools
+  ansible.builtin.import_tasks: dev_tools.yml
+  tags: dev_tools
+
 - name: Configure Remote Pi plugin and supervisor
   ansible.builtin.import_tasks: remote_pi.yml
   tags: remote_pi

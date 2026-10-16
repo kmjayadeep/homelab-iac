@@ -1,6 +1,6 @@
 # Pi Remote VM
 
-Base Debian 13 workspace on Jupiter: 2 vCPUs, 2048 MiB RAM, 100 GiB disk.
+Base Debian 13 workspace on Mars: 4 vCPUs, 6144 MiB RAM, 100 GiB disk.
 DNS: `pi-remote.cosmos.cboxlab.com`. DHCP and QEMU guest agent supply the address.
 VM/EFI storage: `local-lvm`; snippets and Debian import: shared `nfs-templates`.
 Pi 1.0.4 is installed globally from `@earendil-works/pi-coding-agent` with
@@ -71,11 +71,31 @@ Existing unrelated settings are preserved while setting the default model.
 Use `/model` to switch models, or `/login` for other providers.
 A no-tools Qwen smoke test returned `QWEN_OK`.
 
+## Development tools
+
+Ansible installs mise from its apt repository and sets Flutter
+`pi_remote_flutter_version` (3.47.7, bundled Dart 3.13.5) as the global default
+for `pi-remote`. Projects can pin their own version in `.tool-versions`.
+mise shims are on the login PATH and the Remote Pi supervisor PATH, so daemons
+can run `flutter`/`dart`. Flutter/Dart telemetry is disabled.
+Also installed: `gh`, `git-lfs`, `tmux`, `build-essential`, and Flutter's Linux prerequisites.
+A 4 GiB `/swapfile` (`vm.swappiness=10`) backs the 6 GiB RAM during analyze/test.
+No Android SDK/JDK is installed; APK builds stay in GitHub Actions.
+
+Git uses an ed25519 key at `~/.ssh/id_ed25519`, generated on first run and printed
+by the play; add it to GitHub before pushing. GitHub's host key is pinned in
+`known_hosts`.
+
+```bash
+ansible-playbook playbooks/setup.yml --tags dev_tools
+```
+
 ## Remote Pi
 
 Remote Pi 0.7.0 is installed as `npm:remote-pi@0.7.0`. Ansible manages its
 `remote-pi-supervisord.service` user unit and enables lingering so the supervisor
-survives logout and starts after reboot. No agent daemon is registered yet.
+survives logout and starts after reboot. No daemon is registered
+yet; pair and register one manually (not managed by Ansible).
 The `remote-pi` CLI is linked into `~/.local/bin`.
 
 To install/update only Remote Pi without reapplying model configuration:
@@ -111,13 +131,10 @@ Docs: https://remote-pi.jacobmoura.work/remote-pi
 
 ## Deployment status
 
-VM 109 was created on Jupiter at `192.168.1.148`; DNS and Ansible deployment
-completed. The retired VMs and their managed DNS/snippets were deleted; backup
-buckets/users were retained. A full Terraform plan was blocked by unreachable
-Pluto, so apply used a reviewed, refreshing plan targeted to these VM changes.
-A subsequent targeted apply retired `windrose`, `kite`, `agent0`,
-`valheim-speedrun`, and `valheim-rivers` (15 resources deleted). Their S3 buckets,
-users, policies, and credential outputs were retained unchanged. The post-apply
-targeted plan reported no changes. Qwen passed a live smoke test using the
-dedicated `pass litellm/pi-remote` token, and the Remote Pi supervisor is active.
-Run a full `terraform plan` once Pluto is reachable to check unrelated drift.
+On 2026-10-16 the VM moved from Jupiter (VM 109, 2 vCPU/2 GiB) to Mars as VM 101
+at `192.168.1.151` with 4 vCPU/6 GiB; Jupiter was memory-saturated. Mars and
+Jupiter are standalone nodes, so the move was a targeted destroy with the Jupiter
+provider followed by a targeted create with the Mars provider. The old home
+directory was not migrated. Ansible was rerun in full and converged with no changes.
+A full Terraform plan is still blocked by unreachable Pluto; run one once it is
+reachable to check unrelated drift.

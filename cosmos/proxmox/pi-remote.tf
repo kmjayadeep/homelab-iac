@@ -1,7 +1,7 @@
 resource "proxmox_virtual_environment_vm" "pi_remote" {
-  provider  = proxmox-bpg.jupiter-bpg
+  provider  = proxmox-bpg.mars-bpg
   name      = "pi-remote"
-  node_name = "jupiter"
+  node_name = "mars"
   started   = true
   on_boot   = true
 
@@ -11,12 +11,12 @@ resource "proxmox_virtual_environment_vm" "pi_remote" {
   tags        = ["development", "pi-remote"]
 
   cpu {
-    cores = 2
+    cores = 4
     type  = "host"
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 6144
   }
 
   efi_disk {
@@ -50,10 +50,10 @@ resource "proxmox_virtual_environment_vm" "pi_remote" {
 }
 
 resource "proxmox_virtual_environment_file" "pi_remote_user_data" {
-  provider     = proxmox-bpg.jupiter-bpg
+  provider     = proxmox-bpg.mars-bpg
   content_type = "snippets"
   datastore_id = "nfs-templates"
-  node_name    = "jupiter"
+  node_name    = "mars"
 
   source_raw {
     data = <<-EOF

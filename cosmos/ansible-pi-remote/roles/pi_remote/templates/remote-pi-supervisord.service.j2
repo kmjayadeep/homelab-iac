@@ -10,7 +10,7 @@ Restart=on-failure
 RestartSec=5s
 StandardOutput=journal
 StandardError=journal
-Environment="PATH=/home/{{ pi_remote_user }}/.local/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PATH=/home/{{ pi_remote_user }}/.local/share/mise/shims:/home/{{ pi_remote_user }}/.local/bin:/usr/local/bin:/usr/bin:/bin"
 Environment="HOME=/home/{{ pi_remote_user }}"
 UMask=0077
 
