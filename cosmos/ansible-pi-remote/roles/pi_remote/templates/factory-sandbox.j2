@@ -7,7 +7,7 @@ export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:/usr/local/bin:/usr/
 export CHROMIUM_PATH=/usr/bin/chromium
 export NPM_CONFIG_UPDATE_NOTIFIER=false
 # CI uses the default 8787; builder sessions use their own port so both can run e2e at once.
-export E2E_PORT=8790
+export E2E_PORT="${E2E_PORT:-8790}"
 
 "$@" &
 child=$!
