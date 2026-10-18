@@ -21,6 +21,6 @@ done
 
 # Files copied or created with restrictive modes must stay writable by the controller's group.
 case "$PWD" in
-  {{ app_factory_home }}/work/*|{{ app_factory_home }}/runs/*) chmod -R g+rwX . 2>/dev/null || true ;;
+  {{ app_factory_home }}/work/*|{{ app_factory_home }}/runs/*|{{ app_factory_home }}/evals/*) chmod -R g+rwX . 2>/dev/null || true ;;
 esac
 exit "$rc"
