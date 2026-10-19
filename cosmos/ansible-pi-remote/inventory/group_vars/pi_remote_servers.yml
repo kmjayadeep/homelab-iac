@@ -29,6 +29,7 @@ pi_remote_dev_packages:
   - gh
   - git-lfs
   - libglu1-mesa
+  - psmisc
   - tmux
   - unzip
   - xz-utils
