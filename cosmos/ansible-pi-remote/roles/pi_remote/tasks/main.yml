@@ -78,6 +78,19 @@
   register: pi_remote_installed_version
   changed_when: false
 
+# The postinstall script links the platform's native binary, so scripts stay on.
+- name: Install Claude Code CLI
+  community.general.npm:
+    name: "@anthropic-ai/claude-code"
+    version: "{{ pi_remote_claude_code_version }}"
+    global: true
+    state: present
+
+- name: Verify Claude Code CLI as workspace user
+  ansible.builtin.command: claude --version
+  become_user: "{{ pi_remote_user }}"
+  changed_when: false
+
 - name: Read controller Pi provider configuration
   ansible.builtin.set_fact:
     pi_remote_source_provider: "{{ (lookup('file', pi_remote_models_source_file) | from_json).providers[pi_remote_model_provider] }}"
