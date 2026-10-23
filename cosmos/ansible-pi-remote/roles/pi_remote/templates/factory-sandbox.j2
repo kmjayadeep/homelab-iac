@@ -9,6 +9,8 @@ export NPM_CONFIG_UPDATE_NOTIFIER=false
 # CI uses the default 8787; builder sessions use their own port so both can run e2e at once.
 export E2E_PORT="${E2E_PORT:-8790}"
 
+# Every descendant inherits this marker, even one that detaches into its own session.
+export FACTORY_SANDBOX_ID="$$-$RANDOM$RANDOM"
 "$@" &
 child=$!
 trap 'kill -TERM "$child" 2>/dev/null' TERM INT HUP
@@ -17,6 +19,13 @@ rc=$?
 while kill -0 "$child" 2>/dev/null; do
   wait "$child"
   rc=$?
+done
+
+# Kill whatever the command left behind, such as an e2e web server holding a port CI needs.
+for env in /proc/[0-9]*/environ; do
+  pid="${env#/proc/}"; pid="${pid%/environ}"
+  [ "$pid" = "$$" ] && continue
+  grep -qzx "FACTORY_SANDBOX_ID=$FACTORY_SANDBOX_ID" "$env" 2>/dev/null && kill -KILL "$pid" 2>/dev/null
 done
 
 # Files copied or created with restrictive modes must stay writable by the controller's group.
