@@ -81,3 +81,36 @@
     name: "{{ gh_runner_service.content | b64decode | trim }}"
     enabled: true
     state: started
+
+# /tmp is a small tmpfs. CI and builder runs leave Flutter web-build and Playwright temp dirs
+# behind (up to ~200M each), and once it fills, flutter test hangs or fails.
+- name: Expire stale Flutter and Playwright temp files
+  ansible.builtin.copy:
+    dest: /etc/tmpfiles.d/factory-tmp.conf
+    content: |
+      e /tmp/flutter_tools.* - - - 2h
+      e /tmp/playwright_chromiumdev_profile-* - - - 2h
+      e /tmp/playwright-transform-cache-* - - - 2h
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Create tmpfiles clean timer drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/systemd-tmpfiles-clean.timer.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Clean temp files hourly instead of daily
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/systemd-tmpfiles-clean.timer.d/hourly.conf
+    content: |
+      [Timer]
+      OnUnitActiveSec=
+      OnUnitActiveSec=1h
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart tmpfiles clean timer

@@ -16,3 +16,9 @@
     daemon_reload: true
     state: restarted
   when: app_factory_enabled
+
+- name: Restart tmpfiles clean timer
+  ansible.builtin.systemd_service:
+    name: systemd-tmpfiles-clean.timer
+    daemon_reload: true
+    state: restarted
