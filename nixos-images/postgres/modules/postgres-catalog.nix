@@ -28,6 +28,14 @@
       restorePriority = "high";
     };
 
+    kagent = {
+      owner = "kagent";
+      backup = true;
+      criticality = "P3";
+      extensions = [ "vector" ];
+      restorePriority = "normal";
+    };
+
     k3s = {
       owner = "k3s";
       backup = true;

@@ -55,7 +55,11 @@ variable "external_secrets_roles" {
     }
     kagent = {
       kubernetes_namespace = "kagent"
-      secret_paths         = ["apps/litellm/kagent"]
+      secret_paths = [
+        "apps/litellm/kagent",
+        "services/grafana/kagent",
+        "services/postgresql/kagent",
+      ]
     }
     llm-gateway = {
       kubernetes_namespace = "llm-gateway"
