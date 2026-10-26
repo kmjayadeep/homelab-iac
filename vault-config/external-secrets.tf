@@ -53,6 +53,10 @@ variable "external_secrets_roles" {
         "services/immich/glance",
       ]
     }
+    kagent = {
+      kubernetes_namespace = "kagent"
+      secret_paths         = ["apps/litellm/kagent"]
+    }
     llm-gateway = {
       kubernetes_namespace = "llm-gateway"
       secret_paths         = ["apps/llm-gateway/core"]
@@ -61,6 +65,7 @@ variable "external_secrets_roles" {
       kubernetes_namespace = "litellm"
       secret_paths = [
         "apps/litellm/core",
+        "services/deepseek/litellm",
         "services/postgresql/litellm",
       ]
     }
