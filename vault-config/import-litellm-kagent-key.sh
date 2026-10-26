@@ -21,12 +21,12 @@ printf '%s' "$api_key" | vault kv put -mount=homelab/kv "$secret_path" api_key=-
 unset api_key
 
 vault kv metadata put -mount=homelab/kv \
-  -custom-metadata=description="LiteLLM virtual key restricted to the kagent-default model, used by kagent" \
+  -custom-metadata=description="LiteLLM virtual key (alias kagent) used only by kagent" \
   -custom-metadata=origin=litellm \
   -custom-metadata=owner=litellm \
   -custom-metadata=managed-by=manual \
   -custom-metadata=last-rotated-at="$(date -u +%Y-%m-%d)" \
-  -custom-metadata=scope="litellm-virtual-key;models=kagent-default" \
+  -custom-metadata=scope="litellm-virtual-key;alias=kagent" \
   -custom-metadata=runbook="homelab-k8s plans/0019-kagent-deployment.md" \
   "$secret_path" >/dev/null
 
