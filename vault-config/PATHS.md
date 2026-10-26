@@ -108,6 +108,7 @@ lists property names only, never values.
 | LiteLLM kagent virtual key | `apps/litellm/kagent` | `api_key`; LiteLLM virtual key (alias `kagent`) used only by kagent; the model is chosen in kagent's `ModelConfig`, not by key scope (homelab-k8s plan 0019) |
 | Grafana service-account token for kagent | `services/grafana/kagent` | `token`; Viewer-role Grafana service account used by the Grafana MCP server in the `kagent` namespace (homelab-k8s plan 0020) |
 | kagent PostgreSQL identity | `services/postgresql/kagent` | `password`; host, port, database and username remain in the kagent manifests (homelab-k8s plan 0020) |
+| Telegram bot token for kagent | `services/telegram/kagent-bot` | `token`; BotFather token of the bot that fronts the kagent SRE agent and posts alert investigations (homelab-k8s plan 0020 phase 4) |
 | Open WebUI application secret | `apps/open-webui/core` | `webui_secret_key`; stable random key used to sign sessions and encrypt application data |
 | Hugging Face model-serving identity | `services/huggingface/model-serving` | `token`; ESO maps it to `HF_TOKEN` in each authorized workload namespace |
 | `otpcloud-secret` application item | `apps/otpcloud/core` | `app_key` |
