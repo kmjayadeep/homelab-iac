@@ -106,7 +106,6 @@ lists property names only, never values.
 | LLM gateway client API keys | `apps/llm-gateway/core` | `api_key`; Envoy Gateway validates this key for the stable OpenAI-compatible endpoint |
 | LiteLLM Open WebUI virtual key | `apps/litellm/open-webui` | `api_key`; model-scoped LiteLLM virtual key used only by Open WebUI, never the LiteLLM master key |
 | LiteLLM kagent virtual key | `apps/litellm/kagent` | `api_key`; LiteLLM virtual key restricted to the `kagent-default` model, used only by kagent (homelab-k8s plan 0019) |
-| DeepSeek platform key for LiteLLM | `services/deepseek/litellm` | `api_key`; DeepSeek API key that LiteLLM maps to `DEEPSEEK_API_KEY` for the `deepseek/` provider entries; kagent never reads it |
 | Open WebUI application secret | `apps/open-webui/core` | `webui_secret_key`; stable random key used to sign sessions and encrypt application data |
 | Hugging Face model-serving identity | `services/huggingface/model-serving` | `token`; ESO maps it to `HF_TOKEN` in each authorized workload namespace |
 | `otpcloud-secret` application item | `apps/otpcloud/core` | `app_key` |
