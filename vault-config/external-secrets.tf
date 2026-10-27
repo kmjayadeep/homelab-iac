@@ -60,6 +60,7 @@ variable "external_secrets_roles" {
         "services/grafana/kagent",
         "services/postgresql/kagent",
         "services/telegram/kagent-bot",
+        "services/github/kagent-gitops",
       ]
     }
     llm-gateway = {
