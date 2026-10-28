@@ -16,5 +16,5 @@ module "helios" {
   storage     = "ssd-lvm"
   disk_size   = "100G"
   tags        = "db,postgres"
-  vm_state    = "running"
+  power_state = "running"
 }
