@@ -66,12 +66,11 @@ services:
       - "5000:5000"
     networks:
       - psuite-network
+    # yegle/fava is distroless (no /bin/sh, wget or ls); podman-compose runs
+    # healthcheck CMD through /bin/sh, so every probe failed and leaked an exec
+    # session dir until the root fs ran out of inodes (Apr 2026).
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
+      disable: true
 
 networks:
   psuite-network:
