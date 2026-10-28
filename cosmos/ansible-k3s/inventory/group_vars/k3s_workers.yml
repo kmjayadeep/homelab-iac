@@ -2,7 +2,7 @@
 # K3s Worker Node Configuration
 
 # K3s Version (should match master)
-k3s_version: "v1.33.0+k3s1"
+k3s_version: "v1.34.12+k3s1"
 
 # Master node details
 k3s_master_host: "titania.cosmos.cboxlab.com"
