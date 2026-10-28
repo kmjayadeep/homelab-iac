@@ -38,9 +38,10 @@ consumers. Access remains isolated by path policies. A workload or VM can be
 granted access to an existing owner-based path without copying its value.
 
 Vault uses its in-cluster ServiceAccount token and CA for Kubernetes TokenReview
-requests. Its ServiceAccount must retain `system:auth-delegator`. ESO currently
-connects to Vault over the accepted temporary internal HTTP endpoint; trusted
-internal TLS remains required follow-up work.
+requests. Its ServiceAccount must retain `system:auth-delegator`. ESO connects
+to Vault over internal TLS at `https://vault.vault.svc.cluster.local:8200`,
+trusting the CA that trust-manager publishes as ConfigMap `vault-ca-cert`
+(homelab-k8s plan 0012, completed 2026-10-13); plain HTTP is no longer accepted.
 
 The checked-in `.envrc` loads the current administrative token from `pass` for
 Terraform operations; the token value is never committed. Prefer replacing the
