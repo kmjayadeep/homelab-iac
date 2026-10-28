@@ -106,6 +106,7 @@ lists property names only, never values.
 | LLM gateway client API keys | `apps/llm-gateway/core` | `api_key`; Envoy Gateway validates this key for the stable OpenAI-compatible endpoint |
 | LiteLLM Open WebUI virtual key | `apps/litellm/open-webui` | `api_key`; model-scoped LiteLLM virtual key used only by Open WebUI, never the LiteLLM master key |
 | Google Gemini API key for LiteLLM | `services/gemini/litellm` | `api_key`; Gemini API key that LiteLLM maps to `GEMINI_API_KEY` for the `gemini/` provider entries (embeddings for kagent memory) |
+| kagent UI basic auth | `apps/kagent/ui-basic-auth` | `username`, `password`; HTTP basic-auth credential for the kagent UI Ingress; External Secrets renders the htpasswd Secret from them (homelab-k8s plan 0019 follow-up) |
 | LiteLLM kagent virtual key | `apps/litellm/kagent` | `api_key`; LiteLLM virtual key (alias `kagent`) used only by kagent; the model is chosen in kagent's `ModelConfig`, not by key scope (homelab-k8s plan 0019) |
 | Grafana service-account token for kagent | `services/grafana/kagent` | `token`; Viewer-role Grafana service account used by the Grafana MCP server in the `kagent` namespace (homelab-k8s plan 0020) |
 | kagent PostgreSQL identity | `services/postgresql/kagent` | `password`; host, port, database and username remain in the kagent manifests (homelab-k8s plan 0020) |

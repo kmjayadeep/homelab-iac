@@ -56,6 +56,7 @@ variable "external_secrets_roles" {
     kagent = {
       kubernetes_namespace = "kagent"
       secret_paths = [
+        "apps/kagent/ui-basic-auth",
         "apps/litellm/kagent",
         "services/grafana/kagent",
         "services/postgresql/kagent",
