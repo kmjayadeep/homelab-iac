@@ -52,7 +52,7 @@ variable "ipv4_gw" {
   description = "Ipv4 gateway. Eg: 192.168.1.1"
 }
 
-variable "vm_state" {
+variable "power_state" {
   type    = string
   default = "running"
 }

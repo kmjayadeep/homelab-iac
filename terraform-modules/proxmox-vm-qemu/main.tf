@@ -21,7 +21,7 @@ resource "proxmox_vm_qemu" "this" {
   scsihw                 = "virtio-scsi-single"
   sshkeys                = var.sshkeys
   tablet                 = true
-  vm_state               = var.vm_state
+  power_state            = var.power_state
   tags                   = var.tags
   cpu {
     cores   = var.cores

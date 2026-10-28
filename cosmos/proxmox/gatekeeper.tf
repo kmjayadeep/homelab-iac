@@ -16,5 +16,5 @@ module "gatekeeper" {
   storage     = "ssd-lvm"
   disk_size   = "200G"
   tags        = "dns,proxy"
-  vm_state    = "running"
+  power_state = "running"
 }
