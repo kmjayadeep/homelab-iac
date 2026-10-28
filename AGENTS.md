@@ -126,7 +126,7 @@ consistent with the surrounding files.
 - Custom metadata is non-secret and follows `vault-config/PATHS.md`. Keep `origin`, `owner`, management, and lifecycle fields current.
 - `external_secrets_roles` must grant exact logical paths and bind a dedicated Kubernetes ServiceAccount and namespace.
 - Run `terraform fmt`, `terraform validate`, and review the full plan before apply. Commit the `git-crypt`-protected state after an apply.
-- Vault internal TLS is outstanding; do not remove the documented HTTP exception without updating the Kubernetes stores and validating the CA chain.
+- Vault serves its API over internal TLS only (homelab-k8s plan 0012, completed 2026-10-13); plain HTTP is no longer accepted. Kubernetes `SecretStore`s use `https://vault.vault.svc.cluster.local:8200` and trust the CA certificate that trust-manager publishes as ConfigMap `vault-ca-cert` (key `ca.crt`), so update every store and revalidate the CA chain before changing the listener or certificate configuration.
 
 ### Terraform
 - Use snake_case for resource names, variables, locals, and outputs.
