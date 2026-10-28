@@ -92,8 +92,10 @@ ansible-playbook playbooks/restart.yml
 
 **Update K3s version:**
 ```bash
-# Edit k3s_version in group_vars/k3s.yml first
-ansible-playbook playbooks/update.yml
+# Edit k3s_version in inventory/group_vars/k3s_masters.yml and k3s_workers.yml first
+ansible-playbook playbooks/etcd-snapshot.yml -e snapshot_name=pre-<version>
+ansible-playbook playbooks/update.yml          # server first
+ansible-playbook playbooks/update-workers.yml  # then agents, one at a time
 ```
 
 ### Access the Cluster
@@ -242,9 +244,11 @@ sudo journalctl -u k3s -n 100
 
 ### Update K3s
 
-To update to a new version:
-1. Edit `k3s_version` in `inventory/group_vars/k3s.yml`
-2. Run: `ansible-playbook playbooks/update.yml`
+To update to a new version (one Kubernetes minor at a time, server before agents):
+1. Edit `k3s_version` in `inventory/group_vars/k3s_masters.yml` and `inventory/group_vars/k3s_workers.yml`
+2. Run: `ansible-playbook playbooks/etcd-snapshot.yml -e snapshot_name=pre-<version>`
+3. Run: `ansible-playbook playbooks/update.yml`
+4. Run: `ansible-playbook playbooks/update-workers.yml`
 
 ### Reset K3s
 

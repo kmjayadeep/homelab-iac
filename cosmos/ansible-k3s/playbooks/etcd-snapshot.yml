@@ -1,0 +1,19 @@
+---
+- name: Save a named etcd snapshot
+  hosts: k3s_masters
+  become: true
+
+  vars:
+    snapshot_name: "manual"
+
+  tasks:
+    - name: Save etcd snapshot
+      ansible.builtin.command:
+        cmd: /usr/local/bin/k3s etcd-snapshot save --name {{ snapshot_name }}
+      register: snapshot
+      changed_when: true
+
+    # k3s writes its progress to stderr and nothing to stdout.
+    - name: Display snapshot result
+      ansible.builtin.debug:
+        msg: "{{ (snapshot.stdout_lines + snapshot.stderr_lines) | last }}"
