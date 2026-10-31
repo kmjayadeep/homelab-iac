@@ -5,11 +5,12 @@ Applies to the entire repository unless a deeper `AGENTS.md` exists.
 
 ## Project Overview
 Infrastructure-as-code repo with:
-- Terraform stacks (`cloudflare/`, `hetzner/terraform/`, `cosmos/proxmox/`, `cosmos/pluto/`, `storage/minio/`, `vault-config/`).
+- Terraform stacks (`cloudflare/`, `cosmos/proxmox/`, `cosmos/pluto/`, `storage/minio/`, `vault-config/`).
 - Terraform modules (`terraform-modules/*`).
-- Ansible projects (`cosmos/ansible-k3s/`, `cosmos/ansible-valheim/`, `hetzner/ansible-nova/`).
+- Ansible projects (`cosmos/ansible-k3s/`, `cosmos/ansible-valheim/`).
 - NixOS flake images under `nixos-images/*`.
 - Shell scripts and Justfiles for infra workflows.
+- `archive/` holds decommissioned stacks (not applied, not Renovate-tracked).
 
 ## Commands: Build / Lint / Test
 No dedicated lint/test frameworks were found. Use the scoped commands below to
@@ -23,7 +24,6 @@ Run these in the specific Terraform root directory.
 
 Terraform directories include:
 - `cloudflare/`
-- `hetzner/terraform/`
 - `cosmos/proxmox/`
 - `cosmos/pluto/`
 - `vault-config/`
@@ -75,13 +75,6 @@ From `cosmos/ansible-valheim/`:
   - `ansible-playbook playbooks/stop.yml`
   - `ansible-playbook playbooks/restart.yml`
   - `ansible-playbook playbooks/update.yml`
-- Single host limit: `ansible-playbook playbooks/setup.yml -l host_or_group`
-
-### Ansible (Nova)
-From `hetzner/ansible-nova/`:
-- Deploy: `./deploy.sh`
-- Update containers: `./update.sh`
-- Manual playbook: `ansible-playbook playbooks/setup.yml`
 - Single host limit: `ansible-playbook playbooks/setup.yml -l host_or_group`
 
 ### NixOS images

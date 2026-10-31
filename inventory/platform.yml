@@ -14,8 +14,6 @@ tier_policy:
 locations:
   homelab:
     description: "Primary home environment."
-  hetzner:
-    description: "Hetzner Cloud environment."
   cloudflare:
     description: "Cloudflare DNS/R2 and public edge dependencies."
   unknown:
@@ -162,14 +160,6 @@ network:
       - "hardware.compute.mars"
       - "hardware.compute.jupiter"
       - "hardware.compute.truenas"
-  hetzner_nova_network:
-    kind: "cloud_private_network"
-    cidr: "10.10.0.0/16"
-    subnet: "10.10.0.0/24"
-    location: "hetzner"
-    tier: "P2"
-    known_from:
-      - "hetzner/terraform/network.tf"
 
 storage:
   nfs_templates:
@@ -243,15 +233,6 @@ external:
       - "dns.public_records"
       - "storage.cloudflare_r2_postgres"
       - "certificates.acme_dns_challenge"
-  hetzner:
-    kind: "cloud_provider"
-    location: "hetzner"
-    tier: "P2"
-    role: "Cloud host provider for nova."
-    known_from:
-      - "hetzner/terraform/*.tf"
-    supports:
-      - "vm.nova"
 
 platforms:
   proxmox_cosmos:
@@ -440,28 +421,6 @@ vms:
       - "hardware.compute.jupiter"
       - "network.switch_2_5g"
     backup: "unknown"
-  nova:
-    kind: "hetzner_vm"
-    tier: "P2"
-    role: "Hetzner server running psuite Syncthing, wiki, and Fava behind nginx."
-    location: "hetzner"
-    dns:
-      - "nova.hetzner.cboxlab.com"
-      - "psuite.hetzner.cboxlab.com"
-      - "wiki.hetzner.cboxlab.com"
-      - "fava.hetzner.cboxlab.com"
-    known_from:
-      - "hetzner/terraform"
-      - "hetzner/ansible-nova"
-    depends_on:
-      - "external.hetzner"
-      - "external.cloudflare"
-      - "network.hetzner_nova_network"
-    supports:
-      - "service.psuite_syncthing"
-      - "service.psuite_wiki"
-      - "service.psuite_fava"
-    backup: "unknown"
   pi_remote:
     kind: "vm"
     tier: "P3"
@@ -533,24 +492,6 @@ services:
       - "nixos-images/postgres/modules/postgres.nix"
       - "nixos-images/postgres/modules/backup.nix"
       - "docs/platform/postgres.md"
-  psuite_syncthing:
-    tier: "P2"
-    role: "Syncthing data sync on nova."
-    runs_on: "vm.nova"
-    known_from:
-      - "hetzner/ansible-nova/roles/podman/files/compose.yml"
-  psuite_wiki:
-    tier: "P2"
-    role: "SilverBullet wiki on nova."
-    runs_on: "vm.nova"
-    known_from:
-      - "hetzner/ansible-nova/roles/podman/files/compose.yml"
-  psuite_fava:
-    tier: "P2"
-    role: "Fava finance UI on nova."
-    runs_on: "vm.nova"
-    known_from:
-      - "hetzner/ansible-nova/roles/podman/files/compose.yml"
 
 backups:
   vm_pbs:

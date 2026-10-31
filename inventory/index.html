@@ -618,7 +618,6 @@
       { id: "jupiterBox", nodeId: "jupiter", title: "jupiter", note: "Proxmox host on 2.5G switch", className: "hardware", x: 380, y: 170, w: 320, h: 420 },
       { id: "truenasBox", nodeId: "truenas", title: "TrueNAS", note: "NAS on 2.5G switch", className: "hardware", x: 730, y: 170, w: 320, h: 455 },
       { id: "plutoBox", nodeId: "pluto", title: "pluto", note: "PBS target, direct 1G to router", className: "hardware", x: 1080, y: 170, w: 270, h: 180 },
-      { id: "hetznerBox", nodeId: "hetzner", title: "Hetzner", note: "cloud hardware boundary", className: "hardware", x: 1080, y: 380, w: 270, h: 245 },
       { id: "clusterBox", title: "Cross-host platforms", note: "abstractions spanning multiple VMs", className: "network", x: 380, y: 620, w: 670, h: 115 },
       { id: "backupBox", title: "Backup targets", note: "cross-boundary dependencies", className: "network", x: 30, y: 760, w: 1020, h: 115 }
     ];
@@ -627,7 +626,6 @@
       { id: "ispRouter", name: "ISP router + internet", tier: "P0", kind: "network", layer: "hardware", x: 55, y: 80, role: "Internet gateway and router for 192.168.1.0/24. Pluto is directly connected here at 1 Gbps.", known: "user stated + VM gateway values", todos: ["Record router model, DHCP/DNS behavior, firewall rules, port forwards, and failover options."] },
       { id: "switch25g", name: "2.5G switch", tier: "P0", kind: "network", layer: "hardware", x: 315, y: 80, role: "Separate switch connected to ISP router. Mars, Jupiter, and TrueNAS are connected here at 2.5 Gbps.", known: "user stated", todos: ["Record switch model, port map, and exact host ports."] },
       { id: "cloudflare", name: "Cloudflare", tier: "P0", kind: "external", layer: "hardware", x: 690, y: 80, role: "Public DNS, ACME DNS challenge provider, and R2 backup target.", known: "cloudflare/*.tf and ACME integrations" },
-      { id: "hetzner", name: "Hetzner Cloud", tier: "P2", kind: "external", layer: "hardware", x: 920, y: 80, role: "Cloud host provider for nova.", known: "hetzner/terraform" },
 
       { id: "mars", name: "mars hardware", tier: "P0", kind: "hardware", layer: "hardware", groupOnly: true, x: 190, y: 435, role: "Proxmox hardware container for VMs on mars.", known: "cosmos/proxmox/*.tf + user network note", todos: ["Record hardware specs, disks, NICs, UPS, and cluster membership."] },
       { id: "gatekeeperVm", name: "gatekeeper VM", tier: "P0", kind: "vm", layer: "vm", x: 55, y: 315, role: "Dedicated VM for DNS/proxy services.", known: "cosmos/proxmox/gatekeeper.tf + nixos-images/gatekeeper", todos: ["Confirm local DNS clients depend on this VM and document restore path."] },
@@ -652,8 +650,6 @@
       { id: "pluto", name: "pluto hardware", tier: "P1", kind: "hardware", layer: "hardware", groupOnly: true, x: 1215, y: 260, role: "Hardware directly connected to ISP router at 1 Gbps. Runs PBS as a backup target for most VMs.", known: "user stated + cosmos/pluto", todos: ["Record PBS datastore path, retention, prune/verify schedule, and disk layout."] },
       { id: "pbs", name: "PBS", tier: "P1", kind: "backup", layer: "platform", x: 1105, y: 300, role: "Proxmox Backup Server running on pluto; backup target for most VMs.", known: "user stated", todos: ["Record covered VMs, datastore, retention, verify jobs, and restore test status."] },
 
-      { id: "nova", name: "nova VM", tier: "P2", kind: "vm", layer: "vm", x: 1105, y: 425, role: "Hetzner VM running psuite services.", known: "hetzner/terraform + ansible-nova" },
-      { id: "psuiteApps", name: "psuite apps", tier: "P2", kind: "app-group", layer: "app", x: 1105, y: 530, role: "Syncthing, SilverBullet wiki, and Fava inside nova.", known: "hetzner/ansible-nova/roles/podman/files/compose.yml" },
 
       { id: "k3s", name: "K3s platform", tier: "P1", kind: "platform", layer: "platform", x: 425, y: 660, role: "Kubernetes abstraction running over titania-master and titania-worker1.", known: "cosmos/ansible-k3s + nixos-images/k3s", todos: ["Record workloads, ingress, persistent volumes, and cluster backup/restore path."] },
       { id: "k8sApps", name: "Kubernetes apps", tier: "unknown", kind: "app-group", layer: "app", x: 625, y: 660, role: "Apps running on the K3s platform. Names and persistence need inventory.", known: "placeholder from platform scope", todos: ["Record namespaces, ingress names, persistent volumes, and database dependencies."] },
@@ -670,8 +666,6 @@
       { from: "truenas", to: "switch25g", type: "network" },
       { from: "pluto", to: "ispRouter", type: "network" },
       { from: "cloudflare", to: "ispRouter", type: "external" },
-      { from: "hetzner", to: "ispRouter", type: "external" },
-      { from: "nova", to: "hetzner", type: "contains" },
 
       { from: "gatekeeperVm", to: "mars", type: "contains" },
       { from: "heliosVm", to: "mars", type: "contains" },
@@ -684,7 +678,6 @@
       { from: "postgres", to: "heliosVm", type: "contains" },
       { from: "homeAssistantApp", to: "homeAssistantVm", type: "contains" },
       { from: "gameApps", to: "gameVms", type: "contains" },
-      { from: "psuiteApps", to: "nova", type: "contains" },
 
       { from: "nfs", to: "truenas", type: "contains" },
       { from: "dockerJail", to: "truenas", type: "contains" },
@@ -700,7 +693,6 @@
       { from: "postgresBackedApps", to: "postgres", type: "platform" },
       { from: "gameApps", to: "minio", type: "storage" },
       { from: "dnsProxyApp", to: "cloudflare", type: "external" },
-      { from: "psuiteApps", to: "cloudflare", type: "external" },
       { from: "r2", to: "cloudflare", type: "external" },
       { from: "backupPaths", to: "postgres", type: "backup" },
       { from: "backupPaths", to: "pbs", type: "backup" },
