@@ -3,7 +3,6 @@ flowchart LR
     ispRouter["ISP router + internet\n192.168.1.0/24\nP0"]
     switch25g["2.5G switch\nP0"]
     cloudflare["Cloudflare\nDNS / ACME / R2\nP0"]
-    hetzner["Hetzner Cloud\nP2"]
   end
 
   subgraph marsBox["mars hardware\nProxmox host on 2.5G switch"]
@@ -37,11 +36,6 @@ flowchart LR
     pbs["PBS\nbackup target\nP1"]
   end
 
-  subgraph hetznerBox["Hetzner boundary"]
-    nova["nova VM\nP2"]
-    psuite["psuite apps\nP2"]
-  end
-
   subgraph platformApps["Cross-host platforms and app groups"]
     k3s["K3s platform\nP1"]
     k8sApps["Kubernetes apps\nunknown"]
@@ -56,7 +50,6 @@ flowchart LR
   truenas --> switch25g
   pluto --> ispRouter
   cloudflare --> ispRouter
-  hetzner --> ispRouter
 
   gatekeeperVm --> mars
   dnsProxy --> gatekeeperVm
@@ -76,8 +69,6 @@ flowchart LR
   nasRemote --> truenas
 
   pbs --> pluto
-  nova --> hetzner
-  psuite --> nova
 
   mars --> nfs
   jupiter --> nfs
@@ -88,7 +79,6 @@ flowchart LR
   pgApps --> postgres
   games --> minio
   dnsProxy --> cloudflare
-  psuite --> cloudflare
   r2 --> cloudflare
   backups --> postgres
   backups --> pbs
