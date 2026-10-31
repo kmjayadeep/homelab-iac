@@ -72,6 +72,7 @@ variable "external_secrets_roles" {
       kubernetes_namespace = "litellm"
       secret_paths = [
         "apps/litellm/core",
+        "services/deepseek/litellm",
         "services/gemini/litellm",
         "services/postgresql/litellm",
       ]
