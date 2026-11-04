@@ -43,7 +43,7 @@ output "chillyfries_bucket_secret_key" {
 }
 
 output "valheim_nordlys_ip" {
-  value       = proxmox_virtual_environment_vm.valheim_nordlys.ipv4_addresses[1][0]
+  value       = "192.168.1.134"
   description = "IP address of the Valheim Nordlys server"
 }
 
