@@ -15,6 +15,7 @@ See [QUICKSTART.md](QUICKSTART.md) for deployment and routine operations and
 | `valheim-rivers` | Legacy world | Existing host settings |
 | `chillyfries` | Legacy world | Existing host settings |
 | `valheim-nordlys` | Fresh Valheim 1.0 world | Vanilla defaults, Steam over Tailscale |
+| `valheim-nomap` | No-map achievement run (seed `pcgamesn26`) | Hard combat, casual death penalty, 3x resources, casual portals, no map, no build cost, player-based raids; Steam over Tailscale and LAN |
 
 ## Configuration
 
@@ -44,6 +45,12 @@ backend, and allows game traffic through Tailscale and the local
 `192.168.1.0/24` network. Connect through
 `valheim-nordlys-tailscale.cosmos.cboxlab.com:2456` on Tailscale or
 `valheim-nordlys.cosmos.cboxlab.com:2456` on the LAN.
+
+`valheim-nomap` hosts a `nomap` world imported from a client that created it
+with seed `pcgamesn26`, because the server has no seed launch option. Keep its
+`valheim_modifiers` to World Modifiers menu options so the world stays eligible
+for achievements. Connect through `valheim-nomap.cosmos.cboxlab.com:2456` on the
+LAN.
 
 `valheim-speedrun` hosts the imported local `speedrun` world with the same
 private Steam-over-Tailscale configuration. Connect through

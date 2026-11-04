@@ -57,6 +57,21 @@ output "valheim_nordlys_bucket_secret_key" {
   sensitive = true
 }
 
+output "valheim_nomap_ip" {
+  value       = proxmox_virtual_environment_vm.valheim_nomap.ipv4_addresses[1][0]
+  description = "IP address of the Valheim nomap server"
+}
+
+output "valheim_nomap_bucket_access_key" {
+  value     = module.valheim_nomap_s3.access_key
+  sensitive = true
+}
+
+output "valheim_nomap_bucket_secret_key" {
+  value     = module.valheim_nomap_s3.secret_key
+  sensitive = true
+}
+
 output "valheim_speedrun_bucket_access_key" {
   value     = module.valheim_speedrun_s3.access_key
   sensitive = true

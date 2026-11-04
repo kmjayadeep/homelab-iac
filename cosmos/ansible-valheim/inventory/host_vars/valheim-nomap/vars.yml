@@ -1,0 +1,44 @@
+---
+valheim_server_name: "nomap"
+valheim_world_name: "nomap"
+valheim_server_password: "{{ vault_valheim_server_password }}"
+valheim_server_port: 2456
+valheim_public: 0
+valheim_crossplay: false
+valheim_instance_id: ""
+valheim_preset: ""
+# Keep every entry a World Modifiers menu option; other keys permanently block
+# achievements on the world.
+valheim_modifiers:
+  - "-modifier combat hard"
+  - "-modifier deathpenalty casual"
+  - "-modifier resources most"
+  - "-modifier portals casual"
+  - "-setkey nomap"
+  - "-setkey nobuildcost"
+  - "-setkey playerevents"
+valheim_mods_enabled: false
+valheim_game_interface: "tailscale0"
+world_download_enabled: true
+world_download_port: 8000
+world_download_interface: "tailscale0"
+valheim_lan_access_enabled: true
+valheim_lan_interface: "eth0"
+valheim_lan_cidr: "192.168.1.0/24"
+
+tailscale_enabled: true
+tailscale_accept_dns: false
+
+valheim_admin_ids: []
+valheim_permitted_list_enabled: false
+valheim_permitted_ids: []
+
+backup_enabled: true
+backup_schedule: "hourly"
+backup_retention:
+  keep_last: 10
+  keep_daily: 10
+  keep_monthly: 12
+backup_paths:
+  - "{{ valheim_data_dir }}/worlds_local"
+restic_repository: "s3:https://minio.cosmos.cboxlab.com/valheim-nomap-backup"

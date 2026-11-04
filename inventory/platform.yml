@@ -535,6 +535,7 @@ backups:
       - "cosmos/ansible-valheim"
       - "nixos-images/valheim/modules/backup.nix"
       - "cosmos/proxmox/valheim-nordlys.tf"
+      - "cosmos/proxmox/valheim-nomap.tf"
       - "cosmos/proxmox/archived-s3.tf"
     todos:
       - "Confirm whether each active Valheim host uses Ansible or NixOS backup path."
