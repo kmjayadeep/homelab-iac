@@ -290,7 +290,7 @@ function drawObits(data) {
 function drawDesk(data) {
   var box = $("desk");
   var entries = Object.keys(data.cause_tally).sort(function (a, b) { return data.cause_tally[b] - data.cause_tally[a]; });
-  $("leading").textContent = entries.length ? "Leading cause of death: " + CAUSE[entries[0]][0].toLowerCase() + " (" + data.cause_tally[entries[0]] + ")" : "The game doesn't tell the server how anyone died, so friends decide here.";
+  $("leading").textContent = entries.length ? "Leading cause of death: " + CAUSE[entries[0]][0].toLowerCase() + " (" + data.cause_tally[entries[0]] + ")" : "Verdicts are final until someone changes them.";
   if (box.contains(document.activeElement)) return;
   box.textContent = "";
   if (!data.deaths.length) { box.innerHTML = '<p class="empty">No bodies yet. The coroner has gone for chaya.</p>'; return; }
