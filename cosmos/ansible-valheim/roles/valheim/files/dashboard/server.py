@@ -2,7 +2,6 @@
 """Small read-only status page for one Valheim dedicated server."""
 
 import gzip
-import html
 import json
 import os
 import re
@@ -12,7 +11,6 @@ import tarfile
 import tempfile
 import threading
 import time
-import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -30,10 +28,8 @@ UNIT = "valheim"
 BACKUP_UNIT = "backup-valheim.service"
 MAX_EVENTS = 200
 MAX_DEATHS = 300
-STATE_SCHEMA = 3
-MAX_LAST_WORDS = 140
+STATE_SCHEMA = 4
 DEFAULT_DAY_LENGTH = 1800
-STEAM_INTERVAL = 900
 BOSSES = (
     ("defeated_eikthyr", "Eikthyr"),
     ("defeated_gdking", "The Elder"),
@@ -67,12 +63,8 @@ def empty_state():
     return {
         "schema": STATE_SCHEMA, "cursor": None, "players": {}, "sessions": {}, "events": [], "deaths": [],
         "next_death": 1, "next_portrait": 1, "version": "", "ready_at": 0, "verdicts": {}, "bosses": {},
-        "accounts": {}, "achievements": {}, "world_time": 0.0, "world_day": None, "save_number": None,
+        "world_time": 0.0, "world_day": None, "save_number": None,
         "day_length": DEFAULT_DAY_LENGTH,
-        "census": {
-            "raids": 0, "wrong_passwords": 0, "restarts": 0, "peak_players": 0,
-            "locations": 0, "dungeons": 0, "objects": 0,
-        },
     }
 
 
@@ -151,8 +143,6 @@ def process_line(message, ts):
         return
     body = GAME_LINE.sub("", message).strip()
     sessions = state["sessions"]
-    census = state["census"]
-    connected = bool(sessions)
 
     if match := re.match(r"Valheim version: l-(\S+)", body):
         state["version"] = match.group(1)
@@ -160,7 +150,6 @@ def process_line(message, ts):
         clear_sessions(ts)
     elif body == "Game server connected":
         state["ready_at"] = ts
-        census["restarts"] += 1
         add_event(ts, "server", "Server", "Server started and ready")
     elif body == "Shutting down":
         state["ready_at"] = 0
@@ -170,7 +159,6 @@ def process_line(message, ts):
         sessions[match.group(1)] = None
     elif match := re.match(r"Peer (\S+) has wrong password", body):
         sessions.pop(match.group(1), None)
-        census["wrong_passwords"] += 1
         add_event(ts, "player", "Failed", "Someone tried a wrong password")
     elif match := re.match(r"Got character ZDOID from (.+) : (-?\d+):(\d+)$", body):
         name = match.group(1)
@@ -178,14 +166,9 @@ def process_line(message, ts):
             waiting = [steam for steam, known in sessions.items() if known is None]
             if waiting:
                 sessions[waiting[-1]] = name
-                account = state["accounts"].setdefault(waiting[-1], {"characters": [], "last": name})
-                account["last"] = name
-                if name not in account["characters"]:
-                    account["characters"].append(name)
             record = player(name)
             record.update(joined_at=ts, session_deaths=0, alive_since=ts, sessions=record["sessions"] + 1)
             record["first_seen"] = record["first_seen"] or ts
-            census["peak_players"] = max(census["peak_players"], sum(1 for known in sessions.values() if known))
             add_event(ts, "player", "Joined", f"{name} joined", name=name)
         record = player(name)
         record.update(online=True, last_seen=ts)
@@ -207,8 +190,6 @@ def process_line(message, ts):
             if name:
                 end_session(name, ts)
                 add_event(ts, "player", "Left", f"{name} left", name=name)
-    elif match := re.match(r"Connections \d+ ZDOS:(\d+)", body):
-        census["objects"] = int(match.group(1))
     elif match := re.match(r"Time [\d.]+, day:(\d+)\s+nextm:([\d.]+)", body):
         # Sleeping skips to morning, and this line reveals the real day length.
         morning = float(match.group(2))
@@ -216,26 +197,17 @@ def process_line(message, ts):
         if 300 <= length <= 7200:
             state["day_length"] = round(length)
         state["world_time"] = max(state["world_time"], morning)
-    elif connected and body.startswith("Placed location "):
-        census["locations"] += 1
-    elif connected and body.startswith("Generating DG_"):
-        census["dungeons"] += 1
     elif match := re.match(r"Random event set:(\S+)", body):
-        census["raids"] += 1
         add_event(ts, "raid", "Raid", f"Raid started: {match.group(1)}", raid=match.group(1))
 
 
-def set_verdict(death_id, cause=None, words=None):
-    """Record what players said about a death. Returns False if the death is unknown."""
+def set_verdict(death_id, cause):
+    """Record the cause of death that players chose. Returns False if the death is unknown."""
     global state_dirty
     with state_lock:
         for death in state["deaths"]:
             if death["id"] == death_id:
-                verdict = state["verdicts"].setdefault(death_key(death), {})
-                if cause is not None:
-                    verdict["cause"] = cause
-                if words is not None:
-                    verdict["words"] = words
+                state["verdicts"].setdefault(death_key(death), {})["cause"] = cause
                 state_dirty = True
                 return True
     return False
@@ -293,58 +265,6 @@ def read_world_save():
         state_dirty = True
 
 
-def fetch_achievements(steam_id):
-    """Read one account's public Valheim achievements from Steam."""
-    request = urllib.request.Request(
-        f"https://steamcommunity.com/profiles/{steam_id}/stats/892970/achievements/?xml=1",
-        headers={"User-Agent": "valheim-dashboard"},
-    )
-    with urllib.request.urlopen(request, timeout=20) as response:
-        text = response.read(2_000_000).decode("utf-8", "replace")
-    result = []
-    for closed, block in re.findall(r'<achievement closed="(\d)">(.*?)</achievement>', text, re.S):
-        name = re.search(r"<name>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</name>", block, re.S)
-        stamp = re.search(r"<unlockTimestamp>(\d+)</unlockTimestamp>", block)
-        if name:
-            result.append({
-                "name": html.unescape(name.group(1)).strip(),
-                "unlocked": closed == "1",
-                "ts": int(stamp.group(1)) if stamp else 0,
-            })
-    return result
-
-
-def follow_achievements():
-    """Refresh achievements slowly, and report new unlocks as news."""
-    global state_dirty
-    checked = {}
-    while True:
-        with state_lock:
-            accounts = list(state["accounts"])
-        for steam_id in accounts:
-            if time.time() - checked.get(steam_id, 0) < STEAM_INTERVAL:
-                continue
-            checked[steam_id] = time.time()
-            try:
-                fetched = fetch_achievements(steam_id)
-            except (OSError, ValueError) as error:
-                print(f"Could not read achievements: {type(error).__name__}", flush=True)
-                continue
-            if not fetched:
-                continue
-            with state_lock:
-                old = state["achievements"].get(steam_id)
-                if old is not None:
-                    had = {item["name"] for item in old if item["unlocked"]}
-                    who = state["accounts"][steam_id]["last"]
-                    for item in fetched:
-                        if item["unlocked"] and item["name"] not in had:
-                            add_event(item["ts"] or time.time(), "achievement", "Honour", f"{who} earned {item['name']}", name=who, achievement=item["name"])
-                state["achievements"][steam_id] = fetched
-                state_dirty = True
-        time.sleep(30)
-
-
 def journal_field(value):
     if isinstance(value, list):
         return bytes(value).decode("utf-8", "replace")
@@ -382,6 +302,10 @@ def follow_journal():
 def background_work():
     global cpu_percent
     previous = read_cpu()
+    try:
+        read_world_save()
+    except (OSError, ValueError, EOFError, struct.error) as error:
+        print(f"Could not read the world save: {type(error).__name__}", flush=True)
     while True:
         time.sleep(15)
         current = read_cpu()
@@ -481,16 +405,10 @@ def status_payload():
             if verdict.get("cause"):
                 tally[verdict["cause"]] = tally.get(verdict["cause"], 0) + 1
             if len(deaths) < 30:
-                deaths.append({**death, "cause": verdict.get("cause"), "words": verdict.get("words", "")})
+                deaths.append({**death, "cause": verdict.get("cause")})
         total_deaths = sum(details["deaths"] for details in state["players"].values())
         events = list(reversed(sorted(state["events"], key=lambda item: item["ts"])[-60:]))
         bosses = [{"key": key, "name": boss, "ts": state["bosses"].get(key, 0)} for key, boss in BOSSES]
-        accounts = []
-        for steam_id, account in state["accounts"].items():
-            items = state["achievements"].get(steam_id)
-            if items:
-                accounts.append({"characters": account["characters"], "last": account["last"], "achievements": items})
-        census = dict(state["census"])
         world_day = state["world_day"]
         version = state["version"]
     if game.get("ActiveState") != "active":
@@ -511,8 +429,6 @@ def status_payload():
         "total_deaths": total_deaths,
         "cause_tally": tally,
         "bosses": bosses,
-        "accounts": accounts,
-        "census": census,
         "world_day": world_day,
         "causes": CAUSES,
         "world": WORLD_NAME,
@@ -653,22 +569,14 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             body = json.loads(self.rfile.read(length))
-            death_id, cause, words = body["id"], body.get("cause"), body.get("words")
-        except (ValueError, KeyError, TypeError, AttributeError):
-            self.send_json({"error": "Send an id with a cause or last words."}, 400)
+            death_id, cause = body["id"], body["cause"]
+        except (ValueError, KeyError, TypeError):
+            self.send_json({"error": "Send an id and a cause."}, 400)
             return
-        if not isinstance(death_id, int) or (cause is None and words is None):
-            self.send_json({"error": "Send an id with a cause or last words."}, 400)
-            return
-        if cause is not None and cause not in CAUSES:
+        if cause not in CAUSES or not isinstance(death_id, int):
             self.send_json({"error": "That is not a known cause of death."}, 400)
             return
-        if words is not None:
-            if not isinstance(words, str) or len(words) > MAX_LAST_WORDS:
-                self.send_json({"error": f"Last words must be {MAX_LAST_WORDS} characters or fewer."}, 400)
-                return
-            words = " ".join(words.split())
-        if not set_verdict(death_id, cause, words):
+        if not set_verdict(death_id, cause):
             self.send_json({"error": "That death is not on record."}, 404)
             return
         self.send_json({"ok": True})
@@ -707,7 +615,6 @@ def main():
     load_state()
     threading.Thread(target=follow_journal, daemon=True).start()
     threading.Thread(target=background_work, daemon=True).start()
-    threading.Thread(target=follow_achievements, daemon=True).start()
     ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
 
 

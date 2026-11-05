@@ -63,9 +63,6 @@ h2 { margin: 0; font: 400 clamp(1.8rem, 4vw, 2.8rem)/1.1 var(--head); }
 select { font: 600 .95rem var(--body); color: var(--ink); background: var(--paper-2); border: 1.5px solid var(--rule); padding: 5px 6px; max-width: 100%; }
 select.open { border-color: var(--red); color: var(--red); }
 .case { align-items: flex-start; }
-.case .fields { display: grid; gap: 5px; flex: 1 1 200px; min-width: 0; }
-.case input { width: 100%; font: italic 400 .93rem var(--body); color: var(--ink); background: var(--paper-2); border: 1.5px solid var(--soft); padding: 4px 6px; }
-.quote { font-style: italic; color: var(--red); }
 .survivor { display: grid; gap: 2px; margin-top: 3px; font-size: .86rem; font-variant-numeric: tabular-nums; }
 .survivor .track { height: 7px; border: 1px solid var(--rule); background: var(--paper); }
 .survivor .fill { display: block; height: 100%; background: var(--red); }
@@ -75,18 +72,6 @@ select.open { border-color: var(--red); color: var(--red); }
 .boss.down { border-color: var(--red); color: var(--ink); }
 .boss.down span { color: var(--red); font-weight: 700; }
 .boss span { font-size: .84rem; }
-.honours { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 12px 26px; }
-.honour { min-width: 0; border-top: 1px solid var(--rule); padding-top: 6px; }
-.honour .big { font: 400 2rem/1 var(--head); color: var(--red); font-variant-numeric: lining-nums; }
-.honour .track { height: 9px; border: 1px solid var(--rule); margin-block: 4px; background: var(--paper); }
-.honour .fill { display: block; height: 100%; background: var(--red); }
-.honour ul { margin: 4px 0; padding-left: 18px; font-size: .92rem; columns: 2; column-gap: 18px; }
-.honour li.locked { color: var(--ink-2); opacity: .7; }
-summary { cursor: pointer; font-weight: 700; }
-.census { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 22px; margin: 0; }
-.census > div { min-width: 0; border-top: 1px solid var(--soft); padding-top: 4px; }
-.census dt { font-size: .86rem; color: var(--ink-2); font-style: italic; }
-.census dd { margin: 0; font: 400 1.75rem/1.1 var(--head); font-variant-numeric: lining-nums; overflow-wrap: anywhere; }
 .face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.15); }
 .face .cross { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0 26px; margin-top: 14px; }
@@ -152,12 +137,6 @@ label.check { display: inline-flex; gap: 6px; align-items: center; margin-block:
   <div class="section-title"><h2>Forsaken slain</h2><span class="empty" id="boss-line"></span></div>
   <div class="bosses" id="bosses"></div>
 
-  <div class="section-title"><h2>The honours list</h2><span class="empty">Steam achievements, for everyone's whole account</span></div>
-  <div class="honours" id="honours"></div>
-
-  <div class="section-title"><h2>The census</h2></div>
-  <dl class="census" id="census"></dl>
-
   <div class="grid3">
     <div class="col">
       <h3>Classifieds</h3>
@@ -176,7 +155,6 @@ label.check { display: inline-flex; gap: 6px; align-items: center; margin-block:
         <button type="button" class="chip" data-f="death" aria-pressed="false">Deaths</button>
         <button type="button" class="chip" data-f="player" aria-pressed="false">Players</button>
         <button type="button" class="chip" data-f="boss" aria-pressed="false">Bosses</button>
-        <button type="button" class="chip" data-f="achievement" aria-pressed="false">Honours</button>
         <button type="button" class="chip" data-f="raid" aria-pressed="false">Raids</button>
         <button type="button" class="chip" data-f="server" aria-pressed="false">Server</button>
       </div>
@@ -222,13 +200,20 @@ var HEADS = [
   "Polandine patti mindaruthu: {n} is dead",
   "\"Thomas Kutty vitto da,\" witnesses told {n}. Too late"
 ];
-var DECKS = [
-  "Authorities blame the lack of a map. Friends blame {n}.",
-  "The family has asked everyone to stop laughing.",
-  "Police say the investigation is complete, and that it was a skill issue.",
-  "Odin was unavailable for comment and has stopped answering calls from {n}."
+var LAST_WORDS = [
+  "Ellam sariyakum.",
+  "Ithu Dubai alle?",
+  "Polandine patti oraksharam mindaruthu.",
+  "Thomas Kutty vitto da!",
+  "Ee buddhi enthe nerathe thonniyilla?",
+  "Nee po mone Dinesha!",
+  "Chodichu vaangiyathaanu.",
+  "Pani paali.",
+  "Sambhavam kayyil ninnu poyi.",
+  "Ayyo, ente ammo!",
+  "Vazhi thetti.",
+  "Daivame, kaathone."
 ];
-var EPITAPHS = ["Ithu Dubai alle?", "Vazhi thetti. Last seen walking confidently the wrong way.", "Ellam sariyakum, the deceased said, and was wrong.", "Survived by one very confused longship."];
 var TITLES = ["Valhalla's regular", "Odin knows this one by name", "Still has some hope", "Barely trying"];
 var JOINS = ["{n} arrives, despite warnings.", "{n} joins. Map still missing.", "{n} logs in. Trolls notified.", "{n} is back. Next of kin informed in advance."];
 var LEAVES = ["{n} leaves the world, alive for once.", "{n} has gone home for kanji.", "{n} logs off. Tombstones left behind.", "{n} leaves. The boars are celebrating."];
@@ -279,6 +264,7 @@ function copy(text, label) {
   field.remove();
   toast(copied ? "Copied " + label : "This browser blocked copying. Copy it by hand: " + text);
 }
+function lastWords(d) { return pick(LAST_WORDS, d.id - 1); }
 function deathHeadline(d) { return fill(d.cause ? CAUSE[d.cause][1] : pick(HEADS, d.id - 1), d.name); }
 
 function drawLead(data) {
@@ -289,7 +275,7 @@ function drawLead(data) {
   $("flash").textContent = data.state === "offline" ? "Presses stopped: server offline" : data.state === "starting" ? "Presses warming up" : raiding ? "Raid at the base" : slain ? slain.name + " is dead" : "Breaking";
   if (d) {
     $("headline").textContent = deathHeadline(d);
-    $("deck").textContent = "Death number " + d.number + " for " + d.name + ", " + ago(d.ts, data.now) + ". " + (d.words ? "Last words: \u201c" + d.words + "\u201d" : fill(pick(DECKS, d.id), d.name));
+    $("deck").textContent = "Death number " + d.number + " for " + d.name + ", " + ago(d.ts, data.now) + ". " + "Last words: \u201c" + lastWords(d) + "\u201d";
     $("caption").textContent = "File photo: " + d.name + ", moments before the incident.";
   } else {
     $("headline").textContent = "Everyone still alive. Editors suspicious";
@@ -329,8 +315,11 @@ function drawObits(data) {
     el.querySelector(".fill").style.width = (100 * streak / 30) + "%";
     var last = lastByName[p.name];
     var text = el.querySelector(".text");
-    if (last && last.words) { text.className = "text quote"; text.textContent = "Last words: \u201c" + last.words + "\u201d"; }
-    else text.textContent = !dead ? "Still alive. Nobody knows how. An inquiry has been opened." : last && last.cause ? CAUSE[last.cause][2] : pick(EPITAPHS, (last ? last.id : i));
+    if (last) {
+      text.textContent = (last.cause ? CAUSE[last.cause][2] + " " : "") + "Last words: \u201c" + lastWords(last) + "\u201d";
+    } else {
+      text.textContent = dead ? "Last words: lost to history." : "Still alive. Nobody knows how. An inquiry has been opened.";
+    }
     box.append(el);
   });
 }
@@ -354,19 +343,13 @@ function drawDesk(data) {
     sel.add(none);
     data.causes.forEach(function (c) { sel.add(new Option(CAUSE[c] ? CAUSE[c][0] : c, c)); });
     sel.value = d.cause || "";
-    sel.addEventListener("change", function () { verdict(d, { cause: sel.value }, "Verdict recorded: " + CAUSE[sel.value][0].toLowerCase() + "."); });
-    var words = document.createElement("input"), fields = document.createElement("div");
-    words.id = "words-" + d.id; words.maxLength = 140; words.value = d.words || ""; words.placeholder = "Last words?";
-    words.setAttribute("aria-label", "Last words for " + d.name + ", death " + d.number);
-    words.addEventListener("change", function () { verdict(d, { words: words.value }, "Last words printed."); });
-    fields.className = "fields"; fields.append(sel, words);
-    row.append(info, fields);
+    sel.addEventListener("change", function () { verdict(d, sel.value, "Verdict recorded: " + CAUSE[sel.value][0].toLowerCase() + "."); });
+    row.append(info, sel);
     box.append(row);
   });
 }
-function verdict(d, change, message) {
-  change.id = d.id;
-  fetch("/api/verdict", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(change) })
+function verdict(d, cause, message) {
+  fetch("/api/verdict", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: d.id, cause: cause }) })
     .then(function (r) { if (!r.ok) throw new Error(); toast(message); if (document.activeElement) document.activeElement.blur(); refreshStatus(); })
     .catch(function () { toast("The coroner couldn't save that. Try again."); });
 }
@@ -384,53 +367,10 @@ function drawBosses(data) {
     box.append(el);
   });
 }
-function drawHonours(data) {
-  var box = $("honours");
-  var open = {};
-  box.querySelectorAll("details[open]").forEach(function (o) { open[o.dataset.k] = true; });
-  box.textContent = "";
-  if (!data.accounts.length) { box.innerHTML = '<p class="empty">The honours committee is still reading Steam.</p>'; return; }
-  data.accounts.forEach(function (a) {
-    var won = a.achievements.filter(function (x) { return x.unlocked; }), total = a.achievements.length, key = a.characters.join("|");
-    var el = document.createElement("article"), who = document.createElement("b"), big = document.createElement("div"), track = document.createElement("div"), fill = document.createElement("span"), recent = document.createElement("div"), more = document.createElement("details"), sum = document.createElement("summary"), list = document.createElement("ul");
-    el.className = "honour";
-    who.textContent = a.characters.join(", ");
-    big.className = "big"; big.textContent = won.length + " of " + total;
-    track.className = "track"; fill.className = "fill"; fill.style.width = (total ? 100 * won.length / total : 0) + "%"; track.append(fill);
-    var latest = won.slice().sort(function (x, y) { return y.ts - x.ts; }).slice(0, 3).map(function (x) { return x.name; });
-    recent.textContent = won.length ? "Latest: " + latest.join(", ") : "Nothing yet, or this Steam profile keeps its game details private.";
-    sum.textContent = "All achievements";
-    more.dataset.k = key; more.open = !!open[key];
-    a.achievements.slice().sort(function (x, y) { return y.unlocked - x.unlocked; }).forEach(function (x) { var li = document.createElement("li"); li.textContent = x.name; if (!x.unlocked) li.className = "locked"; list.append(li); });
-    more.append(sum, list);
-    el.append(who, big, track, recent, more);
-    box.append(el);
-  });
-}
-function drawCensus(data) {
-  var c = data.census, played = data.players.reduce(function (s, p) { return s + p.played; }, 0);
-  var hardest = data.players.slice().sort(function (a, b) { return b.longest_life - a.longest_life; })[0];
-  var rows = [
-    ["Vikings lost", data.total_deaths],
-    ["Hours wasted, collectively", (played / 3600).toFixed(1)],
-    ["In-game days", data.world_day === null ? "–" : data.world_day],
-    ["Longest life", hardest && hardest.longest_life > 60 ? duration(hardest.longest_life) + ", " + hardest.name : "–"],
-    ["Most Vikings at once", c.peak_players],
-    ["Raids endured", c.raids],
-    ["Places stumbled upon", c.locations],
-    ["Dungeons found by accident", c.dungeons],
-    ["Things in the world", c.objects.toLocaleString()],
-    ["Wrong passwords", c.wrong_passwords],
-    ["Server restarts", c.restarts]
-  ];
-  var box = $("census"); box.textContent = "";
-  rows.forEach(function (r) { var d = document.createElement("div"), t = document.createElement("dt"), v = document.createElement("dd"); t.textContent = r[0]; v.textContent = r[1]; d.append(t, v); box.append(d); });
-}
 function newsText(e) {
   var n = e.name || "", seed = Math.floor(e.ts);
   if (e.kind === "death") { var d = latest.deaths.filter(function (x) { return x.id === e.death_id; })[0]; return d ? deathHeadline(d) + "." : n + " died."; }
   if (e.kind === "boss") return e.boss + " is dead, with the survivors already exaggerating. Trophy to follow.";
-  if (e.kind === "achievement") return n + " has earned " + e.achievement + ". The committee is as surprised as anyone.";
   if (e.label === "Joined") return fill(pick(JOINS, seed), n);
   if (e.label === "Left") return fill(pick(LEAVES, seed), n);
   if (e.label === "Failed") return "Someone tried a wrong password. Police are looking for a person who cannot read.";
@@ -471,7 +411,7 @@ function draw(data) {
   var top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0], day = Math.floor(data.now / 86400);
   $("ad").textContent = fill(pick(ADS, day), top ? top.name : "the editor");
   $("forecast").textContent = pick(FORECASTS, day);
-  drawLead(data); drawObits(data); drawDesk(data); drawBosses(data); drawHonours(data); drawCensus(data); drawNews();
+  drawLead(data); drawObits(data); drawDesk(data); drawBosses(data); drawNews();
   var newest = data.deaths[0] ? data.deaths[0].id : 0;
   if (lastDeathId !== null && newest > lastDeathId) {
     toast("Stop the press: " + data.deaths[0].name + " is dead");
