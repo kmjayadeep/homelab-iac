@@ -49,8 +49,9 @@ backend, and allows game traffic through Tailscale and the local
 `valheim-nomap` hosts a `nomap` world imported from a client that created it
 with seed `pcgamesn26`, because the server has no seed launch option. Keep its
 `valheim_modifiers` to World Modifiers menu options so the world stays eligible
-for achievements. Connect through `valheim-nomap.cosmos.cboxlab.com:2456` on the
-LAN.
+for achievements. Connect through
+`valheim-nomap-tailscale.cosmos.cboxlab.com:2456` on Tailscale or
+`valheim-nomap.cosmos.cboxlab.com:2456` on the LAN.
 
 `valheim-speedrun` hosts the imported local `speedrun` world with the same
 private Steam-over-Tailscale configuration. Connect through
