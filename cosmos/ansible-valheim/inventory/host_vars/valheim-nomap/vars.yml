@@ -10,13 +10,13 @@ valheim_preset: ""
 # Keep every entry a World Modifiers menu option; other keys permanently block
 # achievements on the world.
 valheim_modifiers:
+  # Rebuild the world keys from this list on every boot.
+  - "-resetmodifiers"
   - "-modifier combat hard"
   - "-modifier deathpenalty casual"
-  - "-modifier resources most"
   - "-modifier portals casual"
   - "-setkey nomap"
   - "-setkey nobuildcost"
-  - "-setkey playerevents"
 valheim_mods_enabled: false
 valheim_game_interface: "tailscale0"
 world_download_enabled: true

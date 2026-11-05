@@ -103,6 +103,16 @@ resource "cloudflare_dns_record" "valheim_nomap" {
   ttl     = 300
 }
 
+resource "cloudflare_dns_record" "valheim_nomap_tailscale" {
+  zone_id = var.cloudflare_zone_id
+  name    = "valheim-nomap-tailscale.cosmos.cboxlab.com"
+  type    = "A"
+  comment = "Valheim nomap Tailscale address"
+  content = "100.103.143.87"
+  proxied = false
+  ttl     = 300
+}
+
 module "valheim_nomap_s3" {
   source      = "../../terraform-modules/minio_s3_bucket"
   name        = "valheim-nomap-backup"
