@@ -2,7 +2,8 @@ resource "proxmox_virtual_environment_vm" "valheim_nordlys" {
   provider  = proxmox-bpg.jupiter-bpg
   name      = "valheim-nordlys"
   node_name = "jupiter"
-  started   = true
+  started   = false
+  on_boot   = false
 
   machine     = "q35"
   bios        = "ovmf"
@@ -98,7 +99,7 @@ resource "cloudflare_dns_record" "valheim_nordlys" {
   name    = "valheim-nordlys.cosmos.cboxlab.com"
   type    = "A"
   comment = "Valheim Nordlys LAN address"
-  content = proxmox_virtual_environment_vm.valheim_nordlys.ipv4_addresses[1][0]
+  content = "192.168.1.134"
   proxied = false
   ttl     = 300
 }

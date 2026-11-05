@@ -43,7 +43,7 @@ output "chillyfries_bucket_secret_key" {
 }
 
 output "valheim_nordlys_ip" {
-  value       = proxmox_virtual_environment_vm.valheim_nordlys.ipv4_addresses[1][0]
+  value       = "192.168.1.134"
   description = "IP address of the Valheim Nordlys server"
 }
 
@@ -54,6 +54,21 @@ output "valheim_nordlys_bucket_access_key" {
 
 output "valheim_nordlys_bucket_secret_key" {
   value     = module.valheim_nordlys_s3.secret_key
+  sensitive = true
+}
+
+output "valheim_nomap_ip" {
+  value       = proxmox_virtual_environment_vm.valheim_nomap.ipv4_addresses[1][0]
+  description = "IP address of the Valheim nomap server"
+}
+
+output "valheim_nomap_bucket_access_key" {
+  value     = module.valheim_nomap_s3.access_key
+  sensitive = true
+}
+
+output "valheim_nomap_bucket_secret_key" {
+  value     = module.valheim_nomap_s3.secret_key
   sensitive = true
 }
 
