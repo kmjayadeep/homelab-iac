@@ -39,8 +39,8 @@ figcaption { font-size: .85rem; font-style: italic; padding-top: 4px; }
 h2 { margin: 0; font: 400 clamp(1.8rem, 4vw, 2.8rem)/1.1 var(--head); }
 .section-title .ml { font: 800 clamp(1.2rem, 3vw, 1.9rem)/1.3 var(--ml); color: var(--red); }
 .obits { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; }
-.obit { border: 3px double var(--rule); background: var(--paper-2); padding: 10px; display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 4px 10px; align-content: start; min-width: 0; }
-.obit.first { grid-column: 1 / -1; border: 5px double var(--red); grid-template-columns: 124px minmax(0, 1fr); padding: 14px; }
+.obit { border: 3px double var(--rule); background: var(--paper-2); padding: 10px; display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 4px 10px; align-content: start; min-width: 0; }
+.obit.first { grid-column: 1 / -1; border: 5px double var(--red); grid-template-columns: 220px minmax(0, 1fr); padding: 14px; }
 .obit > div { min-width: 0; }
 .face { width: 100%; aspect-ratio: 4 / 5; position: relative; background: #bdb59d; border: 1px solid var(--rule); overflow: hidden; }
 .face svg { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -72,8 +72,8 @@ select.open { border-color: var(--red); color: var(--red); }
 .boss.down { border-color: var(--red); color: var(--ink); }
 .boss.down span { color: var(--red); font-weight: 700; }
 .boss span { font-size: .84rem; }
-.face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.15); }
-.face .cross { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+.photo img, .face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo.art::after, .face.art::after { opacity: .07; }
 .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0 26px; margin-top: 14px; }
 .col { min-width: 0; padding-block: 8px; border-top: 3px solid var(--rule); }
 h3 { margin: 0 0 6px; font: 400 1.55rem/1.1 var(--head); }
@@ -100,7 +100,7 @@ input[type=search] { width: 100%; font: 400 1rem var(--body); background: var(--
 label.check { display: inline-flex; gap: 6px; align-items: center; margin-block: 6px; margin-right: 8px; }
 .empty { font-style: italic; color: var(--ink-2); }
 #toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper-2); padding: 9px 14px; font-weight: 600; z-index: 9; max-width: calc(100% - 32px); }
-@media (max-width: 700px) { .lead { grid-template-columns: minmax(0, 1fr); } .obit.first { grid-template-columns: 92px minmax(0, 1fr); } }
+@media (max-width: 700px) { .lead { grid-template-columns: minmax(0, 1fr); } .obit.first { grid-template-columns: 120px minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
@@ -182,7 +182,9 @@ var CAUSE = {
   greydwarf: ["A greydwarf", "{n} defeated by angry shrubbery", "Outfought by a very small forest person."],
   neck: ["A Neck (shame)", "Neck kills {n}. Family asks for privacy", "Killed by a Neck. Please do not bring it up."],
   boar: ["A boar", "Boar claims {n}. Pork prices unaffected", "Taken by a boar. Bacon was not avenged."],
-  fall: ["Gravity", "{n} discovers gravity the hard way", "Walked off something high with great confidence."],
+  deathsquito: ["A deathsquito", "Mosquito kills grown Viking. {n} named in report", "Taken by a very large mosquito. Odomos was not available."],
+  mountain: ["Fell off a mountain", "{n} discovers gravity. Seagull saw everything", "Walked off a mountain with great confidence."],
+  building: ["Fell off own building", "{n} killed by own house. Builder blames builder", "Built it free of charge. It was worth every coin."],
   drowned: ["Drowned", "{n} drowned. Ithu Dubai alle, witnesses heard", "Tried to reach Dubai by swimming. Gafoorka denies everything."],
   swamp: ["The swamp", "Swamp 1, {n} 0. Nobody is surprised", "Went into the swamp. That was the whole plan."],
   raid: ["A raid", "{n} killed defending base that was already on fire", "Died a hero, according to nobody."],
@@ -231,6 +233,26 @@ var FORECASTS = [
   "Your stars today: avoid water, heights, trees and your friends.",
   "Your stars today: a tall stranger will fall on you. It is a birch."
 ];
+var ART = ["tree", "swamp", "deathsquito", "mountain", "boar", "building"];
+var causeInfo = function (c) { return CAUSE[c] || CAUSE.mystery; };
+/* The matching picture when the cause has one, otherwise a stable random pick for that death. */
+function artFor(d) {
+  if (ART.indexOf(d.cause) > -1) return d.cause;
+  var mixed = (Math.imul(d.id, 2654435761) >>> 0) % 4294967291;
+  return ART[mixed % ART.length];
+}
+function setArt(box, d, fallback) {
+  var name = artFor(d), src = "/art/" + name + ".jpg";
+  var now = box.querySelector("img");
+  if (now && now.getAttribute("src") === src) return;
+  var img = new Image();
+  img.alt = "Illustration of how " + d.name + " died";
+  img.onerror = function () { box.classList.remove("art"); box.innerHTML = fallback; };
+  img.src = src;
+  box.textContent = "";
+  box.classList.add("art");
+  box.append(img);
+}
 var fill = function (t, name) { return t.replace(/\{n\}/g, name); };
 
 function viking(crossed, fit) {
@@ -265,7 +287,7 @@ function copy(text, label) {
   toast(copied ? "Copied " + label : "This browser blocked copying. Copy it by hand: " + text);
 }
 function lastWords(d) { return pick(LAST_WORDS, d.id - 1); }
-function deathHeadline(d) { return fill(d.cause ? CAUSE[d.cause][1] : pick(HEADS, d.id - 1), d.name); }
+function deathHeadline(d) { return fill(d.cause ? causeInfo(d.cause)[1] : pick(HEADS, d.id - 1), d.name); }
 
 function drawLead(data) {
   var d = data.deaths[0], top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0];
@@ -276,13 +298,14 @@ function drawLead(data) {
   if (d) {
     $("headline").textContent = deathHeadline(d);
     $("deck").textContent = "Death number " + d.number + " for " + d.name + ", " + ago(d.ts, data.now) + ". " + "Last words: \u201c" + lastWords(d) + "\u201d";
-    $("caption").textContent = "File photo: " + d.name + ", moments before the incident.";
+    $("caption").textContent = "Scene of the incident, as drawn by our court artist. " + d.name + " declined to pose.";
+    setArt($("photo"), d, viking(false, "meet"));
   } else {
     $("headline").textContent = "Everyone still alive. Editors suspicious";
     $("deck").textContent = "No deaths reported on this world. Reporters have been sent to the swamp to help things along.";
     $("caption").textContent = top ? "File photo: " + top.name + ", still breathing, for now." : "File photo: a Viking. Name withheld until something happens.";
   }
-  if (!$("photo").firstChild) $("photo").innerHTML = viking(false, "meet");
+  if (!d && !$("photo").querySelector("svg")) { $("photo").classList.remove("art"); $("photo").innerHTML = viking(false, "meet"); }
 }
 function drawObits(data) {
   var box = $("obits"), list = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths || b.played - a.played; });
@@ -294,8 +317,9 @@ function drawObits(data) {
     var el = document.createElement("article"), dead = p.deaths > 0;
     el.className = "obit" + (i === 0 && dead ? " first" : "");
     el.dataset.name = p.name;
-    var faceHtml = p.portrait ? '<img alt="" src="/portrait/' + Number(p.portrait) + '">' + (dead ? '<svg class="cross" viewBox="0 0 100 125" preserveAspectRatio="none" aria-hidden="true"><path fill="none" stroke="#b5141c" stroke-width="4" d="M4 4 96 121M96 4 4 121"/></svg>' : "") : viking(dead, "slice");
-    el.innerHTML = '<div class="face">' + faceHtml + '</div><div><span class="ml" lang="ml"></span><div class="who"></div><div class="n"></div><div class="title"></div><div class="meta"></div><div class="survivor"><span class="sv-text"></span><span class="track"><span class="fill"></span></span></div></div><p class="text"></p>';
+    var known = lastByName[p.name];
+    el.innerHTML = '<div class="face">' + viking(dead, "slice") + '</div><div><span class="ml" lang="ml"></span><div class="who"></div><div class="n"></div><div class="title"></div><div class="meta"></div><div class="survivor"><span class="sv-text"></span><span class="track"><span class="fill"></span></span></div></div><p class="text"></p>';
+    if (known) setArt(el.querySelector(".face"), known, viking(true, "slice"));
     el.querySelector(".ml").textContent = dead ? "ചരമം" : "ജീവനോടെ";
     var who = el.querySelector(".who");
     if (p.online) { var dot = document.createElement("span"); dot.className = "dot"; dot.title = "Online now"; who.append(dot); }
@@ -316,7 +340,7 @@ function drawObits(data) {
     var last = lastByName[p.name];
     var text = el.querySelector(".text");
     if (last) {
-      text.textContent = (last.cause ? CAUSE[last.cause][2] + " " : "") + "Last words: \u201c" + lastWords(last) + "\u201d";
+      text.textContent = (last.cause ? causeInfo(last.cause)[2] + " " : "") + "Last words: \u201c" + lastWords(last) + "\u201d";
     } else {
       text.textContent = dead ? "Last words: lost to history." : "Still alive. Nobody knows how. An inquiry has been opened.";
     }
@@ -326,7 +350,7 @@ function drawObits(data) {
 function drawDesk(data) {
   var box = $("desk");
   var entries = Object.keys(data.cause_tally).sort(function (a, b) { return data.cause_tally[b] - data.cause_tally[a]; });
-  $("leading").textContent = entries.length ? "Leading cause of death: " + CAUSE[entries[0]][0].toLowerCase() + " (" + data.cause_tally[entries[0]] + ")" : "Verdicts are final until someone changes them.";
+  $("leading").textContent = entries.length ? "Leading cause of death: " + causeInfo(entries[0])[0].toLowerCase() + " (" + data.cause_tally[entries[0]] + ")" : "Verdicts are final until someone changes them.";
   if (box.contains(document.activeElement)) return;
   box.textContent = "";
   if (!data.deaths.length) { box.innerHTML = '<p class="empty">No bodies yet. The coroner has gone for chaya.</p>'; return; }
@@ -341,9 +365,9 @@ function drawDesk(data) {
     var none = new Option("Who did it?", "");
     none.disabled = true;
     sel.add(none);
-    data.causes.forEach(function (c) { sel.add(new Option(CAUSE[c] ? CAUSE[c][0] : c, c)); });
+    data.causes.forEach(function (c) { sel.add(new Option(causeInfo(c)[0], c)); });
     sel.value = d.cause || "";
-    sel.addEventListener("change", function () { verdict(d, sel.value, "Verdict recorded: " + CAUSE[sel.value][0].toLowerCase() + "."); });
+    sel.addEventListener("change", function () { verdict(d, sel.value, "Verdict recorded: " + causeInfo(sel.value)[0].toLowerCase() + "."); });
     row.append(info, sel);
     box.append(row);
   });

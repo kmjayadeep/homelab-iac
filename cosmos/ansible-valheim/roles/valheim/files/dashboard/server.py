@@ -39,11 +39,11 @@ BOSSES = (
     ("defeated_queen", "The Queen"),
     ("defeated_fader", "Fader"),
 )
-PORTRAITS_DIR = STATE_DIR / "portraits"
-PORTRAIT_TYPES = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif"}
+ART_DIR = STATE_DIR / "art"
+ART_NAMES = ("tree", "swamp", "deathsquito", "mountain", "boar", "building")
 CAUSES = (
-    "tree", "troll", "greydwarf", "neck", "boar", "fall", "drowned",
-    "swamp", "raid", "boss", "friend", "stupidity", "mystery",
+    "tree", "troll", "greydwarf", "neck", "boar", "deathsquito", "mountain", "building",
+    "drowned", "swamp", "raid", "boss", "friend", "stupidity", "mystery",
 )
 
 GAME_LINE = re.compile(r"^\d\d/\d\d/\d{4} \d\d:\d\d:\d\d: ")
@@ -62,7 +62,7 @@ download_lock = threading.Lock()
 def empty_state():
     return {
         "schema": STATE_SCHEMA, "cursor": None, "players": {}, "sessions": {}, "events": [], "deaths": [],
-        "next_death": 1, "next_portrait": 1, "version": "", "ready_at": 0, "verdicts": {}, "bosses": {},
+        "next_death": 1, "version": "", "ready_at": 0, "verdicts": {}, "bosses": {},
         "world_time": 0.0, "world_day": None, "save_number": None,
         "day_length": DEFAULT_DAY_LENGTH,
     }
@@ -115,9 +115,8 @@ def player(name):
         state["players"][name] = {
             "deaths": 0, "online": False, "last_seen": 0, "first_seen": 0, "joined_at": 0, "played": 0,
             "sessions": 0, "session_deaths": 0, "worst_session": 0, "alive_since": 0, "life_bank": 0,
-            "longest_life": 0, "streak_days": 0, "best_streak": 0, "portrait": state["next_portrait"],
+            "longest_life": 0, "streak_days": 0, "best_streak": 0,
         }
-        state["next_portrait"] += 1
     return state["players"][name]
 
 
@@ -393,10 +392,9 @@ def status_payload():
                 played += max(0, now - details["joined_at"])
             if details["online"] and details["alive_since"]:
                 life += max(0, now - details["alive_since"])
-            portrait = details["portrait"] if portrait_file(details["portrait"]) else None
             players.append({
                 **details, "name": name, "played": played, "current_life": life,
-                "longest_life": max(details["longest_life"], life), "portrait": portrait,
+                "longest_life": max(details["longest_life"], life),
             })
         deaths = []
         tally = {}
@@ -478,14 +476,6 @@ def logs_payload(query):
             continue
         lines.append({"text": line, "noise": noise})
     return {"lines": lines[-500:]}
-
-
-def portrait_file(number):
-    for suffix in PORTRAIT_TYPES:
-        path = PORTRAITS_DIR / f"{number}{suffix}"
-        if path.is_file():
-            return path
-    return None
 
 
 def build_world_archive():
@@ -590,10 +580,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(status_payload())
             elif url.path == "/api/logs":
                 self.send_json(logs_payload(parse_qs(url.query)))
-            elif match := re.fullmatch(r"/portrait/(\d{1,4})", url.path):
-                path = portrait_file(int(match.group(1)))
-                if path:
-                    self.send_bytes(path.read_bytes(), PORTRAIT_TYPES[path.suffix])
+            elif (match := re.fullmatch(r"/art/([a-z]+)\.jpg", url.path)) and match.group(1) in ART_NAMES:
+                path = ART_DIR / f"{match.group(1)}.jpg"
+                if path.is_file():
+                    self.send_bytes(path.read_bytes(), "image/jpeg")
                 else:
                     self.send_json({"error": "Not found"}, 404)
             elif url.path == "/api/password":
