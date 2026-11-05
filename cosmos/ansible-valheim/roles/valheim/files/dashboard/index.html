@@ -62,6 +62,33 @@ h2 { margin: 0; font: 400 clamp(1.8rem, 4vw, 2.8rem)/1.1 var(--head); }
 .case small { display: block; color: var(--ink-2); }
 select { font: 600 .95rem var(--body); color: var(--ink); background: var(--paper-2); border: 1.5px solid var(--rule); padding: 5px 6px; max-width: 100%; }
 select.open { border-color: var(--red); color: var(--red); }
+.case { align-items: flex-start; }
+.case .fields { display: grid; gap: 5px; flex: 1 1 200px; min-width: 0; }
+.case input { width: 100%; font: italic 400 .93rem var(--body); color: var(--ink); background: var(--paper-2); border: 1.5px solid var(--soft); padding: 4px 6px; }
+.quote { font-style: italic; color: var(--red); }
+.survivor { display: grid; gap: 2px; margin-top: 3px; font-size: .86rem; font-variant-numeric: tabular-nums; }
+.survivor .track { height: 7px; border: 1px solid var(--rule); background: var(--paper); }
+.survivor .fill { display: block; height: 100%; background: var(--red); }
+.bosses { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.boss { position: relative; border: 3px double var(--soft); padding: 7px 8px; background: var(--paper-2); color: var(--ink-2); min-width: 0; }
+.boss b { display: block; font: 400 1.15rem/1.15 var(--head); overflow-wrap: anywhere; }
+.boss.down { border-color: var(--red); color: var(--ink); }
+.boss.down span { color: var(--red); font-weight: 700; }
+.boss span { font-size: .84rem; }
+.honours { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 12px 26px; }
+.honour { min-width: 0; border-top: 1px solid var(--rule); padding-top: 6px; }
+.honour .big { font: 400 2rem/1 var(--head); color: var(--red); font-variant-numeric: lining-nums; }
+.honour .track { height: 9px; border: 1px solid var(--rule); margin-block: 4px; background: var(--paper); }
+.honour .fill { display: block; height: 100%; background: var(--red); }
+.honour ul { margin: 4px 0; padding-left: 18px; font-size: .92rem; columns: 2; column-gap: 18px; }
+.honour li.locked { color: var(--ink-2); opacity: .7; }
+summary { cursor: pointer; font-weight: 700; }
+.census { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 22px; margin: 0; }
+.census > div { min-width: 0; border-top: 1px solid var(--soft); padding-top: 4px; }
+.census dt { font-size: .86rem; color: var(--ink-2); font-style: italic; }
+.census dd { margin: 0; font: 400 1.75rem/1.1 var(--head); font-variant-numeric: lining-nums; overflow-wrap: anywhere; }
+.face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.15); }
+.face .cross { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0 26px; margin-top: 14px; }
 .col { min-width: 0; padding-block: 8px; border-top: 3px solid var(--rule); }
 h3 { margin: 0 0 6px; font: 400 1.55rem/1.1 var(--head); }
@@ -101,7 +128,7 @@ label.check { display: inline-flex; gap: 6px; align-items: center; margin-block:
   </header>
   <div class="dateline">
     <span>Server: <b id="s-state">CHECKING</b></span>
-    <span id="s-online">–</span><span id="s-up">–</span><span id="s-version">–</span><span id="s-memory">–</span><span id="s-cpu">–</span>
+    <span id="s-online">–</span><span id="s-day">–</span><span id="s-up">–</span><span id="s-version">–</span><span id="s-memory">–</span><span id="s-cpu">–</span>
   </div>
 
   <section class="lead">
@@ -122,6 +149,15 @@ label.check { display: inline-flex; gap: 6px; align-items: center; margin-block:
   <div class="section-title"><h2>The coroner's desk</h2><span id="leading" class="empty"></span></div>
   <div class="desk" id="desk"></div>
 
+  <div class="section-title"><h2>Forsaken slain</h2><span class="empty" id="boss-line"></span></div>
+  <div class="bosses" id="bosses"></div>
+
+  <div class="section-title"><h2>The honours list</h2><span class="empty">Steam achievements, for everyone's whole account</span></div>
+  <div class="honours" id="honours"></div>
+
+  <div class="section-title"><h2>The census</h2></div>
+  <dl class="census" id="census"></dl>
+
   <div class="grid3">
     <div class="col">
       <h3>Classifieds</h3>
@@ -139,6 +175,8 @@ label.check { display: inline-flex; gap: 6px; align-items: center; margin-block:
         <button type="button" class="chip" data-f="all" aria-pressed="true">All</button>
         <button type="button" class="chip" data-f="death" aria-pressed="false">Deaths</button>
         <button type="button" class="chip" data-f="player" aria-pressed="false">Players</button>
+        <button type="button" class="chip" data-f="boss" aria-pressed="false">Bosses</button>
+        <button type="button" class="chip" data-f="achievement" aria-pressed="false">Honours</button>
         <button type="button" class="chip" data-f="raid" aria-pressed="false">Raids</button>
         <button type="button" class="chip" data-f="server" aria-pressed="false">Server</button>
       </div>
@@ -247,10 +285,11 @@ function drawLead(data) {
   var d = data.deaths[0], top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0];
   var raid = data.events.filter(function (e) { return e.kind === "raid"; })[0];
   var raiding = raid && data.now - raid.ts < 600;
-  $("flash").textContent = data.state === "offline" ? "Presses stopped: server offline" : data.state === "starting" ? "Presses warming up" : raiding ? "Raid at the base" : "Breaking";
+  var slain = data.bosses.filter(function (b) { return b.ts && data.now - b.ts < 3600; })[0];
+  $("flash").textContent = data.state === "offline" ? "Presses stopped: server offline" : data.state === "starting" ? "Presses warming up" : raiding ? "Raid at the base" : slain ? slain.name + " is dead" : "Breaking";
   if (d) {
     $("headline").textContent = deathHeadline(d);
-    $("deck").textContent = "Death number " + d.number + " for " + d.name + ", " + ago(d.ts, data.now) + ". " + fill(pick(DECKS, d.id), d.name);
+    $("deck").textContent = "Death number " + d.number + " for " + d.name + ", " + ago(d.ts, data.now) + ". " + (d.words ? "Last words: \u201c" + d.words + "\u201d" : fill(pick(DECKS, d.id), d.name));
     $("caption").textContent = "File photo: " + d.name + ", moments before the incident.";
   } else {
     $("headline").textContent = "Everyone still alive. Editors suspicious";
@@ -269,7 +308,8 @@ function drawObits(data) {
     var el = document.createElement("article"), dead = p.deaths > 0;
     el.className = "obit" + (i === 0 && dead ? " first" : "");
     el.dataset.name = p.name;
-    el.innerHTML = '<div class="face">' + viking(dead, "slice") + '</div><div><span class="ml" lang="ml"></span><div class="who"></div><div class="n"></div><div class="title"></div><div class="meta"></div></div><p class="text"></p>';
+    var faceHtml = p.portrait ? '<img alt="" src="/portrait/' + Number(p.portrait) + '">' + (dead ? '<svg class="cross" viewBox="0 0 100 125" preserveAspectRatio="none" aria-hidden="true"><path fill="none" stroke="#b5141c" stroke-width="4" d="M4 4 96 121M96 4 4 121"/></svg>' : "") : viking(dead, "slice");
+    el.innerHTML = '<div class="face">' + faceHtml + '</div><div><span class="ml" lang="ml"></span><div class="who"></div><div class="n"></div><div class="title"></div><div class="meta"></div><div class="survivor"><span class="sv-text"></span><span class="track"><span class="fill"></span></span></div></div><p class="text"></p>';
     el.querySelector(".ml").textContent = dead ? "ചരമം" : "ജീവനോടെ";
     var who = el.querySelector(".who");
     if (p.online) { var dot = document.createElement("span"); dot.className = "dot"; dot.title = "Online now"; who.append(dot); }
@@ -280,10 +320,17 @@ function drawObits(data) {
     var hours = p.played / 3600, rate = hours > .05 ? (p.deaths / hours).toFixed(1) + " deaths per hour" : "";
     var meta = ["Played " + duration(p.played), p.online ? "online now" : "seen " + ago(p.last_seen, data.now)];
     if (dead && rate) meta.push(rate);
+    if (p.sessions) meta.push(p.sessions + (p.sessions === 1 ? " visit" : " visits"));
+    if (p.longest_life > 60) meta.push("longest life " + duration(p.longest_life));
     if (p.worst_session > 1) meta.push("worst session " + p.worst_session);
     el.querySelector(".meta").textContent = meta.join(" · ");
+    var streak = Math.min(p.streak_days, 30);
+    el.querySelector(".sv-text").textContent = "Survivor run: day " + p.streak_days + " of 30 (estimate)";
+    el.querySelector(".fill").style.width = (100 * streak / 30) + "%";
     var last = lastByName[p.name];
-    el.querySelector(".text").textContent = !dead ? "Still alive. Nobody knows how. An inquiry has been opened." : last && last.cause ? CAUSE[last.cause][2] : pick(EPITAPHS, (last ? last.id : i));
+    var text = el.querySelector(".text");
+    if (last && last.words) { text.className = "text quote"; text.textContent = "Last words: \u201c" + last.words + "\u201d"; }
+    else text.textContent = !dead ? "Still alive. Nobody knows how. An inquiry has been opened." : last && last.cause ? CAUSE[last.cause][2] : pick(EPITAPHS, (last ? last.id : i));
     box.append(el);
   });
 }
@@ -307,19 +354,83 @@ function drawDesk(data) {
     sel.add(none);
     data.causes.forEach(function (c) { sel.add(new Option(CAUSE[c] ? CAUSE[c][0] : c, c)); });
     sel.value = d.cause || "";
-    sel.addEventListener("change", function () { verdict(d, sel.value); });
-    row.append(info, sel);
+    sel.addEventListener("change", function () { verdict(d, { cause: sel.value }, "Verdict recorded: " + CAUSE[sel.value][0].toLowerCase() + "."); });
+    var words = document.createElement("input"), fields = document.createElement("div");
+    words.id = "words-" + d.id; words.maxLength = 140; words.value = d.words || ""; words.placeholder = "Last words?";
+    words.setAttribute("aria-label", "Last words for " + d.name + ", death " + d.number);
+    words.addEventListener("change", function () { verdict(d, { words: words.value }, "Last words printed."); });
+    fields.className = "fields"; fields.append(sel, words);
+    row.append(info, fields);
     box.append(row);
   });
 }
-function verdict(d, cause) {
-  fetch("/api/verdict", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: d.id, cause: cause }) })
-    .then(function (r) { if (!r.ok) throw new Error(); toast("Verdict recorded: " + CAUSE[cause][0].toLowerCase() + "."); if (document.activeElement) document.activeElement.blur(); refreshStatus(); })
+function verdict(d, change, message) {
+  change.id = d.id;
+  fetch("/api/verdict", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(change) })
+    .then(function (r) { if (!r.ok) throw new Error(); toast(message); if (document.activeElement) document.activeElement.blur(); refreshStatus(); })
     .catch(function () { toast("The coroner couldn't save that. Try again."); });
+}
+var BOSS_QUIPS = ["Odin is said to be mildly impressed.", "The trophy will be mounted somewhere nobody can find without a map.", "Rumours that it tripped remain unconfirmed.", "Survivors are already exaggerating."];
+function drawBosses(data) {
+  var box = $("bosses"), done = data.bosses.filter(function (b) { return b.ts; });
+  box.textContent = "";
+  $("boss-line").textContent = done.length ? done.length + " of " + data.bosses.length + " down. " + pick(BOSS_QUIPS, done.length) : "None down. They have heard of you, and they are not worried.";
+  data.bosses.forEach(function (b) {
+    var el = document.createElement("div"), name = document.createElement("b"), note = document.createElement("span");
+    el.className = "boss" + (b.ts ? " down" : "");
+    name.textContent = b.name;
+    note.textContent = b.ts ? "Slain, " + clock(b.ts) : "Still alive";
+    el.append(name, note);
+    box.append(el);
+  });
+}
+function drawHonours(data) {
+  var box = $("honours");
+  var open = {};
+  box.querySelectorAll("details[open]").forEach(function (o) { open[o.dataset.k] = true; });
+  box.textContent = "";
+  if (!data.accounts.length) { box.innerHTML = '<p class="empty">The honours committee is still reading Steam.</p>'; return; }
+  data.accounts.forEach(function (a) {
+    var won = a.achievements.filter(function (x) { return x.unlocked; }), total = a.achievements.length, key = a.characters.join("|");
+    var el = document.createElement("article"), who = document.createElement("b"), big = document.createElement("div"), track = document.createElement("div"), fill = document.createElement("span"), recent = document.createElement("div"), more = document.createElement("details"), sum = document.createElement("summary"), list = document.createElement("ul");
+    el.className = "honour";
+    who.textContent = a.characters.join(", ");
+    big.className = "big"; big.textContent = won.length + " of " + total;
+    track.className = "track"; fill.className = "fill"; fill.style.width = (total ? 100 * won.length / total : 0) + "%"; track.append(fill);
+    var latest = won.slice().sort(function (x, y) { return y.ts - x.ts; }).slice(0, 3).map(function (x) { return x.name; });
+    recent.textContent = won.length ? "Latest: " + latest.join(", ") : "Nothing yet, or this Steam profile keeps its game details private.";
+    sum.textContent = "All achievements";
+    more.dataset.k = key; more.open = !!open[key];
+    a.achievements.slice().sort(function (x, y) { return y.unlocked - x.unlocked; }).forEach(function (x) { var li = document.createElement("li"); li.textContent = x.name; if (!x.unlocked) li.className = "locked"; list.append(li); });
+    more.append(sum, list);
+    el.append(who, big, track, recent, more);
+    box.append(el);
+  });
+}
+function drawCensus(data) {
+  var c = data.census, played = data.players.reduce(function (s, p) { return s + p.played; }, 0);
+  var hardest = data.players.slice().sort(function (a, b) { return b.longest_life - a.longest_life; })[0];
+  var rows = [
+    ["Vikings lost", data.total_deaths],
+    ["Hours wasted, collectively", (played / 3600).toFixed(1)],
+    ["In-game days", data.world_day === null ? "–" : data.world_day],
+    ["Longest life", hardest && hardest.longest_life > 60 ? duration(hardest.longest_life) + ", " + hardest.name : "–"],
+    ["Most Vikings at once", c.peak_players],
+    ["Raids endured", c.raids],
+    ["Places stumbled upon", c.locations],
+    ["Dungeons found by accident", c.dungeons],
+    ["Things in the world", c.objects.toLocaleString()],
+    ["Wrong passwords", c.wrong_passwords],
+    ["Server restarts", c.restarts]
+  ];
+  var box = $("census"); box.textContent = "";
+  rows.forEach(function (r) { var d = document.createElement("div"), t = document.createElement("dt"), v = document.createElement("dd"); t.textContent = r[0]; v.textContent = r[1]; d.append(t, v); box.append(d); });
 }
 function newsText(e) {
   var n = e.name || "", seed = Math.floor(e.ts);
   if (e.kind === "death") { var d = latest.deaths.filter(function (x) { return x.id === e.death_id; })[0]; return d ? deathHeadline(d) + "." : n + " died."; }
+  if (e.kind === "boss") return e.boss + " is dead, with the survivors already exaggerating. Trophy to follow.";
+  if (e.kind === "achievement") return n + " has earned " + e.achievement + ". The committee is as surprised as anyone.";
   if (e.label === "Joined") return fill(pick(JOINS, seed), n);
   if (e.label === "Left") return fill(pick(LEAVES, seed), n);
   if (e.label === "Failed") return "Someone tried a wrong password. Police are looking for a person who cannot read.";
@@ -349,6 +460,7 @@ function draw(data) {
   var online = data.players.filter(function (p) { return p.online; }).length;
   $("s-online").textContent = online + (online === 1 ? " Viking" : " Vikings") + " online";
   $("s-up").textContent = data.state === "offline" ? "Down" : "Up " + duration(data.now - data.active_since);
+  $("s-day").textContent = data.world_day === null ? "Day unknown" : "World day " + data.world_day;
   $("s-version").textContent = "Version " + (data.version || "unknown");
   $("s-memory").textContent = "Memory " + (data.memory_used / 1073741824).toFixed(1) + " / " + (data.memory_total / 1073741824).toFixed(1) + " GB";
   $("s-cpu").textContent = "CPU " + data.cpu + "%";
@@ -359,7 +471,7 @@ function draw(data) {
   var top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0], day = Math.floor(data.now / 86400);
   $("ad").textContent = fill(pick(ADS, day), top ? top.name : "the editor");
   $("forecast").textContent = pick(FORECASTS, day);
-  drawLead(data); drawObits(data); drawDesk(data); drawNews();
+  drawLead(data); drawObits(data); drawDesk(data); drawBosses(data); drawHonours(data); drawCensus(data); drawNews();
   var newest = data.deaths[0] ? data.deaths[0].id : 0;
   if (lastDeathId !== null && newest > lastDeathId) {
     toast("Stop the press: " + data.deaths[0].name + " is dead");
