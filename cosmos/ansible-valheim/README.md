@@ -15,7 +15,7 @@ See [QUICKSTART.md](QUICKSTART.md) for deployment and routine operations and
 | `valheim-rivers` | Legacy world | Existing host settings |
 | `chillyfries` | Legacy world | Existing host settings |
 | `valheim-nordlys` | Fresh Valheim 1.0 world | Vanilla defaults, Steam over Tailscale |
-| `valheim-nomap` | No-map achievement run (seed `pcgamesn26`) | Hard combat, casual death penalty, 3x resources, casual portals, no map, no build cost, player-based raids; Steam over Tailscale and LAN |
+| `valheim-nomap` | No-map achievement run (seed `pcgamesn26`) | Hard combat, casual death penalty, casual portals, no map, no build cost; Steam over Tailscale and LAN |
 
 ## Configuration
 
