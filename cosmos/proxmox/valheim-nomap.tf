@@ -1,7 +1,7 @@
 resource "proxmox_virtual_environment_vm" "valheim_nomap" {
-  provider  = proxmox-bpg.mars-bpg
+  provider  = proxmox-bpg.jupiter-bpg
   name      = "valheim-nomap"
-  node_name = "mars"
+  node_name = "jupiter"
   started   = true
 
   machine     = "q35"
@@ -27,7 +27,7 @@ resource "proxmox_virtual_environment_vm" "valheim_nomap" {
     datastore_id = "local-lvm"
     import_from  = proxmox_download_file.latest_debian_13_qcow2_img.id
     interface    = "virtio0"
-    size         = 40
+    size         = 100
   }
 
   initialization {
@@ -53,10 +53,10 @@ resource "proxmox_virtual_environment_vm" "valheim_nomap" {
 }
 
 resource "proxmox_virtual_environment_file" "valheim_nomap_user_data" {
-  provider     = proxmox-bpg.mars-bpg
+  provider     = proxmox-bpg.jupiter-bpg
   content_type = "snippets"
   datastore_id = "nfs-templates"
-  node_name    = "mars"
+  node_name    = "jupiter"
 
   source_raw {
     data = <<-EOF
