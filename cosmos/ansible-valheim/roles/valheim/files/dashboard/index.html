@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Valheim Server</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Almendra:wght@700&family=Alegreya+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a longhouse noticeboard. One status band, then join and save side by side, then people and events, then the log as an inset slate. */
+:root {
+  --bg: #e9eef0; --surface: #f6f8f8; --inset: #dce4e7; --fg: #1b2a31; --muted: #566a73; --line: #bccad0;
+  --accent: #98520f; --accent-fg: #fff8ef; --good: #1f7350; --warn: #8f6508; --bad: #ae3a2c; --info: #2c6588;
+  --display: "Almendra", Georgia, serif; --body: "Alegreya Sans", "Segoe UI", sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111b20; --surface: #18252b; --inset: #0c1417; --fg: #e6edef; --muted: #93a7af; --line: #2f424b;
+  --accent: #e39a45; --accent-fg: #201204; --good: #5fcb9d; --warn: #dfb64f; --bad: #ef8474; --info: #79b9dd; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111b20; --surface: #18252b; --inset: #0c1417; --fg: #e6edef; --muted: #93a7af; --line: #2f424b;
+  --accent: #e39a45; --accent-fg: #201204; --good: #5fcb9d; --warn: #dfb64f; --bad: #ef8474; --info: #79b9dd; color-scheme: dark }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 400 1.0625rem/1.45 var(--body); }
+.wrap { max-width: 1120px; margin-inline: auto; padding-block: 16px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 24px; }
+.mock { font-size: .9rem; color: var(--muted); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.mock b { color: var(--warn); font-weight: 700; }
+.band { display: grid; gap: 16px; padding-block: 8px 20px; border-bottom: 2px solid var(--line); }
+.band-top { display: flex; gap: 12px 20px; align-items: center; flex-wrap: wrap; }
+h1 { font: 700 clamp(2.5rem, 7vw, 3.75rem)/1 var(--display); margin: 0; letter-spacing: .01em; }
+.pill { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; padding: 4px 12px; border-radius: 999px; border: 1.5px solid var(--state, var(--muted)); color: var(--state, var(--muted)); }
+.pill i { width: 9px; height: 9px; border-radius: 50%; background: var(--state, var(--muted)); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px 24px; margin: 0; }
+.stats div { min-width: 0; }
+dt { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+dd { margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; font-size: 1.15rem; }
+.cols { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); align-items: start; }
+section { min-width: 0; display: grid; gap: 12px; }
+h2 { font: 700 1.55rem/1.1 var(--display); margin: 0; text-wrap: balance; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.row { display: flex; gap: 8px 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; min-width: 0; }
+.row > div { min-width: 0; }
+.lab { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: block; }
+code { font: 500 .88rem/1.4 var(--mono); overflow-wrap: anywhere; }
+button, .btn { font: 700 .95rem/1.2 var(--body); color: var(--fg); background: transparent; border: 1.5px solid var(--line); border-radius: 5px; padding: 7px 12px; cursor: pointer; text-decoration: none; display: inline-block; }
+button:hover, .btn:hover { border-color: var(--accent); color: var(--accent); }
+.primary { text-align: center; background: var(--accent); border-color: var(--accent); color: var(--accent-fg); padding: 11px 16px; font-size: 1.05rem; }
+.primary:hover { color: var(--accent-fg); filter: brightness(1.08); }
+:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; padding-bottom: 6px; }
+td { padding: 6px 0; border-top: 1px solid var(--line); }
+.num { text-align: right; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; background: var(--muted); }
+.dot.on { background: var(--good); }
+.top { color: var(--accent); font-weight: 700; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { padding: 4px 10px; font-weight: 500; border-radius: 999px; font-size: .88rem; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+ul.events { list-style: none; margin: 0; padding: 0; display: grid; }
+ul.events li { display: grid; grid-template-columns: 3.6rem 4.6rem 1fr; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); align-items: baseline; }
+ul.events time { font: 400 .8rem var(--mono); color: var(--muted); }
+.tag { font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.t-player { color: var(--info); } .t-death { color: var(--bad); } .t-raid { color: var(--warn); } .t-server { color: var(--good); } .t-warn { color: var(--bad); }
+.logs { background: var(--inset); border: 1px solid var(--line); border-radius: 6px; padding: 12px; max-height: 340px; overflow: auto; font: 400 .8rem/1.6 var(--mono); }
+.logs div { white-space: pre-wrap; overflow-wrap: anywhere; }
+.logs .noise { color: var(--muted); }
+.logs .empty { color: var(--muted); }
+.controls { display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; }
+input[type=search] { font: 400 1rem var(--body); color: var(--fg); background: var(--surface); border: 1.5px solid var(--line); border-radius: 5px; padding: 7px 10px; flex: 1 1 200px; min-width: 0; }
+label.check { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.note { color: var(--muted); font-size: .95rem; margin: 0; }
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 6px; font-weight: 500; max-width: calc(100% - 32px); }
+@media (prefers-reduced-motion: no-preference) { .pill i { animation: pulse 2.4s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .35; } } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <p class="mock" id="conn" hidden><b>Connection lost.</b> This page is retrying.</p>
+
+  <header class="band">
+    <div class="band-top">
+      <h1 id="world">Valheim</h1>
+      <span class="pill" id="pill"><i></i><span id="pill-text">Checking</span></span>
+    </div>
+    <dl class="stats">
+      <div><dt>Players</dt><dd id="s-players">–</dd></div>
+      <div><dt>Up for</dt><dd id="s-up">–</dd></div>
+      <div><dt>Version</dt><dd id="s-version">–</dd></div>
+      <div><dt>Memory</dt><dd id="s-memory">–</dd></div>
+      <div><dt>CPU</dt><dd id="s-cpu">–</dd></div>
+    </dl>
+  </header>
+
+  <div class="cols">
+    <section aria-labelledby="h-join">
+      <h2 id="h-join">Join the server</h2>
+      <div class="panel">
+        <div class="row">
+          <div><span class="lab">Server address</span><code id="address">–</code></div>
+          <button type="button" id="copy-address">Copy</button>
+        </div>
+        <div class="row">
+          <div><span class="lab">Server password</span><code>•••••</code></div>
+          <button type="button" id="copy-password">Copy</button>
+        </div>
+        <div class="row">
+          <div><span class="lab">World seed</span><code id="seed">–</code></div>
+          <a class="btn" id="map" href="https://valheim-map.world/" target="_blank" rel="noopener">Open world map ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-save">
+      <h2 id="h-save">World save</h2>
+      <div class="panel">
+        <dl class="stats">
+          <div><dt>Last saved</dt><dd id="s-saved">–</dd></div>
+          <div><dt>World size</dt><dd id="s-size">–</dd></div>
+          <div><dt>Last backup</dt><dd id="s-backup">–</dd></div>
+        </dl>
+        <a class="btn primary" href="/download/world">Download latest save</a>
+        <p class="note">This is the most recent automatic save, so it can be a few minutes behind live play. Unpack the <code>nomap</code> folder into your <code>worlds_local</code> folder.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="cols">
+    <section aria-labelledby="h-players">
+      <h2 id="h-players">Vikings</h2>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Character</th><th class="num">Deaths</th><th class="num">Last seen</th></tr></thead>
+          <tbody id="players"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-events">
+      <h2 id="h-events">What happened</h2>
+      <div class="panel">
+        <div class="chips" role="group" aria-label="Filter events">
+          <button type="button" class="chip" data-f="all" aria-pressed="true">All</button>
+          <button type="button" class="chip" data-f="player" aria-pressed="false">Players</button>
+          <button type="button" class="chip" data-f="death" aria-pressed="false">Deaths</button>
+          <button type="button" class="chip" data-f="raid" aria-pressed="false">Raids</button>
+          <button type="button" class="chip" data-f="server" aria-pressed="false">Server</button>
+        </div>
+        <ul class="events" id="events"></ul>
+      </div>
+    </section>
+  </div>
+
+  <section aria-labelledby="h-logs">
+    <h2 id="h-logs">Server logs</h2>
+    <div class="controls">
+      <input type="search" id="log-search" placeholder="Search logs" aria-label="Search logs">
+      <label class="check"><input type="checkbox" id="log-raw"> Show all lines</label>
+      <a class="btn" href="/download/logs">Download logs</a>
+    </div>
+    <div class="logs" id="logs" tabindex="0" aria-label="Server log lines"></div>
+  </section>
+</div>
+<div id="toast" role="status" hidden></div>
+
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var eventFilter = "all", latest = null, password = null, toastTimer, logTimer;
+
+function toast(message) {
+  $("toast").textContent = message;
+  $("toast").hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { $("toast").hidden = true; }, 3200);
+}
+function ago(ts, now) {
+  if (!ts) return "Never";
+  var s = Math.max(0, Math.round(now - ts));
+  if (s < 60) return "Just now";
+  if (s < 3600) return Math.floor(s / 60) + " min ago";
+  if (s < 86400) return Math.floor(s / 3600) + "h ago";
+  return Math.floor(s / 86400) + "d ago";
+}
+function duration(s) {
+  s = Math.max(0, Math.round(s));
+  var d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+  return d ? d + "d " + h + "h" : h ? h + "h " + m + "m" : m + "m";
+}
+function bytes(n) {
+  if (n >= 1073741824) return (n / 1073741824).toFixed(1) + " GB";
+  return Math.round(n / 1048576) + " MB";
+}
+function clock(ts) {
+  var d = new Date(ts * 1000), now = new Date();
+  var t = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  return d.toDateString() === now.toDateString() ? t : d.toLocaleDateString([], { day: "numeric", month: "short" });
+}
+function copy(text, label) {
+  // Plain HTTP pages have no clipboard API, so use a temporary text field.
+  var field = document.createElement("textarea");
+  field.value = text;
+  field.setAttribute("readonly", "");
+  field.style.position = "fixed";
+  field.style.opacity = "0";
+  document.body.append(field);
+  field.select();
+  var copied = false;
+  try { copied = document.execCommand("copy"); } catch (error) { copied = false; }
+  field.remove();
+  toast(copied ? "Copied " + label : "This browser blocked copying. Copy it by hand: " + text);
+}
+function cell(text, className) {
+  var td = document.createElement("td");
+  td.textContent = text;
+  if (className) td.className = className;
+  return td;
+}
+function drawPlayers(data) {
+  var body = $("players");
+  body.textContent = "";
+  if (!data.players.length) {
+    var tr = document.createElement("tr"), td = cell("Nobody has joined yet.");
+    td.colSpan = 3; tr.append(td); body.append(tr);
+    return;
+  }
+  var most = Math.max.apply(null, data.players.map(function (p) { return p.deaths; }));
+  data.players.forEach(function (p) {
+    var tr = document.createElement("tr"), name = cell(p.name), dot = document.createElement("span");
+    dot.className = "dot" + (p.online ? " on" : "");
+    name.prepend(dot);
+    tr.append(name, cell(p.deaths, "num" + (most && p.deaths === most ? " top" : "")), cell(p.online ? "Online now" : ago(p.last_seen, data.now), "num"));
+    body.append(tr);
+  });
+}
+function drawEvents() {
+  var list = $("events");
+  list.textContent = "";
+  if (!latest) return;
+  var rows = latest.events.filter(function (e) { return eventFilter === "all" || e.kind === eventFilter; }).slice(0, 40);
+  if (!rows.length) {
+    var none = document.createElement("li");
+    none.style.display = "block";
+    none.textContent = "Nothing here yet.";
+    list.append(none);
+  }
+  rows.forEach(function (e) {
+    var li = document.createElement("li"), t = document.createElement("time"), tag = document.createElement("span"), text = document.createElement("span");
+    t.textContent = clock(e.ts);
+    tag.textContent = e.label;
+    tag.className = "tag t-" + (e.label === "Failed" ? "warn" : e.kind);
+    text.textContent = e.text;
+    li.append(t, tag, text);
+    list.append(li);
+  });
+}
+function draw(data) {
+  latest = data;
+  document.title = data.world + " · " + data.state;
+  $("world").textContent = data.world;
+  var labels = { online: "Online", starting: "Starting", offline: "Offline" }, colors = { online: "--good", starting: "--warn", offline: "--bad" };
+  $("pill-text").textContent = labels[data.state];
+  $("pill").style.setProperty("--state", "var(" + colors[data.state] + ")");
+  var online = data.players.filter(function (p) { return p.online; }).length;
+  $("s-players").textContent = online + " online";
+  $("s-up").textContent = data.state === "offline" ? "–" : duration(data.now - data.active_since);
+  $("s-version").textContent = data.version || "–";
+  $("s-memory").textContent = (data.memory_used / 1073741824).toFixed(1) + " / " + (data.memory_total / 1073741824).toFixed(1) + " GB";
+  $("s-cpu").textContent = data.cpu + "%";
+  $("s-saved").textContent = ago(data.last_save, data.now);
+  $("s-size").textContent = bytes(data.world_size);
+  $("s-backup").textContent = data.backup_ok ? ago(data.last_backup, data.now) : "Failed";
+  $("address").textContent = location.hostname + ":" + data.game_port;
+  $("seed").textContent = data.seed || "Unknown";
+  if (data.seed) $("map").href = "https://valheim-map.world/?seed=" + encodeURIComponent(data.seed) + "&offset=0%2C0&zoom=0.12&view=0&ver=1.0.7";
+  drawPlayers(data);
+  drawEvents();
+}
+function refreshStatus() {
+  fetch("/api/status").then(function (r) { if (!r.ok) throw new Error(); return r.json(); }).then(function (data) {
+    $("conn").hidden = true;
+    draw(data);
+  }).catch(function () { $("conn").hidden = false; });
+}
+function refreshLogs() {
+  var params = new URLSearchParams({ q: $("log-search").value.trim(), noise: $("log-raw").checked ? "1" : "0" });
+  fetch("/api/logs?" + params).then(function (r) { if (!r.ok) throw new Error(); return r.json(); }).then(function (data) {
+    var box = $("logs"), follow = box.scrollTop === 0;
+    box.textContent = "";
+    data.lines.slice().reverse().forEach(function (line) {
+      var row = document.createElement("div");
+      row.textContent = line.text;
+      if (line.noise) row.className = "noise";
+      box.append(row);
+    });
+    if (!data.lines.length) {
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No log lines match that search.";
+      box.append(empty);
+    }
+    if (follow) box.scrollTop = 0;
+  }).catch(function () { $("conn").hidden = false; });
+}
+$("copy-address").addEventListener("click", function () { copy($("address").textContent, "the server address"); });
+$("copy-password").addEventListener("click", function () {
+  if (password === null) { toast("Could not get the password. Reload the page and try again."); return; }
+  copy(password, "the password");
+});
+fetch("/api/password").then(function (r) { return r.json(); }).then(function (d) { password = d.password; }).catch(function () {});
+document.querySelector(".chips").addEventListener("click", function (ev) {
+  var b = ev.target.closest("button");
+  if (!b) return;
+  eventFilter = b.dataset.f;
+  document.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("aria-pressed", c === b ? "true" : "false"); });
+  drawEvents();
+});
+$("log-search").addEventListener("input", function () { clearTimeout(logTimer); logTimer = setTimeout(refreshLogs, 250); });
+$("log-raw").addEventListener("change", refreshLogs);
+refreshStatus();
+refreshLogs();
+setInterval(refreshStatus, 15000);
+setInterval(refreshLogs, 15000);
+</script>
+</body>
+</html>

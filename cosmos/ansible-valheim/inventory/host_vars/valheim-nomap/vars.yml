@@ -19,6 +19,8 @@ valheim_modifiers:
   - "-setkey nobuildcost"
 valheim_mods_enabled: false
 valheim_game_interface: "tailscale0"
+valheim_world_seed: "pcgamesn26"
+valheim_dashboard_enabled: true
 world_download_enabled: true
 world_download_port: 8000
 world_download_interface: "tailscale0"
