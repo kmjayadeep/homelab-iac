@@ -53,10 +53,11 @@ for achievements. Connect through
 `valheim-nomap-tailscale.cosmos.cboxlab.com:2456` on Tailscale or
 `valheim-nomap.cosmos.cboxlab.com:2456` on the LAN.
 
-`valheim-nomap` serves a dashboard on port 8000 with server status, join details,
-player and raid events, logs, and a download of the latest save. It has no login,
-so it relies on the host firewall allowing that port only over Tailscale and the
-LAN. Deploy it without restarting the game using
+`valheim-nomap` serves a newspaper-style dashboard on port 8000 with server status,
+join details, a death leaderboard, player and raid events, logs, and a download of
+the latest save. The server cannot see how a player died, so players record causes
+of death on the page. It has no login, so it relies on the host firewall allowing
+that port only over Tailscale and the LAN. Deploy it without restarting the game using
 `ansible-playbook playbooks/dashboard.yml --limit valheim-nomap`.
 
 `valheim-speedrun` hosts the imported local `speedrun` world with the same

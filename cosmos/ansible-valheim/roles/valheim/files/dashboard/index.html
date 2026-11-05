@@ -3,181 +3,221 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Valheim Server</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Almendra:wght@700&family=Alegreya+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<title>Valheim Vartha</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Gelasio:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif+Malayalam:wght@500;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a longhouse noticeboard. One status band, then join and save side by side, then people and events, then the log as an inset slate. */
+/* Layout: the front page of a small-town Kerala daily. */
 :root {
-  --bg: #e9eef0; --surface: #f6f8f8; --inset: #dce4e7; --fg: #1b2a31; --muted: #566a73; --line: #bccad0;
-  --accent: #98520f; --accent-fg: #fff8ef; --good: #1f7350; --warn: #8f6508; --bad: #ae3a2c; --info: #2c6588;
-  --display: "Almendra", Georgia, serif; --body: "Alegreya Sans", "Segoe UI", sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  color-scheme: light;
+  --paper: #e8e2d0; --paper-2: #f0ebdc; --ink: #17140f; --ink-2: #4d473a; --rule: #17140f; --soft: #a79f88; --red: #b5141c; --red-fg: #fff6ea; --ok: #1f6b45;
+  --head: "Abril Fatface", "Bodoni MT", Georgia, serif; --body: "Gelasio", Georgia, serif; --ml: "Noto Serif Malayalam", "Manjari", serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #111b20; --surface: #18252b; --inset: #0c1417; --fg: #e6edef; --muted: #93a7af; --line: #2f424b;
-  --accent: #e39a45; --accent-fg: #201204; --good: #5fcb9d; --warn: #dfb64f; --bad: #ef8474; --info: #79b9dd; color-scheme: dark } }
-:root[data-theme="dark"] {
-  --bg: #111b20; --surface: #18252b; --inset: #0c1417; --fg: #e6edef; --muted: #93a7af; --line: #2f424b;
-  --accent: #e39a45; --accent-fg: #201204; --good: #5fcb9d; --warn: #dfb64f; --bad: #ef8474; --info: #79b9dd; color-scheme: dark }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; background: var(--bg); color: var(--fg); font: 400 1.0625rem/1.45 var(--body); }
-.wrap { max-width: 1120px; margin-inline: auto; padding-block: 16px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 24px; }
-.mock { font-size: .9rem; color: var(--muted); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-.mock b { color: var(--warn); font-weight: 700; }
-.band { display: grid; gap: 16px; padding-block: 8px 20px; border-bottom: 2px solid var(--line); }
-.band-top { display: flex; gap: 12px 20px; align-items: center; flex-wrap: wrap; }
-h1 { font: 700 clamp(2.5rem, 7vw, 3.75rem)/1 var(--display); margin: 0; letter-spacing: .01em; }
-.pill { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; padding: 4px 12px; border-radius: 999px; border: 1.5px solid var(--state, var(--muted)); color: var(--state, var(--muted)); }
-.pill i { width: 9px; height: 9px; border-radius: 50%; background: var(--state, var(--muted)); }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px 24px; margin: 0; }
-.stats div { min-width: 0; }
-dt { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-dd { margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; font-size: 1.15rem; }
-.cols { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); align-items: start; }
-section { min-width: 0; display: grid; gap: 12px; }
-h2 { font: 700 1.55rem/1.1 var(--display); margin: 0; text-wrap: balance; }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
-.row { display: flex; gap: 8px 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; min-width: 0; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 1.03rem/1.42 var(--body); overflow-x: hidden; background-image: radial-gradient(rgba(23, 20, 15, .05) 1px, transparent 1.2px); background-size: 4px 4px; }
+.sheet { max-width: 1160px; margin-inline: auto; padding-block: 14px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.conn { margin: 0 0 8px; background: var(--red); color: var(--red-fg); padding: 5px 10px; font-weight: 700; }
+.mast { text-align: center; border-bottom: 4px double var(--rule); padding-bottom: 6px; }
+.mast .ml { font: 800 clamp(2.6rem, 9vw, 5.4rem)/1.15 var(--ml); margin: 0; }
+.mast .en { font: 400 clamp(1rem, 2vw, 1.3rem)/1.2 var(--head); letter-spacing: .12em; text-transform: uppercase; }
+.dateline { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 18px; padding-block: 5px; border-bottom: 1px solid var(--rule); font-size: .92rem; font-variant-numeric: tabular-nums; }
+.dateline b { color: var(--ok); }
+.dateline b.down { color: var(--red); }
+.flash { background: var(--red); color: var(--red-fg); font-weight: 700; padding: 4px 12px; margin-top: 12px; display: inline-block; letter-spacing: .08em; text-transform: uppercase; font-size: .84rem; animation: flash 1.6s steps(2) infinite; }
+@keyframes flash { 50% { opacity: .6; } }
+.lead { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 22px; padding-block: 8px 18px; border-bottom: 2px solid var(--rule); }
+.lead > * { min-width: 0; }
+h1 { margin: 6px 0; font: 400 clamp(2.5rem, 6.6vw, 5.2rem)/.98 var(--head); text-wrap: balance; overflow-wrap: anywhere; }
+.deck { font-size: 1.2rem; font-style: italic; margin: 0 0 8px; }
+.photo { position: relative; aspect-ratio: 5 / 4; background: #c9c2ad; overflow: hidden; border: 1px solid var(--rule); max-width: 100%; }
+.photo svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.photo::after, .face::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(#17140f 34%, transparent 36%); background-size: 5px 5px; opacity: .28; mix-blend-mode: multiply; }
+figure { margin: 0; }
+figcaption { font-size: .85rem; font-style: italic; padding-top: 4px; }
+.section-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin: 18px 0 8px; border-bottom: 3px solid var(--rule); padding-bottom: 4px; }
+h2 { margin: 0; font: 400 clamp(1.8rem, 4vw, 2.8rem)/1.1 var(--head); }
+.section-title .ml { font: 800 clamp(1.2rem, 3vw, 1.9rem)/1.3 var(--ml); color: var(--red); }
+.obits { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; }
+.obit { border: 3px double var(--rule); background: var(--paper-2); padding: 10px; display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 4px 10px; align-content: start; min-width: 0; }
+.obit.first { grid-column: 1 / -1; border: 5px double var(--red); grid-template-columns: 124px minmax(0, 1fr); padding: 14px; }
+.obit > div { min-width: 0; }
+.face { width: 100%; aspect-ratio: 4 / 5; position: relative; background: #bdb59d; border: 1px solid var(--rule); overflow: hidden; }
+.face svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.obit .ml { font: 800 1rem/1.4 var(--ml); color: var(--red); display: block; }
+.obit .who { font: 400 1.35rem/1.05 var(--head); overflow-wrap: anywhere; }
+.obit.first .who { font-size: clamp(1.7rem, 3.4vw, 2.5rem); }
+.obit .n { font: 400 clamp(2.3rem, 5vw, 3.3rem)/1 var(--head); color: var(--red); font-variant-numeric: lining-nums; }
+.obit.first .n { font-size: clamp(3.6rem, 8vw, 6rem); }
+.obit .n small { font: 700 1rem var(--body); color: var(--ink); margin-left: 6px; }
+.obit .title { font-weight: 700; }
+.obit .meta { font-size: .9rem; color: var(--ink-2); }
+.obit .text { font-size: .95rem; font-style: italic; grid-column: 1 / -1; margin: 0; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--ok); }
+.obit.hit { animation: thump .5s ease; }
+@keyframes thump { 25% { transform: translateY(-5px) rotate(-1deg); } 60% { transform: translateY(2px) rotate(.6deg); } }
+.desk { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0 26px; }
+.case { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding-block: 8px; border-bottom: 1px solid var(--soft); min-width: 0; }
+.case > div { min-width: 0; }
+.case small { display: block; color: var(--ink-2); }
+select { font: 600 .95rem var(--body); color: var(--ink); background: var(--paper-2); border: 1.5px solid var(--rule); padding: 5px 6px; max-width: 100%; }
+select.open { border-color: var(--red); color: var(--red); }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0 26px; margin-top: 14px; }
+.col { min-width: 0; padding-block: 8px; border-top: 3px solid var(--rule); }
+h3 { margin: 0 0 6px; font: 400 1.55rem/1.1 var(--head); }
+.classified { border: 1px solid var(--rule); padding: 8px 10px; margin-bottom: 8px; background: var(--paper-2); }
+.lab { display: block; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+code { font: 500 .9rem/1.4 var(--mono); overflow-wrap: anywhere; }
+.row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
 .row > div { min-width: 0; }
-.lab { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: block; }
-code { font: 500 .88rem/1.4 var(--mono); overflow-wrap: anywhere; }
-button, .btn { font: 700 .95rem/1.2 var(--body); color: var(--fg); background: transparent; border: 1.5px solid var(--line); border-radius: 5px; padding: 7px 12px; cursor: pointer; text-decoration: none; display: inline-block; }
-button:hover, .btn:hover { border-color: var(--accent); color: var(--accent); }
-.primary { text-align: center; background: var(--accent); border-color: var(--accent); color: var(--accent-fg); padding: 11px 16px; font-size: 1.05rem; }
-.primary:hover { color: var(--accent-fg); filter: brightness(1.08); }
-:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }
-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-th { text-align: left; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; padding-bottom: 6px; }
-td { padding: 6px 0; border-top: 1px solid var(--line); }
-.num { text-align: right; }
-.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; background: var(--muted); }
-.dot.on { background: var(--good); }
-.top { color: var(--accent); font-weight: 700; }
-.chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.chip { padding: 4px 10px; font-weight: 500; border-radius: 999px; font-size: .88rem; }
-.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
-ul.events { list-style: none; margin: 0; padding: 0; display: grid; }
-ul.events li { display: grid; grid-template-columns: 3.6rem 4.6rem 1fr; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); align-items: baseline; }
-ul.events time { font: 400 .8rem var(--mono); color: var(--muted); }
-.tag { font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-.t-player { color: var(--info); } .t-death { color: var(--bad); } .t-raid { color: var(--warn); } .t-server { color: var(--good); } .t-warn { color: var(--bad); }
-.logs { background: var(--inset); border: 1px solid var(--line); border-radius: 6px; padding: 12px; max-height: 340px; overflow: auto; font: 400 .8rem/1.6 var(--mono); }
-.logs div { white-space: pre-wrap; overflow-wrap: anywhere; }
-.logs .noise { color: var(--muted); }
-.logs .empty { color: var(--muted); }
-.controls { display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; }
-input[type=search] { font: 400 1rem var(--body); color: var(--fg); background: var(--surface); border: 1.5px solid var(--line); border-radius: 5px; padding: 7px 10px; flex: 1 1 200px; min-width: 0; }
-label.check { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
-.note { color: var(--muted); font-size: .95rem; margin: 0; }
-#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 6px; font-weight: 500; max-width: calc(100% - 32px); }
-@media (prefers-reduced-motion: no-preference) { .pill i { animation: pulse 2.4s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .35; } } }
+.btn { font: 700 .92rem var(--body); color: var(--ink); background: transparent; border: 1.5px solid var(--rule); padding: 5px 10px; cursor: pointer; text-decoration: none; display: inline-block; }
+.btn:hover { background: var(--ink); color: var(--paper-2); }
+.btn.big { display: block; width: 100%; text-align: center; background: var(--red); border-color: var(--red); color: var(--red-fg); padding: 11px; font-size: 1.08rem; }
+.btn.big:hover { background: var(--ink); border-color: var(--ink); }
+.ad { font-size: .92rem; font-style: italic; border-top: 1px dashed var(--soft); padding-top: 6px; margin: 8px 0 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+.chip { font: 600 .84rem var(--body); color: var(--ink); background: transparent; border: 1px solid var(--rule); padding: 2px 8px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper-2); }
+ul.news { list-style: none; margin: 0; padding: 0; }
+ul.news li { padding: 5px 0; border-bottom: 1px solid var(--soft); }
+ul.news time { font: 500 .78rem var(--mono); color: var(--red); margin-right: 6px; }
+.wire { background: var(--paper-2); border: 1px solid var(--rule); padding: 10px; height: 280px; overflow: auto; font: 400 .78rem/1.55 var(--mono); margin-top: 6px; }
+.wire div { overflow-wrap: anywhere; white-space: pre-wrap; }
+.wire .noise { color: var(--ink-2); }
+input[type=search] { width: 100%; font: 400 1rem var(--body); background: var(--paper-2); color: var(--ink); border: 1.5px solid var(--rule); padding: 6px 8px; }
+label.check { display: inline-flex; gap: 6px; align-items: center; margin-block: 6px; margin-right: 8px; }
+.empty { font-style: italic; color: var(--ink-2); }
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper-2); padding: 9px 14px; font-weight: 600; z-index: 9; max-width: calc(100% - 32px); }
+@media (max-width: 700px) { .lead { grid-template-columns: minmax(0, 1fr); } .obit.first { grid-template-columns: 92px minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
 <body>
-
-<div class="wrap">
-  <p class="mock" id="conn" hidden><b>Connection lost.</b> This page is retrying.</p>
-
-  <header class="band">
-    <div class="band-top">
-      <h1 id="world">Valheim</h1>
-      <span class="pill" id="pill"><i></i><span id="pill-text">Checking</span></span>
-    </div>
-    <dl class="stats">
-      <div><dt>Players</dt><dd id="s-players">–</dd></div>
-      <div><dt>Up for</dt><dd id="s-up">–</dd></div>
-      <div><dt>Version</dt><dd id="s-version">–</dd></div>
-      <div><dt>Memory</dt><dd id="s-memory">–</dd></div>
-      <div><dt>CPU</dt><dd id="s-cpu">–</dd></div>
-    </dl>
+<div class="sheet">
+  <p class="conn" id="conn" hidden>The press has lost contact with the server. Retrying.</p>
+  <header class="mast">
+    <p class="ml" lang="ml">വാൽഹൈം വാർത്ത</p>
+    <div class="en">Valheim Vartha · The <span id="world">nomap</span> Daily</div>
   </header>
-
-  <div class="cols">
-    <section aria-labelledby="h-join">
-      <h2 id="h-join">Join the server</h2>
-      <div class="panel">
-        <div class="row">
-          <div><span class="lab">Server address</span><code id="address">–</code></div>
-          <button type="button" id="copy-address">Copy</button>
-        </div>
-        <div class="row">
-          <div><span class="lab">Server password</span><code>•••••</code></div>
-          <button type="button" id="copy-password">Copy</button>
-        </div>
-        <div class="row">
-          <div><span class="lab">World seed</span><code id="seed">–</code></div>
-          <a class="btn" id="map" href="https://valheim-map.world/" target="_blank" rel="noopener">Open world map ↗</a>
-        </div>
-      </div>
-    </section>
-
-    <section aria-labelledby="h-save">
-      <h2 id="h-save">World save</h2>
-      <div class="panel">
-        <dl class="stats">
-          <div><dt>Last saved</dt><dd id="s-saved">–</dd></div>
-          <div><dt>World size</dt><dd id="s-size">–</dd></div>
-          <div><dt>Last backup</dt><dd id="s-backup">–</dd></div>
-        </dl>
-        <a class="btn primary" href="/download/world">Download latest save</a>
-        <p class="note">This is the most recent automatic save, so it can be a few minutes behind live play. Unpack the <code>nomap</code> folder into your <code>worlds_local</code> folder.</p>
-      </div>
-    </section>
+  <div class="dateline">
+    <span>Server: <b id="s-state">CHECKING</b></span>
+    <span id="s-online">–</span><span id="s-up">–</span><span id="s-version">–</span><span id="s-memory">–</span><span id="s-cpu">–</span>
   </div>
 
-  <div class="cols">
-    <section aria-labelledby="h-players">
-      <h2 id="h-players">Vikings</h2>
-      <div class="panel">
-        <table>
-          <thead><tr><th>Character</th><th class="num">Deaths</th><th class="num">Last seen</th></tr></thead>
-          <tbody id="players"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section aria-labelledby="h-events">
-      <h2 id="h-events">What happened</h2>
-      <div class="panel">
-        <div class="chips" role="group" aria-label="Filter events">
-          <button type="button" class="chip" data-f="all" aria-pressed="true">All</button>
-          <button type="button" class="chip" data-f="player" aria-pressed="false">Players</button>
-          <button type="button" class="chip" data-f="death" aria-pressed="false">Deaths</button>
-          <button type="button" class="chip" data-f="raid" aria-pressed="false">Raids</button>
-          <button type="button" class="chip" data-f="server" aria-pressed="false">Server</button>
-        </div>
-        <ul class="events" id="events"></ul>
-      </div>
-    </section>
-  </div>
-
-  <section aria-labelledby="h-logs">
-    <h2 id="h-logs">Server logs</h2>
-    <div class="controls">
-      <input type="search" id="log-search" placeholder="Search logs" aria-label="Search logs">
-      <label class="check"><input type="checkbox" id="log-raw"> Show all lines</label>
-      <a class="btn" href="/download/logs">Download logs</a>
+  <section class="lead">
+    <div>
+      <span class="flash" id="flash">Breaking</span>
+      <h1 id="headline">The press is warming up</h1>
+      <p class="deck" id="deck"></p>
     </div>
-    <div class="logs" id="logs" tabindex="0" aria-label="Server log lines"></div>
+    <figure>
+      <div class="photo" id="photo"></div>
+      <figcaption id="caption"></figcaption>
+    </figure>
   </section>
+
+  <div class="section-title"><h2>Obituaries</h2><span class="ml" lang="ml">ആദരാഞ്ജലികൾ</span></div>
+  <div class="obits" id="obits"></div>
+
+  <div class="section-title"><h2>The coroner's desk</h2><span id="leading" class="empty"></span></div>
+  <div class="desk" id="desk"></div>
+
+  <div class="grid3">
+    <div class="col">
+      <h3>Classifieds</h3>
+      <div class="classified"><div class="row"><div><span class="lab">Wanted: Vikings. Report to</span><code id="address">–</code></div><button class="btn" type="button" id="copy-address">Copy</button></div></div>
+      <div class="classified"><div class="row"><div><span class="lab">Password</span><code>•••••</code></div><button class="btn" type="button" id="copy-password">Copy</button></div></div>
+      <div class="classified"><div class="row"><div><span class="lab">Seed. Map not included</span><code id="seed">–</code></div><a class="btn" id="map" href="https://valheim-map.world/" target="_blank" rel="noopener">World map ↗</a></div></div>
+      <a class="btn big" href="/download/world">Download latest save</a>
+      <p id="save-line"></p>
+      <p class="ad" id="ad"></p>
+      <p class="ad" id="forecast"></p>
+    </div>
+    <div class="col">
+      <h3>In brief</h3>
+      <div class="chips" role="group" aria-label="Filter news">
+        <button type="button" class="chip" data-f="all" aria-pressed="true">All</button>
+        <button type="button" class="chip" data-f="death" aria-pressed="false">Deaths</button>
+        <button type="button" class="chip" data-f="player" aria-pressed="false">Players</button>
+        <button type="button" class="chip" data-f="raid" aria-pressed="false">Raids</button>
+        <button type="button" class="chip" data-f="server" aria-pressed="false">Server</button>
+      </div>
+      <ul class="news" id="news"></ul>
+    </div>
+    <div class="col">
+      <h3>From the wire</h3>
+      <input type="search" id="q" placeholder="Search logs" aria-label="Search logs">
+      <label class="check"><input type="checkbox" id="all"> Show all lines</label>
+      <a class="btn" href="/download/logs">Download logs</a>
+      <div class="wire" id="wire" tabindex="0" aria-label="Server log lines"></div>
+    </div>
+  </div>
 </div>
 <div id="toast" role="status" hidden></div>
-
 <script>
 var $ = function (id) { return document.getElementById(id); };
-var eventFilter = "all", latest = null, password = null, toastTimer, logTimer;
+var pick = function (list, n) { return list[Math.abs(Math.floor(n)) % list.length]; };
+var latest = null, password = null, filter = "all", lastDeathId = null, toastTimer, logTimer;
 
-function toast(message) {
-  $("toast").textContent = message;
-  $("toast").hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(function () { $("toast").hidden = true; }, 3200);
+/* Each entry: menu label, headline, and the obituary's closing line. */
+var CAUSE = {
+  tree: ["A tree", "{n} killed by tree. Tree shows no remorse", "Killed by a tree. The tree has declined to comment."],
+  troll: ["A troll", "Troll 1, {n} 0", "Met a troll. The troll is fine."],
+  greydwarf: ["A greydwarf", "{n} defeated by angry shrubbery", "Outfought by a very small forest person."],
+  neck: ["A Neck (shame)", "Neck kills {n}. Family asks for privacy", "Killed by a Neck. Please do not bring it up."],
+  boar: ["A boar", "Boar claims {n}. Pork prices unaffected", "Taken by a boar. Bacon was not avenged."],
+  fall: ["Gravity", "{n} discovers gravity the hard way", "Walked off something high with great confidence."],
+  drowned: ["Drowned", "{n} drowned. Ithu Dubai alle, witnesses heard", "Tried to reach Dubai by swimming. Gafoorka denies everything."],
+  swamp: ["The swamp", "Swamp 1, {n} 0. Nobody is surprised", "Went into the swamp. That was the whole plan."],
+  raid: ["A raid", "{n} killed defending base that was already on fire", "Died a hero, according to nobody."],
+  boss: ["A boss", "{n} visits boss, leaves in pieces", "Summoned the boss on purpose. Regrets were brief."],
+  friend: ["A friend", "Friendly fire kills {n}. Friendship under review", "Betrayed by a friend. Dasan and Vijayan are looking into it."],
+  stupidity: ["Own stupidity", "Police find no suspect in {n} death except {n}", "The inquest found one suspect, and it was the deceased."],
+  mystery: ["Nobody knows", "{n} dead. Nobody knows how, least of all {n}", "Cause unknown. CID Dasan is on the case."]
+};
+var HEADS = [
+  "{n} dies again",
+  "{n} found dead. Map also not found",
+  "Vazhi thetti: {n} dead in unknown location",
+  "\"Ellam sariyakum,\" said {n}, moments before dying",
+  "Gafoorka denies role in death of {n}",
+  "Polandine patti mindaruthu: {n} is dead",
+  "\"Thomas Kutty vitto da,\" witnesses told {n}. Too late"
+];
+var DECKS = [
+  "Authorities blame the lack of a map. Friends blame {n}.",
+  "The family has asked everyone to stop laughing.",
+  "Police say the investigation is complete, and that it was a skill issue.",
+  "Odin was unavailable for comment and has stopped answering calls from {n}."
+];
+var EPITAPHS = ["Ithu Dubai alle?", "Vazhi thetti. Last seen walking confidently the wrong way.", "Ellam sariyakum, the deceased said, and was wrong.", "Survived by one very confused longship."];
+var TITLES = ["Valhalla's regular", "Odin knows this one by name", "Still has some hope", "Barely trying"];
+var JOINS = ["{n} arrives, despite warnings.", "{n} joins. Map still missing.", "{n} logs in. Trolls notified.", "{n} is back. Next of kin informed in advance."];
+var LEAVES = ["{n} leaves the world, alive for once.", "{n} has gone home for kanji.", "{n} logs off. Tombstones left behind.", "{n} leaves. The boars are celebrating."];
+var ADS = [
+  "LOST: one sense of direction. Reward offered. Ask for {n}.",
+  "FOR SALE: tombstones, barely cold. Bulk rates. Contact {n}.",
+  "URGENT: careful Viking needed to teach {n} how shields work.",
+  "MATRIMONIAL: Viking seeks partner who can read a map. Must tolerate {n}."
+];
+var FORECASTS = [
+  "Today's forecast: troll showers, clearing to tree by evening.",
+  "Today's forecast: heavy Greydwarf with a chance of swamp.",
+  "Today's forecast: raids likely. Bring the washing in.",
+  "Today's forecast: no map, as usual.",
+  "Your stars today: avoid water, heights, trees and your friends.",
+  "Your stars today: a tall stranger will fall on you. It is a birch."
+];
+var fill = function (t, name) { return t.replace(/\{n\}/g, name); };
+
+function viking(crossed, fit) {
+  return '<svg viewBox="0 0 100 125" preserveAspectRatio="xMidYMid ' + fit + '" aria-hidden="true"><rect width="100" height="125" fill="#b9b19a"/><path fill="#17140f" d="M16 125c2-28 15-38 34-38s32 10 34 38z"/><path fill="#6b6454" d="M31 54c0 22 8 37 19 37s19-15 19-37z"/><path fill="#17140f" d="M28 56c5 34 14 48 22 48s17-14 22-48c-5 10-14 13-22 13s-17-3-22-13z"/><path fill="#2b2a26" d="M24 55c0-22 11-36 26-36s26 14 26 36z"/><rect x="20" y="51" width="60" height="7" fill="#17140f"/><rect x="47" y="51" width="6" height="22" fill="#17140f"/><path fill="#d8d0ba" d="M25 40C13 34 8 22 10 8c5 11 12 19 22 21zM75 40c12-6 17-18 15-32-5 11-12 19-22 21z"/>' + (crossed ? '<path fill="none" stroke="#b5141c" stroke-width="4" d="M4 4 96 121M96 4 4 121"/>' : "") + "</svg>";
 }
+function toast(m) { $("toast").textContent = m; $("toast").hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { $("toast").hidden = true; }, 4000); }
 function ago(ts, now) {
-  if (!ts) return "Never";
+  if (!ts) return "never";
   var s = Math.max(0, Math.round(now - ts));
-  if (s < 60) return "Just now";
+  if (s < 60) return "just now";
   if (s < 3600) return Math.floor(s / 60) + " min ago";
   if (s < 86400) return Math.floor(s / 3600) + "h ago";
   return Math.floor(s / 86400) + "d ago";
@@ -187,119 +227,158 @@ function duration(s) {
   var d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
   return d ? d + "d " + h + "h" : h ? h + "h " + m + "m" : m + "m";
 }
-function bytes(n) {
-  if (n >= 1073741824) return (n / 1073741824).toFixed(1) + " GB";
-  return Math.round(n / 1048576) + " MB";
-}
 function clock(ts) {
   var d = new Date(ts * 1000), now = new Date();
-  var t = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
-  return d.toDateString() === now.toDateString() ? t : d.toLocaleDateString([], { day: "numeric", month: "short" });
+  return d.toDateString() === now.toDateString() ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) : d.toLocaleDateString([], { day: "numeric", month: "short" });
 }
+function size(n) { return n >= 1073741824 ? (n / 1073741824).toFixed(1) + " GB" : Math.round(n / 1048576) + " MB"; }
 function copy(text, label) {
-  // Plain HTTP pages have no clipboard API, so use a temporary text field.
   var field = document.createElement("textarea");
-  field.value = text;
-  field.setAttribute("readonly", "");
-  field.style.position = "fixed";
-  field.style.opacity = "0";
-  document.body.append(field);
-  field.select();
+  field.value = text; field.setAttribute("readonly", ""); field.style.position = "fixed"; field.style.opacity = "0";
+  document.body.append(field); field.select();
   var copied = false;
   try { copied = document.execCommand("copy"); } catch (error) { copied = false; }
   field.remove();
   toast(copied ? "Copied " + label : "This browser blocked copying. Copy it by hand: " + text);
 }
-function cell(text, className) {
-  var td = document.createElement("td");
-  td.textContent = text;
-  if (className) td.className = className;
-  return td;
-}
-function drawPlayers(data) {
-  var body = $("players");
-  body.textContent = "";
-  if (!data.players.length) {
-    var tr = document.createElement("tr"), td = cell("Nobody has joined yet.");
-    td.colSpan = 3; tr.append(td); body.append(tr);
-    return;
+function deathHeadline(d) { return fill(d.cause ? CAUSE[d.cause][1] : pick(HEADS, d.id - 1), d.name); }
+
+function drawLead(data) {
+  var d = data.deaths[0], top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0];
+  var raid = data.events.filter(function (e) { return e.kind === "raid"; })[0];
+  var raiding = raid && data.now - raid.ts < 600;
+  $("flash").textContent = data.state === "offline" ? "Presses stopped: server offline" : data.state === "starting" ? "Presses warming up" : raiding ? "Raid at the base" : "Breaking";
+  if (d) {
+    $("headline").textContent = deathHeadline(d);
+    $("deck").textContent = "Death number " + d.number + " for " + d.name + ", " + ago(d.ts, data.now) + ". " + fill(pick(DECKS, d.id), d.name);
+    $("caption").textContent = "File photo: " + d.name + ", moments before the incident.";
+  } else {
+    $("headline").textContent = "Everyone still alive. Editors suspicious";
+    $("deck").textContent = "No deaths reported on this world. Reporters have been sent to the swamp to help things along.";
+    $("caption").textContent = top ? "File photo: " + top.name + ", still breathing, for now." : "File photo: a Viking. Name withheld until something happens.";
   }
-  var most = Math.max.apply(null, data.players.map(function (p) { return p.deaths; }));
-  data.players.forEach(function (p) {
-    var tr = document.createElement("tr"), name = cell(p.name), dot = document.createElement("span");
-    dot.className = "dot" + (p.online ? " on" : "");
-    name.prepend(dot);
-    tr.append(name, cell(p.deaths, "num" + (most && p.deaths === most ? " top" : "")), cell(p.online ? "Online now" : ago(p.last_seen, data.now), "num"));
-    body.append(tr);
+  if (!$("photo").firstChild) $("photo").innerHTML = viking(false, "meet");
+}
+function drawObits(data) {
+  var box = $("obits"), list = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths || b.played - a.played; });
+  box.textContent = "";
+  if (!list.length) { box.innerHTML = '<p class="empty">No Vikings have arrived yet. The obituary desk is on chaya break.</p>'; return; }
+  var lastByName = {};
+  data.deaths.slice().reverse().forEach(function (d) { lastByName[d.name] = d; });
+  list.forEach(function (p, i) {
+    var el = document.createElement("article"), dead = p.deaths > 0;
+    el.className = "obit" + (i === 0 && dead ? " first" : "");
+    el.dataset.name = p.name;
+    el.innerHTML = '<div class="face">' + viking(dead, "slice") + '</div><div><span class="ml" lang="ml"></span><div class="who"></div><div class="n"></div><div class="title"></div><div class="meta"></div></div><p class="text"></p>';
+    el.querySelector(".ml").textContent = dead ? "ചരമം" : "ജീവനോടെ";
+    var who = el.querySelector(".who");
+    if (p.online) { var dot = document.createElement("span"); dot.className = "dot"; dot.title = "Online now"; who.append(dot); }
+    who.append(p.name);
+    var word = document.createElement("small"); word.textContent = p.deaths === 1 ? "death" : "deaths";
+    el.querySelector(".n").append(p.deaths, word);
+    el.querySelector(".title").textContent = dead ? (TITLES[i] || TITLES[3]) : "Suspiciously alive";
+    var hours = p.played / 3600, rate = hours > .05 ? (p.deaths / hours).toFixed(1) + " deaths per hour" : "";
+    var meta = ["Played " + duration(p.played), p.online ? "online now" : "seen " + ago(p.last_seen, data.now)];
+    if (dead && rate) meta.push(rate);
+    if (p.worst_session > 1) meta.push("worst session " + p.worst_session);
+    el.querySelector(".meta").textContent = meta.join(" · ");
+    var last = lastByName[p.name];
+    el.querySelector(".text").textContent = !dead ? "Still alive. Nobody knows how. An inquiry has been opened." : last && last.cause ? CAUSE[last.cause][2] : pick(EPITAPHS, (last ? last.id : i));
+    box.append(el);
   });
 }
-function drawEvents() {
-  var list = $("events");
-  list.textContent = "";
+function drawDesk(data) {
+  var box = $("desk");
+  var entries = Object.keys(data.cause_tally).sort(function (a, b) { return data.cause_tally[b] - data.cause_tally[a]; });
+  $("leading").textContent = entries.length ? "Leading cause of death: " + CAUSE[entries[0]][0].toLowerCase() + " (" + data.cause_tally[entries[0]] + ")" : "The game doesn't tell the server how anyone died, so friends decide here.";
+  if (box.contains(document.activeElement)) return;
+  box.textContent = "";
+  if (!data.deaths.length) { box.innerHTML = '<p class="empty">No bodies yet. The coroner has gone for chaya.</p>'; return; }
+  data.deaths.slice(0, 6).forEach(function (d) {
+    var row = document.createElement("div"), info = document.createElement("div"), name = document.createElement("b"), when = document.createElement("small"), sel = document.createElement("select");
+    row.className = "case";
+    name.textContent = d.name; when.textContent = "Death " + d.number + ", " + ago(d.ts, data.now);
+    info.append(name, when);
+    sel.id = "verdict-" + d.id;
+    sel.setAttribute("aria-label", "Cause of death for " + d.name + ", death " + d.number);
+    sel.className = d.cause ? "" : "open";
+    var none = new Option("Who did it?", "");
+    none.disabled = true;
+    sel.add(none);
+    data.causes.forEach(function (c) { sel.add(new Option(CAUSE[c] ? CAUSE[c][0] : c, c)); });
+    sel.value = d.cause || "";
+    sel.addEventListener("change", function () { verdict(d, sel.value); });
+    row.append(info, sel);
+    box.append(row);
+  });
+}
+function verdict(d, cause) {
+  fetch("/api/verdict", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: d.id, cause: cause }) })
+    .then(function (r) { if (!r.ok) throw new Error(); toast("Verdict recorded: " + CAUSE[cause][0].toLowerCase() + "."); if (document.activeElement) document.activeElement.blur(); refreshStatus(); })
+    .catch(function () { toast("The coroner couldn't save that. Try again."); });
+}
+function newsText(e) {
+  var n = e.name || "", seed = Math.floor(e.ts);
+  if (e.kind === "death") { var d = latest.deaths.filter(function (x) { return x.id === e.death_id; })[0]; return d ? deathHeadline(d) + "." : n + " died."; }
+  if (e.label === "Joined") return fill(pick(JOINS, seed), n);
+  if (e.label === "Left") return fill(pick(LEAVES, seed), n);
+  if (e.label === "Failed") return "Someone tried a wrong password. Police are looking for a person who cannot read.";
+  if (e.kind === "raid") return "Raid reported at the base: " + e.raid + ". Residents advised to panic.";
+  if (e.text.indexOf("stopped") > -1) return "Server stopped. Vikings told to go outside.";
+  return "Server back up. Vikings may resume dying.";
+}
+function drawNews() {
+  var ul = $("news");
+  ul.textContent = "";
   if (!latest) return;
-  var rows = latest.events.filter(function (e) { return eventFilter === "all" || e.kind === eventFilter; }).slice(0, 40);
-  if (!rows.length) {
-    var none = document.createElement("li");
-    none.style.display = "block";
-    none.textContent = "Nothing here yet.";
-    list.append(none);
-  }
+  var rows = latest.events.filter(function (e) { return filter === "all" || e.kind === filter; }).slice(0, 12);
+  if (!rows.length) { var none = document.createElement("li"); none.className = "empty"; none.textContent = "No news. Slow day in the fjord."; ul.append(none); }
   rows.forEach(function (e) {
-    var li = document.createElement("li"), t = document.createElement("time"), tag = document.createElement("span"), text = document.createElement("span");
+    var li = document.createElement("li"), t = document.createElement("time");
     t.textContent = clock(e.ts);
-    tag.textContent = e.label;
-    tag.className = "tag t-" + (e.label === "Failed" ? "warn" : e.kind);
-    text.textContent = e.text;
-    li.append(t, tag, text);
-    list.append(li);
+    li.append(t, newsText(e));
+    ul.append(li);
   });
 }
 function draw(data) {
   latest = data;
-  document.title = data.world + " · " + data.state;
+  document.title = "Valheim Vartha · " + data.state;
   $("world").textContent = data.world;
-  var labels = { online: "Online", starting: "Starting", offline: "Offline" }, colors = { online: "--good", starting: "--warn", offline: "--bad" };
-  $("pill-text").textContent = labels[data.state];
-  $("pill").style.setProperty("--state", "var(" + colors[data.state] + ")");
+  $("s-state").textContent = data.state.toUpperCase();
+  $("s-state").className = data.state === "online" ? "" : "down";
   var online = data.players.filter(function (p) { return p.online; }).length;
-  $("s-players").textContent = online + " online";
-  $("s-up").textContent = data.state === "offline" ? "–" : duration(data.now - data.active_since);
-  $("s-version").textContent = data.version || "–";
-  $("s-memory").textContent = (data.memory_used / 1073741824).toFixed(1) + " / " + (data.memory_total / 1073741824).toFixed(1) + " GB";
-  $("s-cpu").textContent = data.cpu + "%";
-  $("s-saved").textContent = ago(data.last_save, data.now);
-  $("s-size").textContent = bytes(data.world_size);
-  $("s-backup").textContent = data.backup_ok ? ago(data.last_backup, data.now) : "Failed";
+  $("s-online").textContent = online + (online === 1 ? " Viking" : " Vikings") + " online";
+  $("s-up").textContent = data.state === "offline" ? "Down" : "Up " + duration(data.now - data.active_since);
+  $("s-version").textContent = "Version " + (data.version || "unknown");
+  $("s-memory").textContent = "Memory " + (data.memory_used / 1073741824).toFixed(1) + " / " + (data.memory_total / 1073741824).toFixed(1) + " GB";
+  $("s-cpu").textContent = "CPU " + data.cpu + "%";
   $("address").textContent = location.hostname + ":" + data.game_port;
   $("seed").textContent = data.seed || "Unknown";
   if (data.seed) $("map").href = "https://valheim-map.world/?seed=" + encodeURIComponent(data.seed) + "&offset=0%2C0&zoom=0.12&view=0&ver=1.0.7";
-  drawPlayers(data);
-  drawEvents();
+  $("save-line").textContent = "Last saved " + ago(data.last_save, data.now) + ". " + (data.backup_ok ? "Last backup " + ago(data.last_backup, data.now) : "Last backup failed") + ". World size " + size(data.world_size) + ". This is the latest automatic save, so it can be a few minutes behind live play.";
+  var top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0], day = Math.floor(data.now / 86400);
+  $("ad").textContent = fill(pick(ADS, day), top ? top.name : "the editor");
+  $("forecast").textContent = pick(FORECASTS, day);
+  drawLead(data); drawObits(data); drawDesk(data); drawNews();
+  var newest = data.deaths[0] ? data.deaths[0].id : 0;
+  if (lastDeathId !== null && newest > lastDeathId) {
+    toast("Stop the press: " + data.deaths[0].name + " is dead");
+    var stone = document.querySelector('.obit[data-name="' + CSS.escape(data.deaths[0].name) + '"]');
+    if (stone) stone.classList.add("hit");
+  }
+  lastDeathId = newest;
 }
 function refreshStatus() {
-  fetch("/api/status").then(function (r) { if (!r.ok) throw new Error(); return r.json(); }).then(function (data) {
-    $("conn").hidden = true;
-    draw(data);
-  }).catch(function () { $("conn").hidden = false; });
+  fetch("/api/status").then(function (r) { if (!r.ok) throw new Error(); return r.json(); }).then(function (data) { $("conn").hidden = true; draw(data); }).catch(function () { $("conn").hidden = false; });
 }
 function refreshLogs() {
-  var params = new URLSearchParams({ q: $("log-search").value.trim(), noise: $("log-raw").checked ? "1" : "0" });
+  var params = new URLSearchParams({ q: $("q").value.trim(), noise: $("all").checked ? "1" : "0" });
   fetch("/api/logs?" + params).then(function (r) { if (!r.ok) throw new Error(); return r.json(); }).then(function (data) {
-    var box = $("logs"), follow = box.scrollTop === 0;
-    box.textContent = "";
-    data.lines.slice().reverse().forEach(function (line) {
-      var row = document.createElement("div");
-      row.textContent = line.text;
-      if (line.noise) row.className = "noise";
-      box.append(row);
-    });
-    if (!data.lines.length) {
-      var empty = document.createElement("div");
-      empty.className = "empty";
-      empty.textContent = "No log lines match that search.";
-      box.append(empty);
-    }
-    if (follow) box.scrollTop = 0;
+    var w = $("wire"), top = w.scrollTop === 0;
+    w.textContent = "";
+    data.lines.slice().reverse().forEach(function (l) { var d = document.createElement("div"); d.textContent = l.text; if (l.noise) d.className = "noise"; w.append(d); });
+    if (!data.lines.length) { var e = document.createElement("div"); e.className = "noise"; e.textContent = "No log lines match that search."; w.append(e); }
+    if (top) w.scrollTop = 0;
   }).catch(function () { $("conn").hidden = false; });
 }
 $("copy-address").addEventListener("click", function () { copy($("address").textContent, "the server address"); });
@@ -311,14 +390,13 @@ fetch("/api/password").then(function (r) { return r.json(); }).then(function (d)
 document.querySelector(".chips").addEventListener("click", function (ev) {
   var b = ev.target.closest("button");
   if (!b) return;
-  eventFilter = b.dataset.f;
+  filter = b.dataset.f;
   document.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("aria-pressed", c === b ? "true" : "false"); });
-  drawEvents();
+  drawNews();
 });
-$("log-search").addEventListener("input", function () { clearTimeout(logTimer); logTimer = setTimeout(refreshLogs, 250); });
-$("log-raw").addEventListener("change", refreshLogs);
-refreshStatus();
-refreshLogs();
+$("q").addEventListener("input", function () { clearTimeout(logTimer); logTimer = setTimeout(refreshLogs, 250); });
+$("all").addEventListener("change", refreshLogs);
+refreshStatus(); refreshLogs();
 setInterval(refreshStatus, 15000);
 setInterval(refreshLogs, 15000);
 </script>

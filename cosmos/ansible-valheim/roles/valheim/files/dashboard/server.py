@@ -25,6 +25,12 @@ INDEX_FILE = Path(__file__).with_name("index.html")
 UNIT = "valheim"
 BACKUP_UNIT = "backup-valheim.service"
 MAX_EVENTS = 200
+MAX_DEATHS = 300
+STATE_SCHEMA = 2
+CAUSES = (
+    "tree", "troll", "greydwarf", "neck", "boar", "fall", "drowned",
+    "swamp", "raid", "boss", "friend", "stupidity", "mystery",
+)
 
 GAME_LINE = re.compile(r"^\d\d/\d\d/\d{4} \d\d:\d\d:\d\d: ")
 STEAM_ID = re.compile(r"\b\d{17}\b")
@@ -37,7 +43,10 @@ NOISE = re.compile(
 
 state_lock = threading.Lock()
 download_lock = threading.Lock()
-state = {"cursor": None, "players": {}, "sessions": {}, "events": [], "version": "", "ready_at": 0}
+state = {
+    "schema": STATE_SCHEMA, "cursor": None, "players": {}, "sessions": {}, "events": [], "deaths": [],
+    "next_death": 1, "version": "", "ready_at": 0,
+}
 state_dirty = False
 cpu_percent = 0.0
 
@@ -47,7 +56,9 @@ def load_state():
         loaded = json.loads(STATE_FILE.read_text())
     except (OSError, ValueError):
         return
-    state.update(loaded)
+    # An older summary has different fields, so rebuild it from the journal.
+    if loaded.get("schema") == STATE_SCHEMA:
+        state.update(loaded)
 
 
 def save_state():
@@ -62,19 +73,32 @@ def save_state():
     temporary.replace(STATE_FILE)
 
 
-def add_event(ts, kind, label, text):
-    state["events"].append({"ts": ts, "kind": kind, "label": label, "text": text})
+def add_event(ts, kind, label, text, **extra):
+    state["events"].append({"ts": ts, "kind": kind, "label": label, "text": text, **extra})
     del state["events"][:-MAX_EVENTS]
 
 
 def player(name):
-    return state["players"].setdefault(name, {"deaths": 0, "online": False, "last_seen": 0})
+    return state["players"].setdefault(
+        name,
+        {
+            "deaths": 0, "online": False, "last_seen": 0, "joined_at": 0,
+            "played": 0, "session_deaths": 0, "worst_session": 0,
+        },
+    )
+
+
+def end_session(name, ts):
+    record = player(name)
+    if record["joined_at"]:
+        record["played"] += max(0, ts - record["joined_at"])
+    record.update(online=False, last_seen=ts, joined_at=0)
 
 
 def clear_sessions(ts):
     for name in state["sessions"].values():
         if name:
-            player(name).update(online=False, last_seen=ts)
+            end_session(name, ts)
     state["sessions"] = {}
 
 
@@ -107,21 +131,40 @@ def process_line(message, ts):
             waiting = [steam for steam, known in sessions.items() if known is None]
             if waiting:
                 sessions[waiting[-1]] = name
-            add_event(ts, "player", "Joined", f"{name} joined")
+            player(name).update(joined_at=ts, session_deaths=0)
+            add_event(ts, "player", "Joined", f"{name} joined", name=name)
         record = player(name)
         record.update(online=True, last_seen=ts)
         if match.group(2) == "0":
             record["deaths"] += 1
-            add_event(ts, "death", "Death", f"{name} died (death {record['deaths']})")
+            record["session_deaths"] += 1
+            record["worst_session"] = max(record["worst_session"], record["session_deaths"])
+            death_id = state["next_death"]
+            state["next_death"] += 1
+            state["deaths"].append({"id": death_id, "name": name, "ts": ts, "number": record["deaths"], "cause": None})
+            del state["deaths"][:-MAX_DEATHS]
+            add_event(ts, "death", "Death", f"{name} died", name=name, death_id=death_id)
     elif match := re.match(r"Closing socket (\d+)", body):
         steam = match.group(1)
         if steam in sessions:
             name = sessions.pop(steam)
             if name:
-                player(name).update(online=False, last_seen=ts)
-                add_event(ts, "player", "Left", f"{name} left")
+                end_session(name, ts)
+                add_event(ts, "player", "Left", f"{name} left", name=name)
     elif match := re.match(r"Random event set:(\S+)", body):
-        add_event(ts, "raid", "Raid", f"Raid started: {match.group(1)}")
+        add_event(ts, "raid", "Raid", f"Raid started: {match.group(1)}", raid=match.group(1))
+
+
+def set_verdict(death_id, cause):
+    """Record the cause of death that players chose. Returns False if the death is unknown."""
+    global state_dirty
+    with state_lock:
+        for death in state["deaths"]:
+            if death["id"] == death_id:
+                death["cause"] = cause
+                state_dirty = True
+                return True
+    return False
 
 
 def journal_field(value):
@@ -234,7 +277,19 @@ def status_payload():
     active_since = unix_time(game.get("ActiveEnterTimestamp"))
     with state_lock:
         ready = state["ready_at"] >= active_since > 0
-        players = [{"name": name, **details} for name, details in state["players"].items()]
+        now = time.time()
+        players = []
+        for name, details in state["players"].items():
+            played = details["played"]
+            if details["online"] and details["joined_at"]:
+                played += max(0, now - details["joined_at"])
+            players.append({**details, "name": name, "played": played})
+        deaths = list(reversed(state["deaths"][-30:]))
+        total_deaths = sum(details["deaths"] for details in state["players"].values())
+        tally = {}
+        for death in state["deaths"]:
+            if death["cause"]:
+                tally[death["cause"]] = tally.get(death["cause"], 0) + 1
         events = list(reversed(state["events"][-60:]))
         version = state["version"]
     if game.get("ActiveState") != "active":
@@ -251,6 +306,10 @@ def status_payload():
         "memory_total": total,
         "players": players,
         "events": events,
+        "deaths": deaths,
+        "total_deaths": total_deaths,
+        "cause_tally": tally,
+        "causes": CAUSES,
         "world": WORLD_NAME,
         "seed": WORLD_SEED,
         "game_port": GAME_PORT,
@@ -369,6 +428,29 @@ class Handler(BaseHTTPRequestHandler):
                     self.wfile.write(chunk)
         finally:
             download_lock.release()
+
+    def do_POST(self):
+        if urlparse(self.path).path != "/api/verdict":
+            self.send_json({"error": "Not found"}, 404)
+            return
+        # Requiring JSON stops other websites from posting here with a plain form.
+        length = int(self.headers.get("Content-Length") or 0)
+        if self.headers.get("Content-Type") != "application/json" or not 0 < length <= 1024:
+            self.send_json({"error": "Send a small JSON body."}, 400)
+            return
+        try:
+            body = json.loads(self.rfile.read(length))
+            death_id, cause = body["id"], body["cause"]
+        except (ValueError, KeyError, TypeError):
+            self.send_json({"error": "Send an id and a cause."}, 400)
+            return
+        if cause not in CAUSES or not isinstance(death_id, int):
+            self.send_json({"error": "That is not a known cause of death."}, 400)
+            return
+        if not set_verdict(death_id, cause):
+            self.send_json({"error": "That death is not on record."}, 404)
+            return
+        self.send_json({"ok": True})
 
     def do_GET(self):
         url = urlparse(self.path)
