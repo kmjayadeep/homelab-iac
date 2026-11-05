@@ -70,37 +70,38 @@ h2 { margin: 0; font: 400 clamp(1.75rem, 3.4vw, 2.6rem)/1.1 var(--head); }
 .kicker { margin-left: auto; font-style: italic; color: var(--ink-2); font-size: .98rem; text-align: right; }
 .empty { font-style: italic; color: var(--ink-2); }
 
-/* Obituaries */
-#obits { display: grid; gap: var(--gap); }
-.rest { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: var(--gap); }
-.rest .obit:last-child { grid-column: span var(--span, 1); }
-.obit { display: grid; grid-template-columns: 104px minmax(0, 1fr); grid-template-areas: "face head" "facts facts" "survivor survivor" "text text"; grid-template-rows: auto auto auto 1fr; gap: 12px 14px; padding: 13px; border: 3px double var(--ink); background: var(--sheet); min-width: 0; }
-@supports (grid-template-rows: subgrid) { .rest .obit { grid-row: span 4; grid-template-rows: subgrid; } }
-.face { grid-area: face; position: relative; aspect-ratio: 4 / 5; background: #b9b19a; border: 1px solid var(--ink); overflow: hidden; align-self: start; width: 100%; }
-.head { grid-area: head; min-width: 0; display: grid; align-content: start; gap: 2px; }
-.head .ml { font: 800 .95rem/1.35 var(--ml); color: var(--red); }
-.who { margin: 0; font: 400 clamp(1.4rem, 2.2vw, 1.75rem)/1.08 var(--head); overflow-wrap: anywhere; text-wrap: balance; }
-.tally { display: flex; align-items: baseline; gap: 6px; }
-.n { font: 400 clamp(2.5rem, 4.6vw, 3.4rem)/1 var(--head); color: var(--red); font-variant-numeric: lining-nums; }
-.tally small { font: 700 .95rem var(--body); }
-.rank { font-weight: 700; font-style: italic; }
-.facts { grid-area: facts; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; margin: 0; border-top: 1px solid var(--line); padding-top: 9px; font-variant-numeric: tabular-nums; }
-.facts > div { min-width: 0; }
-.facts dt { font: 600 .67rem/1.3 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
-.facts dd { margin: 0; font-weight: 600; font-size: .98rem; overflow-wrap: anywhere; }
+/* Death leaderboard */
+#board { --board: 74px minmax(0, 1fr) 124px 84px 104px 112px 84px; list-style: none; margin: 0; padding: 0; border: 3px double var(--ink); background: var(--sheet); }
+.board-head, .row { display: grid; grid-template-columns: var(--board); column-gap: 14px; align-items: center; padding-inline: 14px; }
+.board-head { padding-block: 7px; background: var(--ink); color: var(--sheet); font: 600 .67rem/1.3 var(--body); letter-spacing: .1em; text-transform: uppercase; }
+.board-head .num, .row .num { text-align: right; }
+.row { padding-block: 12px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.board-head + .row { border-top: 0; }
+.place { font: 400 2.4rem/1 var(--head); font-variant-numeric: lining-nums; color: var(--ink-2); text-align: center; white-space: nowrap; }
+.viking { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 12px; align-items: center; min-width: 0; }
+.face { position: relative; aspect-ratio: 4 / 5; background: #b9b19a; border: 1px solid var(--ink); overflow: hidden; align-self: start; width: 100%; }
+.about { display: grid; gap: 2px; justify-items: start; min-width: 0; }
+.who { margin: 0; font: 400 clamp(1.25rem, 2vw, 1.6rem)/1.1 var(--head); overflow-wrap: anywhere; }
+.rank { font-weight: 700; font-style: italic; font-size: .95rem; }
+.seen { font-weight: 400; font-style: normal; color: var(--ink-2); }
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--ok); vertical-align: 1px; }
-.survivor { grid-area: survivor; display: grid; gap: 4px; align-self: start; font-size: .88rem; font-variant-numeric: tabular-nums; }
-.sv-row { display: flex; justify-content: space-between; gap: 10px; }
-.sv-row b { font-weight: 700; white-space: nowrap; }
-.track { display: block; height: 7px; border: 1px solid var(--ink); background: var(--paper); }
+.text { margin: 3px 0 0; font-style: italic; font-size: .92rem; color: var(--ink-2); }
+.tally { display: grid; gap: 5px; justify-items: end; }
+.n { font: 400 2.6rem/1 var(--head); color: var(--ink-2); font-variant-numeric: lining-nums; }
+.dead .n { color: var(--red); }
+.track { display: block; width: 100%; height: 7px; border: 1px solid var(--ink); background: var(--paper); }
 .fill { display: block; height: 100%; background: var(--red); }
-.text { grid-area: text; align-self: end; font-style: italic; border-top: 1px solid var(--line); padding-top: 9px; font-size: .98rem; }
-.obit.first { grid-template-columns: minmax(250px, 36%) minmax(0, 1fr); grid-template-areas: "face head" "face facts" "face survivor" "face text"; border: 5px double var(--red); padding: clamp(12px, 1.8vw, 18px); column-gap: clamp(16px, 2.4vw, 28px); }
-.obit.first .face { aspect-ratio: auto; height: 100%; min-height: 270px; }
-.obit.first .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.obit.first .who { font-size: clamp(1.9rem, 3.6vw, 3rem); }
-.obit.first .n { font-size: clamp(3.6rem, 7.6vw, 6.2rem); }
-.obit.hit { animation: thump .5s ease; }
+.stats { display: contents; }
+.stat { min-width: 0; font-weight: 600; }
+.stat dt, .stat .label { display: none; }
+.survivor { display: grid; gap: 4px; }
+.row.first { position: relative; padding-block: 18px; background: var(--paper); outline: 3px solid var(--red); outline-offset: -3px; }
+.row.first .place, .row.first .n { color: var(--red); }
+.row.first .place { font-size: 4rem; }
+.row.first .n { font-size: 4.4rem; }
+.row.first .viking { grid-template-columns: 104px minmax(0, 1fr); gap: 16px; }
+.row.first .who { font-size: clamp(1.7rem, 3vw, 2.5rem); }
+.row.hit { animation: thump .5s ease; }
 @keyframes thump { 25% { transform: translateY(-5px) rotate(-.8deg); } 60% { transform: translateY(2px) rotate(.5deg); } }
 
 /* Coroner's desk */
@@ -208,8 +209,23 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
   .dateline > div:nth-child(n + 5) { border-top: 1px solid var(--line); }
 }
 @media (max-width: 1080px) {
-  .rest { grid-template-columns: repeat(var(--cols-tablet, 2), minmax(0, 1fr)); }
-  .rest .obit:last-child { grid-column: span var(--span-tablet, 1); }
+}
+@media (max-width: 860px) {
+  .board-head { display: none; }
+  .row, .row.first { grid-template-columns: 38px 48px minmax(0, 1fr) minmax(58px, auto); column-gap: 10px; row-gap: 6px; padding-inline: 12px; }
+  .row.first { grid-template-columns: 42px 64px minmax(0, 1fr) minmax(58px, auto); }
+  .viking, .row.first .viking, .about { display: contents; }
+  .place, .face, .who, .tally { grid-row: 1; }
+  .who, .row.first .who { font-size: 1.35rem; overflow-wrap: break-word; }
+  .rank, .award, .text { grid-column: 1 / -1; }
+  .award { justify-self: start; }
+  .place { font-size: 1.7rem; }
+  .row.first .place { font-size: 2.5rem; }
+  .n { font-size: 2.1rem; }
+  .row.first .n { font-size: 2.9rem; }
+  .stats { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; border-top: 1px solid var(--line); padding-top: 9px; margin-top: 4px; }
+  .stat .label { display: block; font: 600 .67rem/1.3 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+  .row .stat.num { text-align: left; }
 }
 @media (max-width: 700px) {
   .lead { grid-template-columns: minmax(0, 1fr); }
@@ -228,11 +244,6 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
   .star-row { grid-template-columns: minmax(0, 1fr); }
   .kicker { margin-left: 0; text-align: left; flex-basis: 100%; }
   .nameplate .ml { white-space: normal; }
-  .rest { grid-template-columns: minmax(0, 1fr); }
-  .rest .obit:last-child { grid-column: auto; }
-  .obit.first .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .obit.first { grid-template-columns: minmax(0, 1fr); grid-template-areas: "face" "head" "facts" "survivor" "text"; grid-template-rows: none; }
-  .obit.first .face { aspect-ratio: 3 / 2; height: auto; min-height: 0; }
   .case { grid-template-columns: 54px minmax(0, 1fr); }
   .case .face { width: 54px; }
   .case select { grid-column: 1 / -1; }
@@ -281,8 +292,8 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
     </figure>
   </section>
 
-  <div class="section-title"><h2>Obituaries</h2><span class="ml" lang="ml">ആദരാഞ്ജലികൾ</span></div>
-  <div id="obits"></div>
+  <div class="section-title"><h2>Death leaderboard</h2><span class="ml" lang="ml">മരണപ്പട്ടിക</span></div>
+  <ol id="board"></ol>
 
   <div class="section-title"><h2>The coroner's desk</h2><span id="leading" class="kicker"></span></div>
   <div class="desk" id="desk"></div>
@@ -561,32 +572,28 @@ function drawLead(data) {
     if (!$("photo").querySelector("svg")) { $("photo").classList.remove("art"); $("photo").innerHTML = viking(false, "meet"); }
   }
 }
-function fact(box, label, value, online) {
-  var row = document.createElement("div"), t = document.createElement("dt"), v = document.createElement("dd");
-  t.textContent = label;
-  if (online) { var dot = document.createElement("span"); dot.className = "dot"; v.append(dot); }
-  v.append(value);
-  row.append(t, v);
-  box.append(row);
-}
-function obitCard(p, i, data, lastByName) {
-  var dead = p.deaths > 0, first = i === 0 && dead, known = lastByName[p.name], el = document.createElement("article");
-  el.className = "obit" + (first ? " first" : "");
+function boardRow(p, place, tied, most, data, lastByName) {
+  var dead = p.deaths > 0, first = place === 1 && dead, known = lastByName[p.name], el = document.createElement("li");
+  el.className = "row" + (dead ? " dead" : "") + (first ? " first" : "");
   el.dataset.name = p.name;
-  el.innerHTML = '<div class="face"></div><div class="head"><span class="ml" lang="ml"></span><h3 class="who"></h3><div class="tally"><span class="n"></span><small></small></div><div class="rank"></div><div class="award" hidden></div></div><dl class="facts"></dl><div class="survivor"><div class="sv-row"><span title="Estimated from what the server can see">Survivor run (estimate)</span><b></b></div><span class="track"><span class="fill"></span></span></div><p class="text"></p>';
+  el.innerHTML = '<div class="place"></div><div class="viking"><div class="face"></div><div class="about"><h3 class="who"></h3><div class="rank"></div><div class="award" hidden></div><p class="text"></p></div></div><div class="tally"><span class="n"></span><span class="track"><span class="fill"></span></span></div><div class="stats"></div>';
+  el.querySelector(".place").textContent = place + (tied ? "=" : "");
+  el.querySelector(".place").title = tied ? "Tied for place " + place : "Place " + place;
   var face = el.querySelector(".face");
   // The lead story already shows the latest death, so don't print the same picture twice.
   var art = known;
-  if (first && known && data.deaths[0] && known.id === data.deaths[0].id) {
+  if (known && data.deaths[0] && known.id === data.deaths[0].id) {
     art = data.deaths.filter(function (d) { return d.name === p.name && d.id !== known.id; })[0];
   }
-  face.innerHTML = viking(dead, first ? "meet" : "slice");
+  face.innerHTML = viking(dead, "slice");
   if (art) setArt(face, art, viking(true, "slice"));
-  el.querySelector(".ml").textContent = dead ? "ചരമം" : "ജീവനോടെ";
   el.querySelector(".who").textContent = p.name;
-  el.querySelector(".n").textContent = p.deaths;
-  el.querySelector(".tally small").textContent = p.deaths === 1 ? "death" : "deaths";
-  el.querySelector(".rank").textContent = dead ? (TITLES[i] || TITLES[3]) : "Suspiciously alive";
+  var rank = el.querySelector(".rank"), seen = document.createElement("span");
+  rank.textContent = (dead ? (TITLES[place - 1] || TITLES[3]) : "Suspiciously alive") + " ";
+  seen.className = "seen";
+  if (p.online) { var dot = document.createElement("span"); dot.className = "dot"; seen.append(dot, "Online now"); }
+  else seen.textContent = "Seen " + ago(p.last_seen, data.now);
+  rank.append(seen);
   var favourite = topCause(p.causes), earned = favourite && p.causes[favourite] >= 2 && AWARDS[favourite];
   if (!dead) earned = ["അമരത്വം", "Immortal, for now"];
   if (earned) {
@@ -595,44 +602,50 @@ function obitCard(p, i, data, lastByName) {
     award.title = earned[1];
     setMixed(award, earned[0]);
   }
-  var facts = el.querySelector(".facts");
-  fact(facts, "Played", duration(p.played));
-  fact(facts, "Last seen", p.online ? "Online now" : ago(p.last_seen, data.now), p.online);
-  fact(facts, "Visits", p.sessions || 0);
-  fact(facts, "Longest life", duration(p.longest_life));
-  if (first) {
-    var hours = p.played / 3600;
-    fact(facts, "Deaths an hour", hours > .05 ? (p.deaths / hours).toFixed(1) : "–");
-    fact(facts, "Worst session", p.worst_session);
-  }
-  el.querySelector(".sv-row b").textContent = "Day " + p.streak_days + " of 30";
-  el.querySelector(".fill").style.width = (100 * Math.min(p.streak_days, 30) / 30) + "%";
+  el.querySelector(".n").textContent = p.deaths;
+  el.querySelector(".n").title = p.deaths === 1 ? "1 death" : p.deaths + " deaths";
+  el.querySelector(".fill").style.width = (most ? 100 * p.deaths / most : 0) + "%";
   var text = el.querySelector(".text");
-  if (known) setMixed(text, (known.cause ? causeInfo(known.cause)[2] + " " : "") + "Last words: \u201c" + lastWords(known) + "\u201d");
+  if (known) setMixed(text, (known.cause ? causeInfo(known.cause)[2] + " " : "") + "Last words: “" + lastWords(known) + "”");
   else text.textContent = dead ? "Last words: lost to history." : "Still alive. Nobody knows how. An inquiry has been opened.";
+  var stats = el.querySelector(".stats"), hours = p.played / 3600;
+  function stat(label, value) {
+    var cell = document.createElement("div"), name = document.createElement("span");
+    cell.className = "stat num";
+    name.className = "label";
+    name.textContent = label;
+    cell.append(name, value);
+    stats.append(cell);
+    return cell;
+  }
+  stat("Per hour", hours > .05 ? (p.deaths / hours).toFixed(1) : "–");
+  stat("Longest life", duration(p.longest_life));
+  var run = stat("Survivor run", "Day " + p.streak_days + "/30"), track = document.createElement("span"), fill = document.createElement("span");
+  run.classList.add("survivor");
+  run.title = "Estimated from what the server can see";
+  track.className = "track";
+  fill.className = "fill";
+  fill.style.width = (100 * Math.min(p.streak_days, 30) / 30) + "%";
+  track.append(fill);
+  run.append(track);
+  stat("Played", duration(p.played));
   return el;
 }
-function drawObits(data) {
-  var box = $("obits"), list = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths || b.played - a.played; });
+function drawBoard(data) {
+  var box = $("board"), list = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths || b.played - a.played; });
   box.textContent = "";
-  if (!list.length) { box.innerHTML = '<p class="empty">No Vikings have arrived yet. The obituary desk is on ചായ break.</p>'; return; }
-  var lastByName = {};
+  if (!list.length) { box.innerHTML = '<li class="empty">No Vikings have arrived yet. The obituary desk is on ചായ break.</li>'; return; }
+  var lastByName = {}, most = list[0].deaths, head = document.createElement("li");
   data.deaths.slice().reverse().forEach(function (d) { lastByName[d.name] = d; });
-  var rest = document.createElement("div");
-  rest.className = "rest";
+  head.className = "board-head";
+  head.setAttribute("aria-hidden", "true");
+  head.innerHTML = '<span style="text-align:center">Rank</span><span>Viking</span><span class="num">Deaths</span><span class="num">Per hour</span><span class="num">Longest life</span><span class="num">Survivor run</span><span class="num">Played</span>';
+  box.append(head);
   list.forEach(function (p, i) {
-    var card = obitCard(p, i, data, lastByName);
-    if (card.classList.contains("first")) box.append(card); else rest.append(card);
+    var place = list.findIndex(function (other) { return other.deaths === p.deaths; }) + 1;
+    var tied = list.filter(function (other) { return other.deaths === p.deaths; }).length > 1;
+    box.append(boardRow(p, place, tied, most, data, lastByName));
   });
-  var count = rest.childElementCount;
-  if (count) {
-    var cols = count === 1 ? 1 : count === 2 || count === 4 ? 2 : 3, tablet = Math.min(cols, 2);
-    rest.style.setProperty("--cols", cols);
-    rest.style.setProperty("--cols-tablet", tablet);
-    rest.style.setProperty("--span", cols - ((count - 1) % cols));
-    rest.style.setProperty("--span-tablet", tablet - ((count - 1) % tablet));
-    box.append(rest);
-  }
 }
 function drawDesk(data) {
   var box = $("desk");
@@ -809,11 +822,11 @@ function draw(data) {
   var outlook = pick(FORECASTS, day);
   $("forecast-label").textContent = outlook[0];
   $("forecast").textContent = outlook[1];
-  drawLead(data); drawObits(data); drawDesk(data); drawBosses(data); drawEditorial(data, day); drawStars(data, day); drawAwards(data); drawNews();
+  drawLead(data); drawBoard(data); drawDesk(data); drawBosses(data); drawEditorial(data, day); drawStars(data, day); drawAwards(data); drawNews();
   var newest = data.deaths[0] ? data.deaths[0].id : 0;
   if (lastDeathId !== null && newest > lastDeathId) {
     toast("Stop the press: " + data.deaths[0].name + " is dead");
-    var stone = document.querySelector('.obit[data-name="' + CSS.escape(data.deaths[0].name) + '"]');
+    var stone = document.querySelector('.row[data-name="' + CSS.escape(data.deaths[0].name) + '"]');
     if (stone) stone.classList.add("hit");
   }
   lastDeathId = newest;

@@ -22,13 +22,14 @@ GAME_PORT = int(os.environ.get("VALHEIM_SERVER_PORT", "2456"))
 SERVER_PASSWORD = os.environ.get("VALHEIM_SERVER_PASSWORD", "")
 WORLDS_DIR = Path(os.environ["VALHEIM_WORLDS_DIR"])
 STATE_DIR = Path(os.environ.get("STATE_DIRECTORY", "/var/lib/valheim-dashboard"))
+IGNORED_PLAYERS = set(filter(None, os.environ.get("VALHEIM_DASHBOARD_IGNORED_PLAYERS", "").split(",")))
 STATE_FILE = STATE_DIR / "state.json"
 INDEX_FILE = Path(__file__).with_name("index.html")
 UNIT = "valheim"
 BACKUP_UNIT = "backup-valheim.service"
 MAX_EVENTS = 200
 MAX_DEATHS = 300
-STATE_SCHEMA = 4
+STATE_SCHEMA = 5
 DEFAULT_DAY_LENGTH = 1800
 WEEK_SECONDS = 7 * 86400
 BOSSES = (
@@ -65,7 +66,7 @@ def empty_state():
         "schema": STATE_SCHEMA, "cursor": None, "players": {}, "sessions": {}, "events": [], "deaths": [],
         "next_death": 1, "version": "", "ready_at": 0, "verdicts": {}, "bosses": {},
         "world_time": 0.0, "world_day": None, "save_number": None,
-        "day_length": DEFAULT_DAY_LENGTH,
+        "day_length": DEFAULT_DAY_LENGTH, "ignored": sorted(IGNORED_PLAYERS),
     }
 
 
@@ -79,10 +80,10 @@ def load_state():
         loaded = json.loads(STATE_FILE.read_text())
     except (OSError, ValueError):
         return
-    if loaded.get("schema") == STATE_SCHEMA:
+    if loaded.get("schema") == STATE_SCHEMA and loaded.get("ignored") == sorted(IGNORED_PLAYERS):
         state.update(loaded)
         return
-    # An older summary has different fields, so rebuild it from the journal.
+    # An older summary has different fields or players, so rebuild it from the journal.
     # Keep what only players can provide.
     state["verdicts"] = dict(loaded.get("verdicts", {}))
     for death in loaded.get("deaths", []):
@@ -162,6 +163,8 @@ def process_line(message, ts):
         add_event(ts, "player", "Failed", "Someone tried a wrong password")
     elif match := re.match(r"Got character ZDOID from (.+) : (-?\d+):(\d+)$", body):
         name = match.group(1)
+        if name in IGNORED_PLAYERS:
+            return
         if name not in sessions.values():
             waiting = [steam for steam, known in sessions.items() if known is None]
             if waiting:

@@ -24,6 +24,7 @@ world_download_enabled: false
 world_download_port: 8000
 world_download_interface: ""
 valheim_dashboard_enabled: false
+valheim_dashboard_ignored_players: []
 valheim_lan_access_enabled: false
 valheim_lan_interface: ""
 valheim_lan_cidr: ""
