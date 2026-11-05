@@ -22,14 +22,16 @@ GAME_PORT = int(os.environ.get("VALHEIM_SERVER_PORT", "2456"))
 SERVER_PASSWORD = os.environ.get("VALHEIM_SERVER_PASSWORD", "")
 WORLDS_DIR = Path(os.environ["VALHEIM_WORLDS_DIR"])
 STATE_DIR = Path(os.environ.get("STATE_DIRECTORY", "/var/lib/valheim-dashboard"))
+IGNORED_PLAYERS = set(filter(None, os.environ.get("VALHEIM_DASHBOARD_IGNORED_PLAYERS", "").split(",")))
 STATE_FILE = STATE_DIR / "state.json"
 INDEX_FILE = Path(__file__).with_name("index.html")
 UNIT = "valheim"
 BACKUP_UNIT = "backup-valheim.service"
 MAX_EVENTS = 200
 MAX_DEATHS = 300
-STATE_SCHEMA = 4
+STATE_SCHEMA = 5
 DEFAULT_DAY_LENGTH = 1800
+WEEK_SECONDS = 7 * 86400
 BOSSES = (
     ("defeated_eikthyr", "Eikthyr"),
     ("defeated_gdking", "The Elder"),
@@ -40,7 +42,7 @@ BOSSES = (
     ("defeated_fader", "Fader"),
 )
 ART_DIR = STATE_DIR / "art"
-ART_NAMES = ("tree", "swamp", "deathsquito", "mountain", "boar", "building")
+ART_NAMES = ("tree", "swamp", "deathsquito", "mountain", "boar", "building", "drowned")
 CAUSES = (
     "tree", "troll", "greydwarf", "neck", "boar", "deathsquito", "mountain", "building",
     "drowned", "swamp", "raid", "boss", "friend", "stupidity", "mystery",
@@ -64,7 +66,7 @@ def empty_state():
         "schema": STATE_SCHEMA, "cursor": None, "players": {}, "sessions": {}, "events": [], "deaths": [],
         "next_death": 1, "version": "", "ready_at": 0, "verdicts": {}, "bosses": {},
         "world_time": 0.0, "world_day": None, "save_number": None,
-        "day_length": DEFAULT_DAY_LENGTH,
+        "day_length": DEFAULT_DAY_LENGTH, "ignored": sorted(IGNORED_PLAYERS),
     }
 
 
@@ -78,10 +80,10 @@ def load_state():
         loaded = json.loads(STATE_FILE.read_text())
     except (OSError, ValueError):
         return
-    if loaded.get("schema") == STATE_SCHEMA:
+    if loaded.get("schema") == STATE_SCHEMA and loaded.get("ignored") == sorted(IGNORED_PLAYERS):
         state.update(loaded)
         return
-    # An older summary has different fields, so rebuild it from the journal.
+    # An older summary has different fields or players, so rebuild it from the journal.
     # Keep what only players can provide.
     state["verdicts"] = dict(loaded.get("verdicts", {}))
     for death in loaded.get("deaths", []):
@@ -161,6 +163,8 @@ def process_line(message, ts):
         add_event(ts, "player", "Failed", "Someone tried a wrong password")
     elif match := re.match(r"Got character ZDOID from (.+) : (-?\d+):(\d+)$", body):
         name = match.group(1)
+        if name in IGNORED_PLAYERS:
+            return
         if name not in sessions.values():
             waiting = [steam for steam, known in sessions.items() if known is None]
             if waiting:
@@ -398,12 +402,24 @@ def status_payload():
             })
         deaths = []
         tally = {}
+        causes_by_player = {}
+        week = {"deaths": {}, "causes": {}}
         for death in reversed(state["deaths"]):
             verdict = state["verdicts"].get(death_key(death), {})
-            if verdict.get("cause"):
-                tally[verdict["cause"]] = tally.get(verdict["cause"], 0) + 1
+            cause = verdict.get("cause")
+            recent = now - death["ts"] < WEEK_SECONDS
+            if recent:
+                week["deaths"][death["name"]] = week["deaths"].get(death["name"], 0) + 1
+            if cause:
+                tally[cause] = tally.get(cause, 0) + 1
+                mine = causes_by_player.setdefault(death["name"], {})
+                mine[cause] = mine.get(cause, 0) + 1
+                if recent:
+                    week["causes"][cause] = week["causes"].get(cause, 0) + 1
             if len(deaths) < 30:
                 deaths.append({**death, "cause": verdict.get("cause")})
+        for entry in players:
+            entry["causes"] = causes_by_player.get(entry["name"], {})
         total_deaths = sum(details["deaths"] for details in state["players"].values())
         events = list(reversed(sorted(state["events"], key=lambda item: item["ts"])[-60:]))
         bosses = [{"key": key, "name": boss, "ts": state["bosses"].get(key, 0)} for key, boss in BOSSES]
@@ -427,6 +443,7 @@ def status_payload():
         "total_deaths": total_deaths,
         "cause_tally": tally,
         "bosses": bosses,
+        "week": week,
         "world_day": world_day,
         "causes": CAUSES,
         "world": WORLD_NAME,
