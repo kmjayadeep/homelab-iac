@@ -122,6 +122,34 @@ select.open { border-color: var(--red); color: var(--red); }
 .boss.down span.note { color: var(--red); font-weight: 700; }
 .boss .stamp { position: absolute; right: 5px; bottom: 5px; padding: 0 5px; border: 2px solid var(--red); color: var(--red); font: 400 .82rem/1.35 var(--head); letter-spacing: .08em; transform: rotate(-8deg); opacity: .85; }
 
+/* Editorial page */
+.editorial { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .85fr) minmax(0, 1fr); gap: clamp(18px, 3vw, 32px); align-items: start; }
+.editorial > * { min-width: 0; }
+.toon-line { display: block; font: 800 clamp(1.15rem, 2vw, 1.45rem)/1.4 var(--ml); font-style: normal; color: var(--ink); }
+.wanted { background: #e3d5ae; border: 2px solid var(--ink); outline: 1px solid var(--ink); outline-offset: 3px; padding: 12px; text-align: center; display: grid; gap: 6px; transform: rotate(-1.2deg); transition: transform .18s ease; box-shadow: 3px 5px 14px rgba(23, 20, 15, .25); }
+.wanted:hover { transform: rotate(.6deg) scale(1.015); }
+.wanted-head { font: 400 clamp(2.2rem, 4vw, 3rem)/1 var(--head); letter-spacing: .05em; text-transform: uppercase; }
+.mug { position: relative; aspect-ratio: 4 / 3; background: #c9b98d; border: 1px solid var(--ink); display: grid; place-items: center; font: 400 4rem var(--head); color: var(--ink-2); overflow: hidden; }
+.mug img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: sepia(.45) contrast(1.05); }
+.wanted-name { font: 400 clamp(1.5rem, 2.6vw, 2rem)/1.1 var(--head); overflow-wrap: anywhere; }
+.reward { font-weight: 700; color: var(--red); }
+.letters { display: grid; gap: 8px; }
+.letter { display: grid; gap: 3px; padding-block: 8px; border-top: 1px solid var(--line); }
+.letter:first-child { border-top: 0; padding-top: 0; }
+.signed { text-align: right; font-style: italic; color: var(--ink-2); font-size: .92rem; }
+.stars { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 0 clamp(18px, 3vw, 36px); }
+.star-row { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 4px 14px; align-items: baseline; padding-block: 7px; border-bottom: 1px solid var(--line); }
+.star-row b { font: 400 1.1rem/1.2 var(--head); overflow-wrap: anywhere; }
+.star-row span { font-style: italic; }
+.awards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
+.trophy { display: grid; gap: 3px; align-content: start; justify-items: center; text-align: center; padding: 12px 10px; border: 3px double var(--ink); background: var(--sheet); min-width: 0; }
+.trophy svg { width: 38px; height: 38px; color: #9a7416; }
+.trophy h3 { font: 800 1.1rem/1.4 var(--ml); }
+.trophy b { font: 400 1.35rem/1.15 var(--head); overflow-wrap: anywhere; }
+.trophy p { font-size: .92rem; font-style: italic; color: var(--ink-2); }
+.award { justify-self: start; margin-top: 3px; padding: 0 8px; border: 1.5px solid var(--red); color: var(--red); font-size: .95rem; }
+.award .mlrun { font-weight: 800; }
+
 /* Back of the page */
 .back { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.25fr); margin-top: var(--section); border-top: 3px solid var(--ink); }
 .col { min-width: 0; padding: 10px clamp(14px, 2vw, 24px) 0; border-left: 1px solid var(--soft); display: flex; flex-direction: column; gap: 10px; }
@@ -158,6 +186,11 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
 #toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--sheet); padding: 9px 14px; font-weight: 600; z-index: 9; max-width: calc(100% - 32px); box-shadow: 0 6px 22px rgba(23, 20, 15, .35); }
 
 @media (max-width: 1080px) {
+  .editorial { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+  .letters { grid-column: 1 / -1; }
+  #letters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .letter, .letter:first-child { border-top: 0; padding-block: 0; }
+  .awards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .back { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .col:nth-child(2) { padding-right: 0; }
   .col:last-child { grid-column: 1 / -1; padding: 12px 0 0; border-left: 0; border-top: 3px solid var(--ink); margin-top: 18px; }
@@ -189,6 +222,10 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
   .dateline > div:nth-child(n) { border-left: 1px solid var(--line); padding-left: 8px; border-top: 1px solid var(--line); }
   .dateline > div:nth-child(2n + 1) { border-left: 0; padding-left: 0; }
   .dateline > div:nth-child(-n + 2) { border-top: 0; }
+  .editorial { grid-template-columns: minmax(0, 1fr); }
+  #letters { grid-template-columns: minmax(0, 1fr); }
+  .letter, .letter:first-child { border-top: 1px solid var(--line); padding-block: 8px; }
+  .star-row { grid-template-columns: minmax(0, 1fr); }
   .kicker { margin-left: 0; text-align: left; flex-basis: 100%; }
   .nameplate .ml { white-space: normal; }
   .rest { grid-template-columns: minmax(0, 1fr); }
@@ -252,6 +289,31 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
 
   <div class="section-title"><h2>Forsaken slain</h2><span class="kicker" id="boss-line"></span></div>
   <div class="bosses" id="bosses"></div>
+
+  <div class="section-title"><h2>The editorial page</h2><span class="ml" lang="ml">മുഖപ്രസംഗം</span></div>
+  <div class="editorial">
+    <figure class="cartoon">
+      <div class="photo" id="cartoon"></div>
+      <figcaption><span class="lab">Cartoon of the day</span><span class="toon-line" id="cartoon-caption"></span></figcaption>
+    </figure>
+    <article class="wanted">
+      <div class="wanted-head">Wanted</div>
+      <div class="mug" id="wanted-photo">?</div>
+      <div class="wanted-name" id="wanted-name"></div>
+      <p id="wanted-crime"></p>
+      <p class="reward" id="wanted-reward"></p>
+    </article>
+    <div class="letters">
+      <h3>Letters to the editor</h3>
+      <div id="letters"></div>
+    </div>
+  </div>
+
+  <div class="section-title"><h2>Your stars</h2><span class="kicker">Today's reading, and no refunds</span></div>
+  <div class="stars" id="stars"></div>
+
+  <div class="section-title"><h2>The Vartha Awards</h2><span class="kicker">Winners from the last 7 days</span></div>
+  <div class="awards" id="awards"></div>
 
   <div class="back">
     <div class="col">
@@ -352,19 +414,71 @@ var FORECASTS = [
   ["Your stars today", "Avoid water, heights, trees and your friends."],
   ["Your stars today", "A tall stranger will fall on you. It is a birch."]
 ];
+var CARTOONS = [
+  ["tree", "മരം: ഞാൻ ഒന്നും ചെയ്തില്ല."],
+  ["swamp", "നീന്തൽ പഠിച്ചിട്ട് വരാമായിരുന്നു."],
+  ["deathsquito", "ഒരു കൊതുകല്ലേ, എന്ത് ചെയ്യാനാ?"],
+  ["mountain", "ഇവിടെ നിന്ന് നല്ല കാഴ്ചയാണ്."],
+  ["boar", "പന്നി: ഇന്ന് നിന്റെ ദിവസമല്ല."],
+  ["building", "ബിൽഡിംഗ് പെർമിറ്റ് ഉണ്ടായിരുന്നില്ല."],
+  ["drowned", "ദുബായ് ഇപ്പോൾ എത്തും."]
+];
+var LETTERS = [
+  ["Sir, I am tired of being blamed for everything. I was standing still. {n} walked into me.", "A Birch, Black Forest"],
+  ["Sir, I charged once. {n} screamed for a week. Young Vikings have no manners.", "A Boar, the Meadows"],
+  ["Sir, kindly stop printing my name next to the word shame. I have a family.", "A Neck, the shallows"],
+  ["Sir, I watched {n} walk off the mountain. I said nothing. I am a seagull.", "A Seagull, the cliff"],
+  ["Sir, I never promised Dubai. I said it was near Dubai.", "ഗഫൂർക്ക, Madras"],
+  ["Sir, I sold {n} a fine helmet. It is now at the bottom of a swamp. No refunds.", "Haldor, Black Forest"],
+  ["Sir, I have received {n} at Valhalla so many times that we now keep a chair. Please advise.", "Odin, Valhalla"],
+  ["Sir, I keep offering tips. Nobody reads them, {n} especially.", "Hugin, a raven"],
+  ["Sir, we regret to inform readers that the map is not coming.", "The Editor"]
+];
+var STARS = [
+  "{d} so far. The stars suggest an indoor hobby.",
+  "Lucky item: a map. You do not have one.",
+  "A stranger offers you a boat to Dubai. Refuse.",
+  "A good day for building, and a bad day for standing on it.",
+  "Your shield is in your inventory. Consider using it.",
+  "Mars is in the swamp, and soon you will be too.",
+  "Someone close to you will betray you. It is the ground.",
+  "Today you will find something new. It will be sharp."
+];
+var ALIVE_STARS = ["Suspicious luck. The trees have started talking.", "The stars have checked twice. You should be dead by now.", "Death has your address, but no map."];
+var WANTED_NAMES = { tree: "A tree", troll: "A troll", greydwarf: "A greydwarf", neck: "A Neck", boar: "A boar", deathsquito: "A deathsquito", mountain: "The mountain", building: "Your own house", drowned: "The sea", swamp: "The swamp", raid: "The raiders", boss: "The boss", friend: "A so-called friend", stupidity: "Own stupidity", mystery: "Person unknown" };
+var REWARDS = ["3 deer hides and one apology", "1 slightly used tombstone", "A free boat to Dubai", "Half a turnip", "All the resin you can carry"];
+/* Title earned by dying the same way at least twice: Malayalam, then its English meaning. */
+var AWARDS = {
+  tree: ["മരംവെട്ടി", "The woodcutter"],
+  troll: ["ട്രോളിന്റെ സ്വന്തം", "The troll's very own"],
+  greydwarf: ["കുള്ളന്മാരോട് തോറ്റു", "Lost to dwarfs"],
+  neck: ["നെക്കിന്റെ ഇര", "A Neck's prey"],
+  boar: ["പന്നിയുടെ ഇര", "A boar's prey"],
+  deathsquito: ["കൊതുകിന്റെ ഇര", "A mosquito's prey"],
+  mountain: ["മലകയറ്റം: പരാജയം", "Mountaineering: failed"],
+  building: ["സ്വന്തം വീട് ചതിച്ചു", "Betrayed by own house"],
+  drowned: ["ദുബായ് യാത്ര", "The Dubai voyage"],
+  swamp: ["ചതുപ്പിന്റെ അതിഥി", "Guest of the swamp"],
+  raid: ["വീരമൃത്യു", "A hero's death"],
+  boss: ["ബോസിന്റെ ഇര", "A boss's prey"],
+  friend: ["ചങ്ക് ചതിച്ചു", "Betrayed by a best friend"],
+  stupidity: ["സ്വയംകൃതാനർത്ഥം", "Self-inflicted disaster"],
+  mystery: ["സി.ഐ.ഡി. കേസ്", "A CID case"]
+};
 var STORIES = [
   "Authorities blame the lack of a map. Friends blame {n}.",
   "The family has asked everyone to stop laughing.",
   "Police say the investigation is complete, and that it was a skill issue.",
   "Odin was unavailable for comment and has stopped answering calls from {n}."
 ];
-var ART = ["tree", "swamp", "deathsquito", "mountain", "boar", "building"];
+var RANDOM_ART = ["tree", "swamp", "deathsquito", "mountain", "boar", "building"];
+var ART = RANDOM_ART.concat("drowned");
 var causeInfo = function (c) { return CAUSE[c] || CAUSE.mystery; };
 /* The matching picture when the cause has one, otherwise a stable random pick for that death. */
 function artFor(d) {
   if (ART.indexOf(d.cause) > -1) return d.cause;
   var mixed = (Math.imul(d.id, 2654435761) >>> 0) % 4294967291;
-  return ART[mixed % ART.length];
+  return RANDOM_ART[mixed % RANDOM_ART.length];
 }
 function setArt(box, d, fallback) {
   var name = artFor(d), src = "/art/" + name + ".jpg";
@@ -381,6 +495,8 @@ function setArt(box, d, fallback) {
 ART.forEach(function (name) { new Image().src = "/art/" + name + ".jpg"; });
 var fill = function (t, name) { return t.replace(/\{n\}/g, name); };
 
+function nameSeed(name) { var h = 7; for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0; return h; }
+function topCause(counts) { return Object.keys(counts || {}).sort(function (a, b) { return counts[b] - counts[a] || a.localeCompare(b); })[0]; }
 function viking(crossed, fit) {
   return '<svg viewBox="0 0 100 125" preserveAspectRatio="xMidYMid ' + fit + '" aria-hidden="true"><rect width="100" height="125" fill="#b9b19a"/><path fill="#17140f" d="M16 125c2-28 15-38 34-38s32 10 34 38z"/><path fill="#6b6454" d="M31 54c0 22 8 37 19 37s19-15 19-37z"/><path fill="#17140f" d="M28 56c5 34 14 48 22 48s17-14 22-48c-5 10-14 13-22 13s-17-3-22-13z"/><path fill="#2b2a26" d="M24 55c0-22 11-36 26-36s26 14 26 36z"/><rect x="20" y="51" width="60" height="7" fill="#17140f"/><rect x="47" y="51" width="6" height="22" fill="#17140f"/><path fill="#d8d0ba" d="M25 40C13 34 8 22 10 8c5 11 12 19 22 21zM75 40c12-6 17-18 15-32-5 11-12 19-22 21z"/>' + (crossed ? '<path fill="none" stroke="#b5141c" stroke-width="4" d="M4 4 96 121M96 4 4 121"/>' : "") + "</svg>";
 }
@@ -457,7 +573,7 @@ function obitCard(p, i, data, lastByName) {
   var dead = p.deaths > 0, first = i === 0 && dead, known = lastByName[p.name], el = document.createElement("article");
   el.className = "obit" + (first ? " first" : "");
   el.dataset.name = p.name;
-  el.innerHTML = '<div class="face"></div><div class="head"><span class="ml" lang="ml"></span><h3 class="who"></h3><div class="tally"><span class="n"></span><small></small></div><div class="rank"></div></div><dl class="facts"></dl><div class="survivor"><div class="sv-row"><span title="Estimated from what the server can see">Survivor run (estimate)</span><b></b></div><span class="track"><span class="fill"></span></span></div><p class="text"></p>';
+  el.innerHTML = '<div class="face"></div><div class="head"><span class="ml" lang="ml"></span><h3 class="who"></h3><div class="tally"><span class="n"></span><small></small></div><div class="rank"></div><div class="award" hidden></div></div><dl class="facts"></dl><div class="survivor"><div class="sv-row"><span title="Estimated from what the server can see">Survivor run (estimate)</span><b></b></div><span class="track"><span class="fill"></span></span></div><p class="text"></p>';
   var face = el.querySelector(".face");
   // The lead story already shows the latest death, so don't print the same picture twice.
   var art = known;
@@ -471,6 +587,14 @@ function obitCard(p, i, data, lastByName) {
   el.querySelector(".n").textContent = p.deaths;
   el.querySelector(".tally small").textContent = p.deaths === 1 ? "death" : "deaths";
   el.querySelector(".rank").textContent = dead ? (TITLES[i] || TITLES[3]) : "Suspiciously alive";
+  var favourite = topCause(p.causes), earned = favourite && p.causes[favourite] >= 2 && AWARDS[favourite];
+  if (!dead) earned = ["അമരത്വം", "Immortal, for now"];
+  if (earned) {
+    var award = el.querySelector(".award");
+    award.hidden = false;
+    award.title = earned[1];
+    setMixed(award, earned[0]);
+  }
   var facts = el.querySelector(".facts");
   fact(facts, "Played", duration(p.played));
   fact(facts, "Last seen", p.online ? "Online now" : ago(p.last_seen, data.now), p.online);
@@ -560,6 +684,81 @@ function drawBosses(data) {
     box.append(el);
   });
 }
+function drawEditorial(data, day) {
+  var today = pick(CARTOONS, day), box = $("cartoon");
+  var toonSrc = "/art/" + today[0] + ".jpg", toon = box.querySelector("img");
+  if (!toon || toon.getAttribute("src") !== toonSrc) {
+    var img = new Image();
+    img.alt = "Today's cartoon";
+    img.src = toonSrc;
+    box.textContent = "";
+    box.classList.add("art");
+    box.append(img);
+  }
+  setMixed($("cartoon-caption"), today[1]);
+  var worst = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0], target = worst ? worst.name : "our readers";
+  var list = $("letters");
+  list.textContent = "";
+  for (var i = 0; i < 3; i++) {
+    var letter = pick(LETTERS, day + i * 4), item = document.createElement("article"), body = document.createElement("p"), sign = document.createElement("p");
+    item.className = "letter"; sign.className = "signed";
+    setMixed(body, fill(letter[0], target));
+    setMixed(sign, letter[1]);
+    item.append(body, sign);
+    list.append(item);
+  }
+  var cause = topCause(data.cause_tally), label = cause ? (WANTED_NAMES[cause] || "Person unknown") : "A map";
+  $("wanted-name").textContent = label;
+  $("wanted-crime").textContent = cause ? "For the deaths of " + data.cause_tally[cause] + (data.cause_tally[cause] === 1 ? " Viking" : " Vikings") : "For failing to exist";
+  $("wanted-reward").textContent = "Reward: " + pick(REWARDS, data.total_deaths);
+  var mug = $("wanted-photo"), src = cause && ART.indexOf(cause) > -1 ? "/art/" + cause + ".jpg" : "";
+  var shown = mug.querySelector("img");
+  if ((shown ? shown.getAttribute("src") : "") !== src) {
+    mug.textContent = "?";
+    if (src) { var pic = new Image(); pic.alt = "Likeness of the accused"; pic.src = src; mug.textContent = ""; mug.append(pic); }
+  }
+}
+function drawStars(data, day) {
+  var box = $("stars");
+  box.textContent = "";
+  if (!data.players.length) { box.innerHTML = '<p class="empty">The astrologer is waiting for clients.</p>'; return; }
+  data.players.forEach(function (p) {
+    var row = document.createElement("div"), name = document.createElement("b"), line = document.createElement("span"), seed = nameSeed(p.name) + day;
+    row.className = "star-row";
+    name.textContent = p.name;
+    var favourite = topCause(p.causes);
+    var text = p.deaths ? pick(STARS, seed) : pick(ALIVE_STARS, seed);
+    if (p.deaths && favourite && seed % 3 === 0) text = "Avoid " + causeInfo(favourite)[0].toLowerCase() + " today. It remembers you.";
+    line.textContent = text.replace("{d}", p.deaths + (p.deaths === 1 ? " death" : " deaths"));
+    row.append(name, line);
+    box.append(row);
+  });
+}
+function drawAwards(data) {
+  var names = Object.keys(data.week.deaths).sort(function (a, b) { return data.week.deaths[b] - data.week.deaths[a]; });
+  var killer = topCause(data.week.causes);
+  var survivor = data.players.slice().sort(function (a, b) { return b.longest_life - a.longest_life; })[0];
+  var quiet = data.players.filter(function (p) { return !data.week.deaths[p.name]; })[0];
+  var rows = [
+    ["മികച്ച മരണം", "Best death", names[0] || "No nominees", names[0] ? data.week.deaths[names[0]] + (data.week.deaths[names[0]] === 1 ? " death this week" : " deaths this week") : "Nobody died. The jury is disappointed."],
+    ["മികച്ച വില്ലൻ", "Best villain", killer ? causeInfo(killer)[0] : "No nominees", killer ? data.week.causes[killer] + " this week, and no remorse" : "No verdicts yet"],
+    ["ആജീവനാന്ത അതിജീവനം", "Lifetime survival", survivor && survivor.longest_life > 60 ? survivor.name : "No nominees", survivor && survivor.longest_life > 60 ? "Stayed alive for " + duration(survivor.longest_life) : "Nobody has lasted long enough"],
+    ["ജൂറി പരാമർശം", "Special jury mention", quiet ? quiet.name : "Nobody", quiet ? "No deaths this week. Possibly not playing." : "Everyone died this week. Well done."]
+  ];
+  var box = $("awards");
+  box.textContent = "";
+  rows.forEach(function (r) {
+    var card = document.createElement("article"), title = document.createElement("h3"), en = document.createElement("span"), who = document.createElement("b"), note = document.createElement("p");
+    card.className = "trophy";
+    card.innerHTML = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M14 5h20v4h9v5c0 7-5 11-10 12-1 4-4 6-6 7v6h6v5H15v-5h6v-6c-2-1-5-3-6-7C10 25 5 21 5 14V9h9zm-5 8v1c0 4 2 7 5 8V13zm30 0h-5v9c3-1 5-4 5-8z"/></svg>';
+    setMixed(title, r[0]);
+    en.className = "lab"; en.textContent = r[1];
+    who.textContent = r[2];
+    note.textContent = r[3];
+    card.append(title, en, who, note);
+    box.append(card);
+  });
+}
 function newsText(e) {
   var n = e.name || "", seed = Math.floor(e.ts);
   if (e.kind === "death") { var d = latest.deaths.filter(function (x) { return x.id === e.death_id; })[0]; return d ? deathHeadline(d) + "." : n + " died."; }
@@ -610,7 +809,7 @@ function draw(data) {
   var outlook = pick(FORECASTS, day);
   $("forecast-label").textContent = outlook[0];
   $("forecast").textContent = outlook[1];
-  drawLead(data); drawObits(data); drawDesk(data); drawBosses(data); drawNews();
+  drawLead(data); drawObits(data); drawDesk(data); drawBosses(data); drawEditorial(data, day); drawStars(data, day); drawAwards(data); drawNews();
   var newest = data.deaths[0] ? data.deaths[0].id : 0;
   if (lastDeathId !== null && newest > lastDeathId) {
     toast("Stop the press: " + data.deaths[0].name + " is dead");

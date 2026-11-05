@@ -30,6 +30,7 @@ MAX_EVENTS = 200
 MAX_DEATHS = 300
 STATE_SCHEMA = 4
 DEFAULT_DAY_LENGTH = 1800
+WEEK_SECONDS = 7 * 86400
 BOSSES = (
     ("defeated_eikthyr", "Eikthyr"),
     ("defeated_gdking", "The Elder"),
@@ -40,7 +41,7 @@ BOSSES = (
     ("defeated_fader", "Fader"),
 )
 ART_DIR = STATE_DIR / "art"
-ART_NAMES = ("tree", "swamp", "deathsquito", "mountain", "boar", "building")
+ART_NAMES = ("tree", "swamp", "deathsquito", "mountain", "boar", "building", "drowned")
 CAUSES = (
     "tree", "troll", "greydwarf", "neck", "boar", "deathsquito", "mountain", "building",
     "drowned", "swamp", "raid", "boss", "friend", "stupidity", "mystery",
@@ -398,12 +399,24 @@ def status_payload():
             })
         deaths = []
         tally = {}
+        causes_by_player = {}
+        week = {"deaths": {}, "causes": {}}
         for death in reversed(state["deaths"]):
             verdict = state["verdicts"].get(death_key(death), {})
-            if verdict.get("cause"):
-                tally[verdict["cause"]] = tally.get(verdict["cause"], 0) + 1
+            cause = verdict.get("cause")
+            recent = now - death["ts"] < WEEK_SECONDS
+            if recent:
+                week["deaths"][death["name"]] = week["deaths"].get(death["name"], 0) + 1
+            if cause:
+                tally[cause] = tally.get(cause, 0) + 1
+                mine = causes_by_player.setdefault(death["name"], {})
+                mine[cause] = mine.get(cause, 0) + 1
+                if recent:
+                    week["causes"][cause] = week["causes"].get(cause, 0) + 1
             if len(deaths) < 30:
                 deaths.append({**death, "cause": verdict.get("cause")})
+        for entry in players:
+            entry["causes"] = causes_by_player.get(entry["name"], {})
         total_deaths = sum(details["deaths"] for details in state["players"].values())
         events = list(reversed(sorted(state["events"], key=lambda item: item["ts"])[-60:]))
         bosses = [{"key": key, "name": boss, "ts": state["bosses"].get(key, 0)} for key, boss in BOSSES]
@@ -427,6 +440,7 @@ def status_payload():
         "total_deaths": total_deaths,
         "cause_tally": tally,
         "bosses": bosses,
+        "week": week,
         "world_day": world_day,
         "causes": CAUSES,
         "world": WORLD_NAME,
