@@ -10,6 +10,8 @@ valheim_preset: ""
 # Keep every entry a World Modifiers menu option; other keys permanently block
 # achievements on the world.
 valheim_modifiers:
+  # Rebuild the world keys from this list on every boot.
+  - "-resetmodifiers"
   - "-modifier combat hard"
   - "-modifier deathpenalty casual"
   - "-modifier portals casual"
