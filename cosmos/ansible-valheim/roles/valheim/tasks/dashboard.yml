@@ -1,0 +1,75 @@
+---
+- name: Require a private interface for the dashboard
+  ansible.builtin.assert:
+    that:
+      - world_download_interface | default("") | length > 0
+    fail_msg: Set world_download_interface to a private interface such as tailscale0.
+
+- name: Install dashboard dependency
+  ansible.builtin.apt:
+    name: python3
+    state: present
+
+- name: Create dashboard directory
+  ansible.builtin.file:
+    path: /opt/valheim-dashboard
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install dashboard files
+  ansible.builtin.copy:
+    src: "dashboard/{{ item }}"
+    dest: "/opt/valheim-dashboard/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - server.py
+    - index.html
+  register: dashboard_files
+
+- name: Create dashboard settings
+  ansible.builtin.template:
+    src: valheim-dashboard.env.j2
+    dest: /etc/valheim-dashboard.env
+    owner: root
+    group: root
+    mode: "0600"
+  register: dashboard_settings
+  no_log: true
+
+- name: Create dashboard service
+  ansible.builtin.template:
+    src: valheim-dashboard.service.j2
+    dest: /etc/systemd/system/valheim-dashboard.service
+    owner: root
+    group: root
+    mode: "0644"
+  register: dashboard_service
+
+- name: Stop the old world download service
+  ansible.builtin.systemd:
+    name: valheim-world-download.service
+    enabled: false
+    state: stopped
+  failed_when: false
+
+- name: Remove the old world download service
+  ansible.builtin.file:
+    path: /etc/systemd/system/valheim-world-download.service
+    state: absent
+
+- name: Enable and start dashboard
+  ansible.builtin.systemd:
+    name: valheim-dashboard.service
+    daemon_reload: true
+    enabled: true
+    state: started
+
+- name: Restart dashboard after changes
+  ansible.builtin.systemd:
+    name: valheim-dashboard.service
+    state: restarted
+  when: dashboard_files.changed or dashboard_settings.changed or dashboard_service.changed

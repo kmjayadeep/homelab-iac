@@ -1,0 +1,26 @@
+[Unit]
+Description=Valheim server dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ steam_user }}
+Group={{ steam_group }}
+SupplementaryGroups=systemd-journal
+EnvironmentFile=/etc/valheim-dashboard.env
+ExecStart=/usr/bin/python3 -I /opt/valheim-dashboard/server.py
+Restart=on-failure
+RestartSec=5
+Nice=10
+MemoryMax=512M
+StateDirectory=valheim-dashboard
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target

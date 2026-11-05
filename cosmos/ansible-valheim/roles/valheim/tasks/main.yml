@@ -28,7 +28,13 @@
 
 - name: Include world download server tasks
   ansible.builtin.include_tasks: world-download.yml
-  when: world_download_enabled | default(false) | bool
+  when:
+    - world_download_enabled | default(false) | bool
+    - not (valheim_dashboard_enabled | default(false) | bool)
+
+- name: Include dashboard tasks
+  ansible.builtin.include_tasks: dashboard.yml
+  when: valheim_dashboard_enabled | default(false) | bool
 
 - name: Include firewall configuration tasks
   include_tasks: firewall.yml
