@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Small read-only status page for one Valheim dedicated server."""
 
+import gzip
 import json
 import os
 import re
+import struct
 import subprocess
 import tarfile
 import tempfile
@@ -26,10 +28,22 @@ UNIT = "valheim"
 BACKUP_UNIT = "backup-valheim.service"
 MAX_EVENTS = 200
 MAX_DEATHS = 300
-STATE_SCHEMA = 2
+STATE_SCHEMA = 4
+DEFAULT_DAY_LENGTH = 1800
+BOSSES = (
+    ("defeated_eikthyr", "Eikthyr"),
+    ("defeated_gdking", "The Elder"),
+    ("defeated_bonemass", "Bonemass"),
+    ("defeated_dragon", "Moder"),
+    ("defeated_goblinking", "Yagluth"),
+    ("defeated_queen", "The Queen"),
+    ("defeated_fader", "Fader"),
+)
+ART_DIR = STATE_DIR / "art"
+ART_NAMES = ("tree", "swamp", "deathsquito", "mountain", "boar", "building")
 CAUSES = (
-    "tree", "troll", "greydwarf", "neck", "boar", "fall", "drowned",
-    "swamp", "raid", "boss", "friend", "stupidity", "mystery",
+    "tree", "troll", "greydwarf", "neck", "boar", "deathsquito", "mountain", "building",
+    "drowned", "swamp", "raid", "boss", "friend", "stupidity", "mystery",
 )
 
 GAME_LINE = re.compile(r"^\d\d/\d\d/\d{4} \d\d:\d\d:\d\d: ")
@@ -43,10 +57,18 @@ NOISE = re.compile(
 
 state_lock = threading.Lock()
 download_lock = threading.Lock()
-state = {
-    "schema": STATE_SCHEMA, "cursor": None, "players": {}, "sessions": {}, "events": [], "deaths": [],
-    "next_death": 1, "version": "", "ready_at": 0,
-}
+
+
+def empty_state():
+    return {
+        "schema": STATE_SCHEMA, "cursor": None, "players": {}, "sessions": {}, "events": [], "deaths": [],
+        "next_death": 1, "version": "", "ready_at": 0, "verdicts": {}, "bosses": {},
+        "world_time": 0.0, "world_day": None, "save_number": None,
+        "day_length": DEFAULT_DAY_LENGTH,
+    }
+
+
+state = empty_state()
 state_dirty = False
 cpu_percent = 0.0
 
@@ -56,9 +78,19 @@ def load_state():
         loaded = json.loads(STATE_FILE.read_text())
     except (OSError, ValueError):
         return
-    # An older summary has different fields, so rebuild it from the journal.
     if loaded.get("schema") == STATE_SCHEMA:
         state.update(loaded)
+        return
+    # An older summary has different fields, so rebuild it from the journal.
+    # Keep what only players can provide.
+    state["verdicts"] = dict(loaded.get("verdicts", {}))
+    for death in loaded.get("deaths", []):
+        if death.get("cause"):
+            state["verdicts"].setdefault(death_key(death), {})["cause"] = death["cause"]
+
+
+def death_key(death):
+    return f"{death['name']}#{death['number']}"
 
 
 def save_state():
@@ -79,20 +111,22 @@ def add_event(ts, kind, label, text, **extra):
 
 
 def player(name):
-    return state["players"].setdefault(
-        name,
-        {
-            "deaths": 0, "online": False, "last_seen": 0, "joined_at": 0,
-            "played": 0, "session_deaths": 0, "worst_session": 0,
-        },
-    )
+    if name not in state["players"]:
+        state["players"][name] = {
+            "deaths": 0, "online": False, "last_seen": 0, "first_seen": 0, "joined_at": 0, "played": 0,
+            "sessions": 0, "session_deaths": 0, "worst_session": 0, "alive_since": 0, "life_bank": 0,
+            "longest_life": 0, "streak_days": 0, "best_streak": 0,
+        }
+    return state["players"][name]
 
 
 def end_session(name, ts):
     record = player(name)
     if record["joined_at"]:
         record["played"] += max(0, ts - record["joined_at"])
-    record.update(online=False, last_seen=ts, joined_at=0)
+    if record["alive_since"]:
+        record["life_bank"] += max(0, ts - record["alive_since"])
+    record.update(online=False, last_seen=ts, joined_at=0, alive_since=0)
 
 
 def clear_sessions(ts):
@@ -131,17 +165,21 @@ def process_line(message, ts):
             waiting = [steam for steam, known in sessions.items() if known is None]
             if waiting:
                 sessions[waiting[-1]] = name
-            player(name).update(joined_at=ts, session_deaths=0)
+            record = player(name)
+            record.update(joined_at=ts, session_deaths=0, alive_since=ts, sessions=record["sessions"] + 1)
+            record["first_seen"] = record["first_seen"] or ts
             add_event(ts, "player", "Joined", f"{name} joined", name=name)
         record = player(name)
         record.update(online=True, last_seen=ts)
         if match.group(2) == "0":
             record["deaths"] += 1
             record["session_deaths"] += 1
+            life = record["life_bank"] + max(0, ts - (record["alive_since"] or ts))
+            record.update(longest_life=max(record["longest_life"], life), life_bank=0, alive_since=ts, streak_days=0)
             record["worst_session"] = max(record["worst_session"], record["session_deaths"])
             death_id = state["next_death"]
             state["next_death"] += 1
-            state["deaths"].append({"id": death_id, "name": name, "ts": ts, "number": record["deaths"], "cause": None})
+            state["deaths"].append({"id": death_id, "name": name, "ts": ts, "number": record["deaths"]})
             del state["deaths"][:-MAX_DEATHS]
             add_event(ts, "death", "Death", f"{name} died", name=name, death_id=death_id)
     elif match := re.match(r"Closing socket (\d+)", body):
@@ -151,6 +189,13 @@ def process_line(message, ts):
             if name:
                 end_session(name, ts)
                 add_event(ts, "player", "Left", f"{name} left", name=name)
+    elif match := re.match(r"Time [\d.]+, day:(\d+)\s+nextm:([\d.]+)", body):
+        # Sleeping skips to morning, and this line reveals the real day length.
+        morning = float(match.group(2))
+        length = morning / (int(match.group(1)) + 1.15)
+        if 300 <= length <= 7200:
+            state["day_length"] = round(length)
+        state["world_time"] = max(state["world_time"], morning)
     elif match := re.match(r"Random event set:(\S+)", body):
         add_event(ts, "raid", "Raid", f"Raid started: {match.group(1)}", raid=match.group(1))
 
@@ -161,10 +206,62 @@ def set_verdict(death_id, cause):
     with state_lock:
         for death in state["deaths"]:
             if death["id"] == death_id:
-                death["cause"] = cause
+                state["verdicts"].setdefault(death_key(death), {})["cause"] = cause
                 state_dirty = True
                 return True
     return False
+
+
+def advance_world(seconds):
+    """Keep game time moving between saves. It stops when nobody is connected."""
+    global state_dirty
+    with state_lock:
+        if not any(state["sessions"].values()):
+            return
+        state["world_time"] += seconds
+        update_world_day()
+        state_dirty = True
+
+
+def update_world_day():
+    """Credit online players with a survived day when the world day changes."""
+    day = int(state["world_time"] / state["day_length"])
+    known = state["world_day"]
+    state["world_day"] = day if known is None else max(known, day)
+    if known is not None and day > known:
+        for name in state["sessions"].values():
+            if name:
+                record = player(name)
+                record["streak_days"] += 1
+                record["best_streak"] = max(record["best_streak"], record["streak_days"])
+
+
+def parse_world_save(data):
+    """Return game time and the boss keys from a world .db2 file."""
+    _version, net_time, length = struct.unpack_from("<idi", data)
+    zones = gzip.decompress(data[16:16 + length])
+    keys = {match.decode() for match in re.findall(rb"defeated_[a-z]+", zones)}
+    return net_time, keys
+
+
+def read_world_save():
+    """Pick up game time and boss kills whenever the game writes a new save."""
+    global state_dirty
+    number = latest_save()[0]
+    with state_lock:
+        if number is None or number == state["save_number"]:
+            return
+    net_time, keys = parse_world_save((world_dir() / f"_main.{number}.db2").read_bytes())
+    now = time.time()
+    with state_lock:
+        state["save_number"] = number
+        state["world_time"] = net_time
+        update_world_day()
+        for key, boss in BOSSES:
+            if key in keys and key not in state["bosses"]:
+                state["bosses"][key] = now
+                add_event(now, "boss", "Boss", f"{boss} defeated", boss=boss)
+        state_dirty = True
 
 
 def journal_field(value):
@@ -204,6 +301,10 @@ def follow_journal():
 def background_work():
     global cpu_percent
     previous = read_cpu()
+    try:
+        read_world_save()
+    except (OSError, ValueError, EOFError, struct.error) as error:
+        print(f"Could not read the world save: {type(error).__name__}", flush=True)
     while True:
         time.sleep(15)
         current = read_cpu()
@@ -211,6 +312,11 @@ def background_work():
         if total > 0:
             cpu_percent = 100 * (1 - (current[1] - previous[1]) / total)
         previous = current
+        advance_world(15)
+        try:
+            read_world_save()
+        except (OSError, ValueError, EOFError, struct.error) as error:
+            print(f"Could not read the world save: {type(error).__name__}", flush=True)
         try:
             save_state()
         except OSError as error:
@@ -281,16 +387,27 @@ def status_payload():
         players = []
         for name, details in state["players"].items():
             played = details["played"]
+            life = details["life_bank"]
             if details["online"] and details["joined_at"]:
                 played += max(0, now - details["joined_at"])
-            players.append({**details, "name": name, "played": played})
-        deaths = list(reversed(state["deaths"][-30:]))
-        total_deaths = sum(details["deaths"] for details in state["players"].values())
+            if details["online"] and details["alive_since"]:
+                life += max(0, now - details["alive_since"])
+            players.append({
+                **details, "name": name, "played": played, "current_life": life,
+                "longest_life": max(details["longest_life"], life),
+            })
+        deaths = []
         tally = {}
-        for death in state["deaths"]:
-            if death["cause"]:
-                tally[death["cause"]] = tally.get(death["cause"], 0) + 1
-        events = list(reversed(state["events"][-60:]))
+        for death in reversed(state["deaths"]):
+            verdict = state["verdicts"].get(death_key(death), {})
+            if verdict.get("cause"):
+                tally[verdict["cause"]] = tally.get(verdict["cause"], 0) + 1
+            if len(deaths) < 30:
+                deaths.append({**death, "cause": verdict.get("cause")})
+        total_deaths = sum(details["deaths"] for details in state["players"].values())
+        events = list(reversed(sorted(state["events"], key=lambda item: item["ts"])[-60:]))
+        bosses = [{"key": key, "name": boss, "ts": state["bosses"].get(key, 0)} for key, boss in BOSSES]
+        world_day = state["world_day"]
         version = state["version"]
     if game.get("ActiveState") != "active":
         server_state = "offline"
@@ -309,6 +426,8 @@ def status_payload():
         "deaths": deaths,
         "total_deaths": total_deaths,
         "cause_tally": tally,
+        "bosses": bosses,
+        "world_day": world_day,
         "causes": CAUSES,
         "world": WORLD_NAME,
         "seed": WORLD_SEED,
@@ -461,6 +580,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(status_payload())
             elif url.path == "/api/logs":
                 self.send_json(logs_payload(parse_qs(url.query)))
+            elif (match := re.fullmatch(r"/art/([a-z]+)\.jpg", url.path)) and match.group(1) in ART_NAMES:
+                path = ART_DIR / f"{match.group(1)}.jpg"
+                if path.is_file():
+                    self.send_bytes(path.read_bytes(), "image/jpeg")
+                else:
+                    self.send_json({"error": "Not found"}, 404)
             elif url.path == "/api/password":
                 self.send_json({"password": SERVER_PASSWORD})
             elif url.path == "/download/world":

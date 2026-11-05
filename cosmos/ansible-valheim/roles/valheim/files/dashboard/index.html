@@ -6,109 +6,237 @@
 <title>Valheim Vartha</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Gelasio:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif+Malayalam:wght@500;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: the front page of a small-town Kerala daily. */
+/* Layout: a broadsheet front page. Masthead with ears, an edition bar, a lead story with art, then ruled sections on one shared grid. */
 :root {
   color-scheme: light;
-  --paper: #e8e2d0; --paper-2: #f0ebdc; --ink: #17140f; --ink-2: #4d473a; --rule: #17140f; --soft: #a79f88; --red: #b5141c; --red-fg: #fff6ea; --ok: #1f6b45;
-  --head: "Abril Fatface", "Bodoni MT", Georgia, serif; --body: "Gelasio", Georgia, serif; --ml: "Noto Serif Malayalam", "Manjari", serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --paper: #e9e3d2; --sheet: #f2eddf; --ink: #17140f; --ink-2: #51493b; --soft: #b3aa92; --line: #cfc7b1; --red: #b5141c; --red-fg: #fff6ea; --ok: #1f6b45;
+  --head: "Abril Fatface", "Noto Serif Malayalam", "Bodoni MT", Georgia, serif; --body: "Gelasio", "Noto Serif Malayalam", Georgia, serif; --ml: "Noto Serif Malayalam", "Manjari", serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --gap: clamp(14px, 2vw, 22px); --section: clamp(30px, 4.5vw, 48px);
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; background: var(--paper); color: var(--ink); font: 400 1.03rem/1.42 var(--body); overflow-x: hidden; background-image: radial-gradient(rgba(23, 20, 15, .05) 1px, transparent 1.2px); background-size: 4px 4px; }
-.sheet { max-width: 1160px; margin-inline: auto; padding-block: 14px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 1.0625rem/1.45 var(--body); overflow-x: hidden; background-image: radial-gradient(rgba(23, 20, 15, .045) 1px, transparent 1.2px); background-size: 4px 4px; }
+.sheet { max-width: 1240px; margin-inline: auto; padding-block: clamp(10px, 2vw, 22px) 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+p { margin: 0; text-wrap: pretty; }
 :focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
-.conn { margin: 0 0 8px; background: var(--red); color: var(--red-fg); padding: 5px 10px; font-weight: 700; }
-.mast { text-align: center; border-bottom: 4px double var(--rule); padding-bottom: 6px; }
-.mast .ml { font: 800 clamp(2.6rem, 9vw, 5.4rem)/1.15 var(--ml); margin: 0; }
-.mast .en { font: 400 clamp(1rem, 2vw, 1.3rem)/1.2 var(--head); letter-spacing: .12em; text-transform: uppercase; }
-.dateline { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 18px; padding-block: 5px; border-bottom: 1px solid var(--rule); font-size: .92rem; font-variant-numeric: tabular-nums; }
-.dateline b { color: var(--ok); }
-.dateline b.down { color: var(--red); }
-.flash { background: var(--red); color: var(--red-fg); font-weight: 700; padding: 4px 12px; margin-top: 12px; display: inline-block; letter-spacing: .08em; text-transform: uppercase; font-size: .84rem; animation: flash 1.6s steps(2) infinite; }
-@keyframes flash { 50% { opacity: .6; } }
-.lead { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 22px; padding-block: 8px 18px; border-bottom: 2px solid var(--rule); }
+.lab { display: block; font: 600 .7rem/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.conn { margin-bottom: 10px; background: var(--red); color: var(--red-fg); padding: 6px 12px; font-weight: 700; }
+
+/* Masthead */
+.mast { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(0, 3.4fr) minmax(150px, 1fr); gap: var(--gap); align-items: center; padding-bottom: 8px; }
+.nameplate { text-align: center; min-width: 0; }
+.nameplate .ml { font: 800 clamp(2.4rem, 5vw, 4.1rem)/1.15 var(--ml); white-space: nowrap; }
+.nameplate .en { font: 400 clamp(.9rem, 1.7vw, 1.25rem)/1.25 var(--head); letter-spacing: .14em; text-transform: uppercase; }
+.ear { border: 1px solid var(--ink); padding: 8px 10px; font-size: .9rem; line-height: 1.3; min-height: 86px; display: flex; flex-direction: column; justify-content: center; gap: 3px; background: var(--sheet); }
+.ear b { font: 400 1.1rem/1.15 var(--head); }
+.edition { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2px 18px; border-block: 3px double var(--ink); padding-block: 4px; font-size: .9rem; font-style: italic; }
+.dateline { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: 0; border-bottom: 2px solid var(--ink); font-variant-numeric: tabular-nums; }
+.dateline > div { padding: 6px 10px; border-left: 1px solid var(--line); min-width: 0; }
+.dateline > div:first-child { border-left: 0; padding-left: 0; }
+.dateline dt { font: 600 .68rem/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.dateline dd { margin: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up { color: var(--ok); } .down { color: var(--red); }
+
+/* Lead */
+.flash { display: inline-block; background: var(--red); color: var(--red-fg); font-weight: 700; padding: 3px 11px; letter-spacing: .1em; text-transform: uppercase; font-size: .8rem; animation: flash 1.8s steps(2) infinite; }
+@keyframes flash { 50% { opacity: .68; } }
+.lead { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(18px, 3vw, 36px); padding-block: 14px 22px; border-bottom: 2px solid var(--ink); align-items: start; }
 .lead > * { min-width: 0; }
-h1 { margin: 6px 0; font: 400 clamp(2.5rem, 6.6vw, 5.2rem)/.98 var(--head); text-wrap: balance; overflow-wrap: anywhere; }
-.deck { font-size: 1.2rem; font-style: italic; margin: 0 0 8px; }
-.photo { position: relative; aspect-ratio: 5 / 4; background: #c9c2ad; overflow: hidden; border: 1px solid var(--rule); max-width: 100%; }
-.photo svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.photo::after, .face::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(#17140f 34%, transparent 36%); background-size: 5px 5px; opacity: .28; mix-blend-mode: multiply; }
-figure { margin: 0; }
-figcaption { font-size: .85rem; font-style: italic; padding-top: 4px; }
-.section-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin: 18px 0 8px; border-bottom: 3px solid var(--rule); padding-bottom: 4px; }
-h2 { margin: 0; font: 400 clamp(1.8rem, 4vw, 2.8rem)/1.1 var(--head); }
-.section-title .ml { font: 800 clamp(1.2rem, 3vw, 1.9rem)/1.3 var(--ml); color: var(--red); }
-.obits { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; }
-.obit { border: 3px double var(--rule); background: var(--paper-2); padding: 10px; display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 4px 10px; align-content: start; min-width: 0; }
-.obit.first { grid-column: 1 / -1; border: 5px double var(--red); grid-template-columns: 124px minmax(0, 1fr); padding: 14px; }
-.obit > div { min-width: 0; }
-.face { width: 100%; aspect-ratio: 4 / 5; position: relative; background: #bdb59d; border: 1px solid var(--rule); overflow: hidden; }
-.face svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.obit .ml { font: 800 1rem/1.4 var(--ml); color: var(--red); display: block; }
-.obit .who { font: 400 1.35rem/1.05 var(--head); overflow-wrap: anywhere; }
-.obit.first .who { font-size: clamp(1.7rem, 3.4vw, 2.5rem); }
-.obit .n { font: 400 clamp(2.3rem, 5vw, 3.3rem)/1 var(--head); color: var(--red); font-variant-numeric: lining-nums; }
-.obit.first .n { font-size: clamp(3.6rem, 8vw, 6rem); }
-.obit .n small { font: 700 1rem var(--body); color: var(--ink); margin-left: 6px; }
-.obit .title { font-weight: 700; }
-.obit .meta { font-size: .9rem; color: var(--ink-2); }
-.obit .text { font-size: .95rem; font-style: italic; grid-column: 1 / -1; margin: 0; }
-.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--ok); }
-.obit.hit { animation: thump .5s ease; }
-@keyframes thump { 25% { transform: translateY(-5px) rotate(-1deg); } 60% { transform: translateY(2px) rotate(.6deg); } }
-.desk { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0 26px; }
-.case { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding-block: 8px; border-bottom: 1px solid var(--soft); min-width: 0; }
-.case > div { min-width: 0; }
-.case small { display: block; color: var(--ink-2); }
-select { font: 600 .95rem var(--body); color: var(--ink); background: var(--paper-2); border: 1.5px solid var(--rule); padding: 5px 6px; max-width: 100%; }
-select.open { border-color: var(--red); color: var(--red); }
-.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0 26px; margin-top: 14px; }
-.col { min-width: 0; padding-block: 8px; border-top: 3px solid var(--rule); }
-h3 { margin: 0 0 6px; font: 400 1.55rem/1.1 var(--head); }
-.classified { border: 1px solid var(--rule); padding: 8px 10px; margin-bottom: 8px; background: var(--paper-2); }
-.lab { display: block; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
-code { font: 500 .9rem/1.4 var(--mono); overflow-wrap: anywhere; }
-.row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
-.row > div { min-width: 0; }
-.btn { font: 700 .92rem var(--body); color: var(--ink); background: transparent; border: 1.5px solid var(--rule); padding: 5px 10px; cursor: pointer; text-decoration: none; display: inline-block; }
-.btn:hover { background: var(--ink); color: var(--paper-2); }
-.btn.big { display: block; width: 100%; text-align: center; background: var(--red); border-color: var(--red); color: var(--red-fg); padding: 11px; font-size: 1.08rem; }
-.btn.big:hover { background: var(--ink); border-color: var(--ink); }
-.ad { font-size: .92rem; font-style: italic; border-top: 1px dashed var(--soft); padding-top: 6px; margin: 8px 0 0; }
-.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
-.chip { font: 600 .84rem var(--body); color: var(--ink); background: transparent; border: 1px solid var(--rule); padding: 2px 8px; cursor: pointer; }
-.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper-2); }
-ul.news { list-style: none; margin: 0; padding: 0; }
-ul.news li { padding: 5px 0; border-bottom: 1px solid var(--soft); }
-ul.news time { font: 500 .78rem var(--mono); color: var(--red); margin-right: 6px; }
-.wire { background: var(--paper-2); border: 1px solid var(--rule); padding: 10px; height: 280px; overflow: auto; font: 400 .78rem/1.55 var(--mono); margin-top: 6px; }
-.wire div { overflow-wrap: anywhere; white-space: pre-wrap; }
-.wire .noise { color: var(--ink-2); }
-input[type=search] { width: 100%; font: 400 1rem var(--body); background: var(--paper-2); color: var(--ink); border: 1.5px solid var(--rule); padding: 6px 8px; }
-label.check { display: inline-flex; gap: 6px; align-items: center; margin-block: 6px; margin-right: 8px; }
+.mlrun { font-family: var(--ml); font-style: normal; font-weight: 500; }
+h1 .mlrun { font-weight: 800; }
+h1:has(.mlrun) { line-height: 1.18; }
+.pull q .mlrun { font-weight: 800; }
+.lead-text { display: grid; gap: 10px; justify-items: start; }
+h1 { margin: 0; font: 400 clamp(2.5rem, 6vw, 5.1rem)/.98 var(--head); text-wrap: balance; overflow-wrap: anywhere; }
+.story { font-size: 1.14rem; max-width: 60ch; }
+.story::first-letter { font: 400 3.1em/.8 var(--head); float: left; padding: .08em .1em 0 0; color: var(--red); }
+@supports (initial-letter: 2) { .story::first-letter { float: none; padding: 0 .12em 0 0; font-size: 1em; line-height: 1; initial-letter: 2; } }
+.pull { margin: 2px 0 0; padding: 8px 0; border-block: 1px solid var(--ink); width: 100%; }
+.pull q { display: block; quotes: "\201C" "\201D"; font: italic 600 clamp(1.25rem, 2.4vw, 1.7rem)/1.2 var(--body); text-wrap: balance; }
+.pull cite { font-style: normal; font-size: .84rem; color: var(--ink-2); }
+figure { margin: 0; display: grid; gap: 5px; }
+.photo { position: relative; aspect-ratio: 3 / 2; width: 100%; background: #b9b19a; overflow: hidden; border: 1px solid var(--ink); }
+.photo svg, .face svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.photo img, .face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 32%; display: block; }
+.photo::after, .face::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(#17140f 34%, transparent 36%); background-size: 5px 5px; opacity: .24; mix-blend-mode: multiply; pointer-events: none; }
+.photo.art::after, .face.art::after { opacity: .06; }
+figcaption { font-size: .86rem; font-style: italic; color: var(--ink-2); }
+
+/* Sections */
+.section-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin: var(--section) 0 var(--gap); border-bottom: 3px solid var(--ink); padding-bottom: 5px; }
+h2 { margin: 0; font: 400 clamp(1.75rem, 3.4vw, 2.6rem)/1.1 var(--head); }
+.section-title .ml { font: 800 clamp(1.1rem, 2.4vw, 1.7rem)/1.3 var(--ml); color: var(--red); }
+.kicker { margin-left: auto; font-style: italic; color: var(--ink-2); font-size: .98rem; text-align: right; }
 .empty { font-style: italic; color: var(--ink-2); }
-#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper-2); padding: 9px 14px; font-weight: 600; z-index: 9; max-width: calc(100% - 32px); }
-@media (max-width: 700px) { .lead { grid-template-columns: minmax(0, 1fr); } .obit.first { grid-template-columns: 92px minmax(0, 1fr); } }
-@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+
+/* Obituaries */
+#obits { display: grid; gap: var(--gap); }
+.rest { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: var(--gap); }
+.rest .obit:last-child { grid-column: span var(--span, 1); }
+.obit { display: grid; grid-template-columns: 104px minmax(0, 1fr); grid-template-areas: "face head" "facts facts" "survivor survivor" "text text"; grid-template-rows: auto auto auto 1fr; gap: 12px 14px; padding: 13px; border: 3px double var(--ink); background: var(--sheet); min-width: 0; }
+@supports (grid-template-rows: subgrid) { .rest .obit { grid-row: span 4; grid-template-rows: subgrid; } }
+.face { grid-area: face; position: relative; aspect-ratio: 4 / 5; background: #b9b19a; border: 1px solid var(--ink); overflow: hidden; align-self: start; width: 100%; }
+.head { grid-area: head; min-width: 0; display: grid; align-content: start; gap: 2px; }
+.head .ml { font: 800 .95rem/1.35 var(--ml); color: var(--red); }
+.who { margin: 0; font: 400 clamp(1.4rem, 2.2vw, 1.75rem)/1.08 var(--head); overflow-wrap: anywhere; text-wrap: balance; }
+.tally { display: flex; align-items: baseline; gap: 6px; }
+.n { font: 400 clamp(2.5rem, 4.6vw, 3.4rem)/1 var(--head); color: var(--red); font-variant-numeric: lining-nums; }
+.tally small { font: 700 .95rem var(--body); }
+.rank { font-weight: 700; font-style: italic; }
+.facts { grid-area: facts; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; margin: 0; border-top: 1px solid var(--line); padding-top: 9px; font-variant-numeric: tabular-nums; }
+.facts > div { min-width: 0; }
+.facts dt { font: 600 .67rem/1.3 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.facts dd { margin: 0; font-weight: 600; font-size: .98rem; overflow-wrap: anywhere; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--ok); vertical-align: 1px; }
+.survivor { grid-area: survivor; display: grid; gap: 4px; align-self: start; font-size: .88rem; font-variant-numeric: tabular-nums; }
+.sv-row { display: flex; justify-content: space-between; gap: 10px; }
+.sv-row b { font-weight: 700; white-space: nowrap; }
+.track { display: block; height: 7px; border: 1px solid var(--ink); background: var(--paper); }
+.fill { display: block; height: 100%; background: var(--red); }
+.text { grid-area: text; align-self: end; font-style: italic; border-top: 1px solid var(--line); padding-top: 9px; font-size: .98rem; }
+.obit.first { grid-template-columns: minmax(250px, 36%) minmax(0, 1fr); grid-template-areas: "face head" "face facts" "face survivor" "face text"; border: 5px double var(--red); padding: clamp(12px, 1.8vw, 18px); column-gap: clamp(16px, 2.4vw, 28px); }
+.obit.first .face { aspect-ratio: auto; height: 100%; min-height: 270px; }
+.obit.first .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.obit.first .who { font-size: clamp(1.9rem, 3.6vw, 3rem); }
+.obit.first .n { font-size: clamp(3.6rem, 7.6vw, 6.2rem); }
+.obit.hit { animation: thump .5s ease; }
+@keyframes thump { 25% { transform: translateY(-5px) rotate(-.8deg); } 60% { transform: translateY(2px) rotate(.5deg); } }
+
+/* Coroner's desk */
+.desk { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr)); gap: 0 clamp(18px, 3vw, 36px); }
+.case { display: grid; grid-template-columns: 62px minmax(0, 1fr) minmax(150px, 190px); gap: 10px 12px; align-items: center; padding-block: 8px; border-bottom: 1px solid var(--line); min-width: 0; }
+.case .face { grid-area: auto; aspect-ratio: 4 / 3; width: 62px; }
+.case small { display: block; color: var(--ink-2); }
+.case b { display: block; overflow-wrap: anywhere; }
+select { width: 100%; font: 600 .95rem var(--body); color: var(--ink); background: var(--sheet); border: 1.5px solid var(--ink); padding: 6px; }
+select.open { border-color: var(--red); color: var(--red); }
+
+/* Bosses */
+.bosses { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.boss { position: relative; display: grid; gap: 1px; align-content: start; border: 3px double var(--soft); padding: 8px 9px; min-height: 86px; background: var(--sheet); color: var(--ink-2); min-width: 0; overflow: hidden; }
+.boss .lab { color: inherit; }
+.boss b { font: 400 1.2rem/1.12 var(--head); overflow-wrap: anywhere; color: var(--ink); }
+.boss span.note { font-size: .86rem; }
+.boss.down { border-color: var(--red); }
+.boss.down span.note { color: var(--red); font-weight: 700; }
+.boss .stamp { position: absolute; right: 5px; bottom: 5px; padding: 0 5px; border: 2px solid var(--red); color: var(--red); font: 400 .82rem/1.35 var(--head); letter-spacing: .08em; transform: rotate(-8deg); opacity: .85; }
+
+/* Back of the page */
+.back { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.25fr); margin-top: var(--section); border-top: 3px solid var(--ink); }
+.col { min-width: 0; padding: 10px clamp(14px, 2vw, 24px) 0; border-left: 1px solid var(--soft); display: flex; flex-direction: column; gap: 10px; }
+.col:first-child { padding-left: 0; border-left: 0; }
+.col:last-child { padding-right: 0; }
+h3 { margin: 0; font: 400 1.6rem/1.1 var(--head); }
+.classified { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: center; border: 1px solid var(--ink); padding: 8px 10px; background: var(--sheet); }
+.classified > div { min-width: 0; }
+code { font: 500 .9rem/1.4 var(--mono); overflow-wrap: anywhere; }
+.btn { font: 700 .92rem/1.2 var(--body); color: var(--ink); background: transparent; border: 1.5px solid var(--ink); padding: 6px 10px; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; white-space: nowrap; transition: background-color .12s ease, color .12s ease; }
+.classified .btn { min-width: 62px; }
+.btn:hover { background: var(--ink); color: var(--sheet); }
+.btn.big { display: block; background: var(--red); border-color: var(--red); color: var(--red-fg); padding: 12px; font-size: 1.08rem; }
+.btn.big:hover { background: var(--ink); border-color: var(--ink); }
+.savefacts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; font-variant-numeric: tabular-nums; }
+.savefacts dt { font: 600 .67rem/1.3 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.savefacts dd { margin: 0; font-weight: 600; font-size: .95rem; }
+.note { font-size: .9rem; color: var(--ink-2); }
+.ad { font-size: .95rem; font-style: italic; border: 3px double var(--soft); padding: 8px 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { font: 600 .84rem var(--body); color: var(--ink); background: transparent; border: 1px solid var(--ink); padding: 3px 9px; cursor: pointer; }
+.chip:hover { background: var(--line); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--sheet); }
+ul.news { list-style: none; margin: 0; padding: 0; }
+ul.news li { display: grid; grid-template-columns: 3.1rem minmax(0, 1fr); gap: 6px; padding: 6px 0; border-bottom: 1px solid var(--line); line-height: 1.32; }
+ul.news time { font: 500 .78rem/1.7 var(--mono); color: var(--red); }
+ul.news li.empty { display: block; }
+.wire-tools { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 10px; }
+.wire { flex: 1 1 0; min-height: 300px; background: var(--sheet); border: 1px solid var(--ink); padding: 10px; overflow: auto; font: 400 .76rem/1.55 var(--mono); }
+.wire div { overflow-wrap: anywhere; white-space: pre-wrap; padding-bottom: 3px; }
+.wire .noise { color: var(--ink-2); }
+input[type=search] { width: 100%; font: 400 1rem var(--body); background: var(--sheet); color: var(--ink); border: 1.5px solid var(--ink); padding: 7px 9px; }
+label.check { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--sheet); padding: 9px 14px; font-weight: 600; z-index: 9; max-width: calc(100% - 32px); box-shadow: 0 6px 22px rgba(23, 20, 15, .35); }
+
+@media (max-width: 1080px) {
+  .back { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .col:nth-child(2) { padding-right: 0; }
+  .col:last-child { grid-column: 1 / -1; padding: 12px 0 0; border-left: 0; border-top: 3px solid var(--ink); margin-top: 18px; }
+  .wire { flex: none; height: 300px; }
+  .bosses { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .boss { grid-column: span 4; }
+  .boss:nth-child(-n+4) { grid-column: span 3; }
+}
+@media (max-width: 860px) {
+  .mast { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .nameplate { grid-column: 1 / -1; grid-row: 1; }
+  .ear { min-height: 0; }
+  .dateline { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .dateline > div:nth-child(4n + 1) { border-left: 0; padding-left: 0; }
+  .dateline > div:nth-child(n + 5) { border-top: 1px solid var(--line); }
+}
+@media (max-width: 1080px) {
+  .rest { grid-template-columns: repeat(var(--cols-tablet, 2), minmax(0, 1fr)); }
+  .rest .obit:last-child { grid-column: span var(--span-tablet, 1); }
+}
+@media (max-width: 700px) {
+  .lead { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .ear small { display: none; }
+  .ear b { font-size: 1rem; }
+  .dateline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dateline > div { padding-inline: 8px; }
+  .dateline > div:nth-child(n) { border-left: 1px solid var(--line); padding-left: 8px; border-top: 1px solid var(--line); }
+  .dateline > div:nth-child(2n + 1) { border-left: 0; padding-left: 0; }
+  .dateline > div:nth-child(-n + 2) { border-top: 0; }
+  .kicker { margin-left: 0; text-align: left; flex-basis: 100%; }
+  .nameplate .ml { white-space: normal; }
+  .rest { grid-template-columns: minmax(0, 1fr); }
+  .rest .obit:last-child { grid-column: auto; }
+  .obit.first .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .obit.first { grid-template-columns: minmax(0, 1fr); grid-template-areas: "face" "head" "facts" "survivor" "text"; grid-template-rows: none; }
+  .obit.first .face { aspect-ratio: 3 / 2; height: auto; min-height: 0; }
+  .case { grid-template-columns: 54px minmax(0, 1fr); }
+  .case .face { width: 54px; }
+  .case select { grid-column: 1 / -1; }
+  .bosses { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .boss, .boss:nth-child(-n+4) { grid-column: auto; }
+  .boss:last-child { grid-column: 1 / -1; }
+  .back { grid-template-columns: minmax(0, 1fr); }
+  .col, .col:first-child, .col:nth-child(2), .col:last-child { grid-column: auto; padding: 12px 0 0; border-left: 0; }
+  .col + .col { border-top: 3px solid var(--ink); margin-top: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <div class="sheet">
   <p class="conn" id="conn" hidden>The press has lost contact with the server. Retrying.</p>
   <header class="mast">
-    <p class="ml" lang="ml">വാൽഹൈം വാർത്ത</p>
-    <div class="en">Valheim Vartha · The <span id="world">nomap</span> Daily</div>
+    <div class="ear"><span class="lab">Price</span><b>One tombstone</b><small>Free to the recently deceased</small></div>
+    <div class="nameplate">
+      <p class="ml" lang="ml">വാൽഹൈം വാർത്ത</p>
+      <div class="en">Valheim Vartha · The <span id="world">nomap</span> Daily</div>
+    </div>
+    <div class="ear"><span class="lab" id="forecast-label">The outlook</span><span id="forecast"></span></div>
   </header>
-  <div class="dateline">
-    <span>Server: <b id="s-state">CHECKING</b></span>
-    <span id="s-online">–</span><span id="s-up">–</span><span id="s-version">–</span><span id="s-memory">–</span><span id="s-cpu">–</span>
-  </div>
+  <div class="edition"><span id="issue">Vol. I</span><span id="today"></span><span>Late edition, still no map</span></div>
+  <dl class="dateline">
+    <div><dt>Server</dt><dd id="s-state">Checking</dd></div>
+    <div><dt>Vikings online</dt><dd id="s-online">–</dd></div>
+    <div><dt>World day</dt><dd id="s-day">–</dd></div>
+    <div><dt>Up for</dt><dd id="s-up">–</dd></div>
+    <div><dt>Version</dt><dd id="s-version">–</dd></div>
+    <div><dt>Memory</dt><dd id="s-memory">–</dd></div>
+    <div><dt>CPU</dt><dd id="s-cpu">–</dd></div>
+  </dl>
 
   <section class="lead">
-    <div>
+    <div class="lead-text">
       <span class="flash" id="flash">Breaking</span>
       <h1 id="headline">The press is warming up</h1>
-      <p class="deck" id="deck"></p>
+      <p class="story" id="story"></p>
+      <blockquote class="pull" id="pull" hidden><q id="pull-words"></q><cite id="pull-who"></cite></blockquote>
     </div>
     <figure>
       <div class="photo" id="photo"></div>
@@ -117,21 +245,28 @@ label.check { display: inline-flex; gap: 6px; align-items: center; margin-block:
   </section>
 
   <div class="section-title"><h2>Obituaries</h2><span class="ml" lang="ml">ആദരാഞ്ജലികൾ</span></div>
-  <div class="obits" id="obits"></div>
+  <div id="obits"></div>
 
-  <div class="section-title"><h2>The coroner's desk</h2><span id="leading" class="empty"></span></div>
+  <div class="section-title"><h2>The coroner's desk</h2><span id="leading" class="kicker"></span></div>
   <div class="desk" id="desk"></div>
 
-  <div class="grid3">
+  <div class="section-title"><h2>Forsaken slain</h2><span class="kicker" id="boss-line"></span></div>
+  <div class="bosses" id="bosses"></div>
+
+  <div class="back">
     <div class="col">
       <h3>Classifieds</h3>
-      <div class="classified"><div class="row"><div><span class="lab">Wanted: Vikings. Report to</span><code id="address">–</code></div><button class="btn" type="button" id="copy-address">Copy</button></div></div>
-      <div class="classified"><div class="row"><div><span class="lab">Password</span><code>•••••</code></div><button class="btn" type="button" id="copy-password">Copy</button></div></div>
-      <div class="classified"><div class="row"><div><span class="lab">Seed. Map not included</span><code id="seed">–</code></div><a class="btn" id="map" href="https://valheim-map.world/" target="_blank" rel="noopener">World map ↗</a></div></div>
+      <div class="classified"><div><span class="lab">Wanted: Vikings. Report to</span><code id="address">–</code></div><button class="btn" type="button" id="copy-address">Copy</button></div>
+      <div class="classified"><div><span class="lab">Password</span><code>•••••</code></div><button class="btn" type="button" id="copy-password">Copy</button></div>
+      <div class="classified"><div><span class="lab">Seed. Map not included</span><code id="seed">–</code></div><a class="btn" id="map" href="https://valheim-map.world/" target="_blank" rel="noopener">Map ↗</a></div>
       <a class="btn big" href="/download/world">Download latest save</a>
-      <p id="save-line"></p>
+      <dl class="savefacts">
+        <div><dt>Saved</dt><dd id="v-saved">–</dd></div>
+        <div><dt>Backup</dt><dd id="v-backup">–</dd></div>
+        <div><dt>Size</dt><dd id="v-size">–</dd></div>
+      </dl>
+      <p class="note">This is the latest automatic save, so it can be a few minutes behind live play.</p>
       <p class="ad" id="ad"></p>
-      <p class="ad" id="forecast"></p>
     </div>
     <div class="col">
       <h3>In brief</h3>
@@ -139,6 +274,7 @@ label.check { display: inline-flex; gap: 6px; align-items: center; margin-block:
         <button type="button" class="chip" data-f="all" aria-pressed="true">All</button>
         <button type="button" class="chip" data-f="death" aria-pressed="false">Deaths</button>
         <button type="button" class="chip" data-f="player" aria-pressed="false">Players</button>
+        <button type="button" class="chip" data-f="boss" aria-pressed="false">Bosses</button>
         <button type="button" class="chip" data-f="raid" aria-pressed="false">Raids</button>
         <button type="button" class="chip" data-f="server" aria-pressed="false">Server</button>
       </div>
@@ -147,8 +283,7 @@ label.check { display: inline-flex; gap: 6px; align-items: center; margin-block:
     <div class="col">
       <h3>From the wire</h3>
       <input type="search" id="q" placeholder="Search logs" aria-label="Search logs">
-      <label class="check"><input type="checkbox" id="all"> Show all lines</label>
-      <a class="btn" href="/download/logs">Download logs</a>
+      <div class="wire-tools"><label class="check"><input type="checkbox" id="all"> Show all lines</label><a class="btn" href="/download/logs">Download logs</a></div>
       <div class="wire" id="wire" tabindex="0" aria-label="Server log lines"></div>
     </div>
   </div>
@@ -166,34 +301,43 @@ var CAUSE = {
   greydwarf: ["A greydwarf", "{n} defeated by angry shrubbery", "Outfought by a very small forest person."],
   neck: ["A Neck (shame)", "Neck kills {n}. Family asks for privacy", "Killed by a Neck. Please do not bring it up."],
   boar: ["A boar", "Boar claims {n}. Pork prices unaffected", "Taken by a boar. Bacon was not avenged."],
-  fall: ["Gravity", "{n} discovers gravity the hard way", "Walked off something high with great confidence."],
-  drowned: ["Drowned", "{n} drowned. Ithu Dubai alle, witnesses heard", "Tried to reach Dubai by swimming. Gafoorka denies everything."],
+  deathsquito: ["A deathsquito", "Mosquito kills grown Viking. {n} named in report", "Taken by a very large mosquito. Odomos was not available."],
+  mountain: ["Fell off a mountain", "{n} discovers gravity. Seagull saw everything", "Walked off a mountain with great confidence."],
+  building: ["Fell off own building", "{n} killed by own house. Builder blames builder", "Built it free of charge. It was worth every coin."],
+  drowned: ["Drowned", "{n} drowned. \"ഇത് ദുബായ് അല്ലേ?\" witnesses heard", "Tried to reach Dubai by swimming. ഗഫൂർക്ക denies everything."],
   swamp: ["The swamp", "Swamp 1, {n} 0. Nobody is surprised", "Went into the swamp. That was the whole plan."],
   raid: ["A raid", "{n} killed defending base that was already on fire", "Died a hero, according to nobody."],
   boss: ["A boss", "{n} visits boss, leaves in pieces", "Summoned the boss on purpose. Regrets were brief."],
-  friend: ["A friend", "Friendly fire kills {n}. Friendship under review", "Betrayed by a friend. Dasan and Vijayan are looking into it."],
+  friend: ["A friend", "Friendly fire kills {n}. Friendship under review", "Betrayed by a friend. ദാസനും വിജയനും are looking into it."],
   stupidity: ["Own stupidity", "Police find no suspect in {n} death except {n}", "The inquest found one suspect, and it was the deceased."],
-  mystery: ["Nobody knows", "{n} dead. Nobody knows how, least of all {n}", "Cause unknown. CID Dasan is on the case."]
+  mystery: ["Nobody knows", "{n} dead. Nobody knows how, least of all {n}", "Cause unknown. സി.ഐ.ഡി. ദാസൻ is on the case."]
 };
 var HEADS = [
   "{n} dies again",
   "{n} found dead. Map also not found",
-  "Vazhi thetti: {n} dead in unknown location",
-  "\"Ellam sariyakum,\" said {n}, moments before dying",
-  "Gafoorka denies role in death of {n}",
-  "Polandine patti mindaruthu: {n} is dead",
-  "\"Thomas Kutty vitto da,\" witnesses told {n}. Too late"
+  "വഴി തെറ്റി: {n} dead in unknown location",
+  "\"എല്ലാം ശരിയാകും,\" said {n}, moments before dying",
+  "ഗഫൂർക്ക denies role in death of {n}",
+  "പോളണ്ടിനെപ്പറ്റി മിണ്ടരുത്: {n} is dead",
+  "\"തോമസുകുട്ടീ, വിട്ടോടാ,\" witnesses told {n}. Too late"
 ];
-var DECKS = [
-  "Authorities blame the lack of a map. Friends blame {n}.",
-  "The family has asked everyone to stop laughing.",
-  "Police say the investigation is complete, and that it was a skill issue.",
-  "Odin was unavailable for comment and has stopped answering calls from {n}."
+var LAST_WORDS = [
+  "എല്ലാം ശരിയാകും.",
+  "ഇത് ദുബായ് അല്ലേ?",
+  "പോളണ്ടിനെപ്പറ്റി ഒരക്ഷരം മിണ്ടരുത്.",
+  "തോമസുകുട്ടീ, വിട്ടോടാ!",
+  "ഈ ബുദ്ധി എന്തേ നേരത്തെ തോന്നിയില്ല?",
+  "നീ പോ മോനേ ദിനേശാ!",
+  "ചോദിച്ചു വാങ്ങിയതാണ്.",
+  "പണി പാളി.",
+  "സംഭവം കയ്യിൽ നിന്ന് പോയി.",
+  "അയ്യോ, എന്റമ്മോ!",
+  "വഴി തെറ്റി.",
+  "ദൈവമേ, കാത്തോളണേ."
 ];
-var EPITAPHS = ["Ithu Dubai alle?", "Vazhi thetti. Last seen walking confidently the wrong way.", "Ellam sariyakum, the deceased said, and was wrong.", "Survived by one very confused longship."];
 var TITLES = ["Valhalla's regular", "Odin knows this one by name", "Still has some hope", "Barely trying"];
 var JOINS = ["{n} arrives, despite warnings.", "{n} joins. Map still missing.", "{n} logs in. Trolls notified.", "{n} is back. Next of kin informed in advance."];
-var LEAVES = ["{n} leaves the world, alive for once.", "{n} has gone home for kanji.", "{n} logs off. Tombstones left behind.", "{n} leaves. The boars are celebrating."];
+var LEAVES = ["{n} leaves the world, alive for once.", "{n} has gone home for കഞ്ഞി.", "{n} logs off. Tombstones left behind.", "{n} leaves. The boars are celebrating."];
 var ADS = [
   "LOST: one sense of direction. Reward offered. Ask for {n}.",
   "FOR SALE: tombstones, barely cold. Bulk rates. Contact {n}.",
@@ -201,17 +345,53 @@ var ADS = [
   "MATRIMONIAL: Viking seeks partner who can read a map. Must tolerate {n}."
 ];
 var FORECASTS = [
-  "Today's forecast: troll showers, clearing to tree by evening.",
-  "Today's forecast: heavy Greydwarf with a chance of swamp.",
-  "Today's forecast: raids likely. Bring the washing in.",
-  "Today's forecast: no map, as usual.",
-  "Your stars today: avoid water, heights, trees and your friends.",
-  "Your stars today: a tall stranger will fall on you. It is a birch."
+  ["Today's forecast", "Troll showers, clearing to tree by evening."],
+  ["Today's forecast", "Heavy Greydwarf with a chance of swamp."],
+  ["Today's forecast", "Raids likely. Bring the washing in."],
+  ["Today's forecast", "No map, as usual."],
+  ["Your stars today", "Avoid water, heights, trees and your friends."],
+  ["Your stars today", "A tall stranger will fall on you. It is a birch."]
 ];
+var STORIES = [
+  "Authorities blame the lack of a map. Friends blame {n}.",
+  "The family has asked everyone to stop laughing.",
+  "Police say the investigation is complete, and that it was a skill issue.",
+  "Odin was unavailable for comment and has stopped answering calls from {n}."
+];
+var ART = ["tree", "swamp", "deathsquito", "mountain", "boar", "building"];
+var causeInfo = function (c) { return CAUSE[c] || CAUSE.mystery; };
+/* The matching picture when the cause has one, otherwise a stable random pick for that death. */
+function artFor(d) {
+  if (ART.indexOf(d.cause) > -1) return d.cause;
+  var mixed = (Math.imul(d.id, 2654435761) >>> 0) % 4294967291;
+  return ART[mixed % ART.length];
+}
+function setArt(box, d, fallback) {
+  var name = artFor(d), src = "/art/" + name + ".jpg";
+  var now = box.querySelector("img");
+  if (now && now.getAttribute("src") === src) return;
+  var img = new Image();
+  img.alt = "Illustration of how " + d.name + " died";
+  img.onerror = function () { box.classList.remove("art"); box.innerHTML = fallback; };
+  img.src = src;
+  box.textContent = "";
+  box.classList.add("art");
+  box.append(img);
+}
+ART.forEach(function (name) { new Image().src = "/art/" + name + ".jpg"; });
 var fill = function (t, name) { return t.replace(/\{n\}/g, name); };
 
 function viking(crossed, fit) {
   return '<svg viewBox="0 0 100 125" preserveAspectRatio="xMidYMid ' + fit + '" aria-hidden="true"><rect width="100" height="125" fill="#b9b19a"/><path fill="#17140f" d="M16 125c2-28 15-38 34-38s32 10 34 38z"/><path fill="#6b6454" d="M31 54c0 22 8 37 19 37s19-15 19-37z"/><path fill="#17140f" d="M28 56c5 34 14 48 22 48s17-14 22-48c-5 10-14 13-22 13s-17-3-22-13z"/><path fill="#2b2a26" d="M24 55c0-22 11-36 26-36s26 14 26 36z"/><rect x="20" y="51" width="60" height="7" fill="#17140f"/><rect x="47" y="51" width="6" height="22" fill="#17140f"/><path fill="#d8d0ba" d="M25 40C13 34 8 22 10 8c5 11 12 19 22 21zM75 40c12-6 17-18 15-32-5 11-12 19-22 21z"/>' + (crossed ? '<path fill="none" stroke="#b5141c" stroke-width="4" d="M4 4 96 121M96 4 4 121"/>' : "") + "</svg>";
+}
+/* Sets text, putting each Malayalam phrase in the Malayalam font. */
+function setMixed(el, text) {
+  el.textContent = "";
+  String(text).split(/([\u0D00-\u0D7F][\u0D00-\u0D7F\u200C\u200D\s,.?!:]*)/).forEach(function (part, i) {
+    if (!part) return;
+    if (i % 2) { var run = document.createElement("span"); run.className = "mlrun"; run.lang = "ml"; run.textContent = part; el.append(run); }
+    else el.append(part);
+  });
 }
 function toast(m) { $("toast").textContent = m; $("toast").hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { $("toast").hidden = true; }, 4000); }
 function ago(ts, now) {
@@ -241,85 +421,149 @@ function copy(text, label) {
   field.remove();
   toast(copied ? "Copied " + label : "This browser blocked copying. Copy it by hand: " + text);
 }
-function deathHeadline(d) { return fill(d.cause ? CAUSE[d.cause][1] : pick(HEADS, d.id - 1), d.name); }
+function lastWords(d) { return pick(LAST_WORDS, d.id - 1); }
+function deathHeadline(d) { return fill(d.cause ? causeInfo(d.cause)[1] : pick(HEADS, d.id - 1), d.name); }
 
 function drawLead(data) {
   var d = data.deaths[0], top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0];
   var raid = data.events.filter(function (e) { return e.kind === "raid"; })[0];
   var raiding = raid && data.now - raid.ts < 600;
-  $("flash").textContent = data.state === "offline" ? "Presses stopped: server offline" : data.state === "starting" ? "Presses warming up" : raiding ? "Raid at the base" : "Breaking";
+  var slain = data.bosses.filter(function (b) { return b.ts && data.now - b.ts < 3600; })[0];
+  $("flash").textContent = data.state === "offline" ? "Presses stopped: server offline" : data.state === "starting" ? "Presses warming up" : raiding ? "Raid at the base" : slain ? slain.name + " is dead" : "Breaking";
+  $("pull").hidden = !d;
   if (d) {
-    $("headline").textContent = deathHeadline(d);
-    $("deck").textContent = "Death number " + d.number + " for " + d.name + ", " + ago(d.ts, data.now) + ". " + fill(pick(DECKS, d.id), d.name);
-    $("caption").textContent = "File photo: " + d.name + ", moments before the incident.";
+    setMixed($("headline"), deathHeadline(d));
+    setMixed($("story"), "Death number " + d.number + " for " + d.name + ", " + ago(d.ts, data.now) + ". " + (d.cause ? causeInfo(d.cause)[2] : fill(pick(STORIES, d.id), d.name)));
+    setMixed($("pull-words"), lastWords(d));
+    $("pull-who").textContent = "Last words of " + d.name;
+    $("caption").textContent = "Scene of the incident, as drawn by our court artist. " + d.name + " declined to pose.";
+    setArt($("photo"), d, viking(false, "meet"));
   } else {
     $("headline").textContent = "Everyone still alive. Editors suspicious";
-    $("deck").textContent = "No deaths reported on this world. Reporters have been sent to the swamp to help things along.";
+    $("story").textContent = "No deaths reported on this world. Reporters have been sent to the swamp to help things along.";
     $("caption").textContent = top ? "File photo: " + top.name + ", still breathing, for now." : "File photo: a Viking. Name withheld until something happens.";
+    if (!$("photo").querySelector("svg")) { $("photo").classList.remove("art"); $("photo").innerHTML = viking(false, "meet"); }
   }
-  if (!$("photo").firstChild) $("photo").innerHTML = viking(false, "meet");
+}
+function fact(box, label, value, online) {
+  var row = document.createElement("div"), t = document.createElement("dt"), v = document.createElement("dd");
+  t.textContent = label;
+  if (online) { var dot = document.createElement("span"); dot.className = "dot"; v.append(dot); }
+  v.append(value);
+  row.append(t, v);
+  box.append(row);
+}
+function obitCard(p, i, data, lastByName) {
+  var dead = p.deaths > 0, first = i === 0 && dead, known = lastByName[p.name], el = document.createElement("article");
+  el.className = "obit" + (first ? " first" : "");
+  el.dataset.name = p.name;
+  el.innerHTML = '<div class="face"></div><div class="head"><span class="ml" lang="ml"></span><h3 class="who"></h3><div class="tally"><span class="n"></span><small></small></div><div class="rank"></div></div><dl class="facts"></dl><div class="survivor"><div class="sv-row"><span title="Estimated from what the server can see">Survivor run (estimate)</span><b></b></div><span class="track"><span class="fill"></span></span></div><p class="text"></p>';
+  var face = el.querySelector(".face");
+  // The lead story already shows the latest death, so don't print the same picture twice.
+  var art = known;
+  if (first && known && data.deaths[0] && known.id === data.deaths[0].id) {
+    art = data.deaths.filter(function (d) { return d.name === p.name && d.id !== known.id; })[0];
+  }
+  face.innerHTML = viking(dead, first ? "meet" : "slice");
+  if (art) setArt(face, art, viking(true, "slice"));
+  el.querySelector(".ml").textContent = dead ? "ചരമം" : "ജീവനോടെ";
+  el.querySelector(".who").textContent = p.name;
+  el.querySelector(".n").textContent = p.deaths;
+  el.querySelector(".tally small").textContent = p.deaths === 1 ? "death" : "deaths";
+  el.querySelector(".rank").textContent = dead ? (TITLES[i] || TITLES[3]) : "Suspiciously alive";
+  var facts = el.querySelector(".facts");
+  fact(facts, "Played", duration(p.played));
+  fact(facts, "Last seen", p.online ? "Online now" : ago(p.last_seen, data.now), p.online);
+  fact(facts, "Visits", p.sessions || 0);
+  fact(facts, "Longest life", duration(p.longest_life));
+  if (first) {
+    var hours = p.played / 3600;
+    fact(facts, "Deaths an hour", hours > .05 ? (p.deaths / hours).toFixed(1) : "–");
+    fact(facts, "Worst session", p.worst_session);
+  }
+  el.querySelector(".sv-row b").textContent = "Day " + p.streak_days + " of 30";
+  el.querySelector(".fill").style.width = (100 * Math.min(p.streak_days, 30) / 30) + "%";
+  var text = el.querySelector(".text");
+  if (known) setMixed(text, (known.cause ? causeInfo(known.cause)[2] + " " : "") + "Last words: \u201c" + lastWords(known) + "\u201d");
+  else text.textContent = dead ? "Last words: lost to history." : "Still alive. Nobody knows how. An inquiry has been opened.";
+  return el;
 }
 function drawObits(data) {
   var box = $("obits"), list = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths || b.played - a.played; });
   box.textContent = "";
-  if (!list.length) { box.innerHTML = '<p class="empty">No Vikings have arrived yet. The obituary desk is on chaya break.</p>'; return; }
+  if (!list.length) { box.innerHTML = '<p class="empty">No Vikings have arrived yet. The obituary desk is on ചായ break.</p>'; return; }
   var lastByName = {};
   data.deaths.slice().reverse().forEach(function (d) { lastByName[d.name] = d; });
+  var rest = document.createElement("div");
+  rest.className = "rest";
   list.forEach(function (p, i) {
-    var el = document.createElement("article"), dead = p.deaths > 0;
-    el.className = "obit" + (i === 0 && dead ? " first" : "");
-    el.dataset.name = p.name;
-    el.innerHTML = '<div class="face">' + viking(dead, "slice") + '</div><div><span class="ml" lang="ml"></span><div class="who"></div><div class="n"></div><div class="title"></div><div class="meta"></div></div><p class="text"></p>';
-    el.querySelector(".ml").textContent = dead ? "ചരമം" : "ജീവനോടെ";
-    var who = el.querySelector(".who");
-    if (p.online) { var dot = document.createElement("span"); dot.className = "dot"; dot.title = "Online now"; who.append(dot); }
-    who.append(p.name);
-    var word = document.createElement("small"); word.textContent = p.deaths === 1 ? "death" : "deaths";
-    el.querySelector(".n").append(p.deaths, word);
-    el.querySelector(".title").textContent = dead ? (TITLES[i] || TITLES[3]) : "Suspiciously alive";
-    var hours = p.played / 3600, rate = hours > .05 ? (p.deaths / hours).toFixed(1) + " deaths per hour" : "";
-    var meta = ["Played " + duration(p.played), p.online ? "online now" : "seen " + ago(p.last_seen, data.now)];
-    if (dead && rate) meta.push(rate);
-    if (p.worst_session > 1) meta.push("worst session " + p.worst_session);
-    el.querySelector(".meta").textContent = meta.join(" · ");
-    var last = lastByName[p.name];
-    el.querySelector(".text").textContent = !dead ? "Still alive. Nobody knows how. An inquiry has been opened." : last && last.cause ? CAUSE[last.cause][2] : pick(EPITAPHS, (last ? last.id : i));
-    box.append(el);
+    var card = obitCard(p, i, data, lastByName);
+    if (card.classList.contains("first")) box.append(card); else rest.append(card);
   });
+  var count = rest.childElementCount;
+  if (count) {
+    var cols = count === 1 ? 1 : count === 2 || count === 4 ? 2 : 3, tablet = Math.min(cols, 2);
+    rest.style.setProperty("--cols", cols);
+    rest.style.setProperty("--cols-tablet", tablet);
+    rest.style.setProperty("--span", cols - ((count - 1) % cols));
+    rest.style.setProperty("--span-tablet", tablet - ((count - 1) % tablet));
+    box.append(rest);
+  }
 }
 function drawDesk(data) {
   var box = $("desk");
   var entries = Object.keys(data.cause_tally).sort(function (a, b) { return data.cause_tally[b] - data.cause_tally[a]; });
-  $("leading").textContent = entries.length ? "Leading cause of death: " + CAUSE[entries[0]][0].toLowerCase() + " (" + data.cause_tally[entries[0]] + ")" : "Verdicts are final until someone changes them.";
+  $("leading").textContent = entries.length ? "Leading cause of death: " + causeInfo(entries[0])[0].toLowerCase() + " (" + data.cause_tally[entries[0]] + ")" : "Verdicts are final until someone changes them.";
   if (box.contains(document.activeElement)) return;
   box.textContent = "";
-  if (!data.deaths.length) { box.innerHTML = '<p class="empty">No bodies yet. The coroner has gone for chaya.</p>'; return; }
+  if (!data.deaths.length) { box.innerHTML = '<p class="empty">No bodies yet. The coroner has gone for ചായ.</p>'; return; }
   data.deaths.slice(0, 6).forEach(function (d) {
     var row = document.createElement("div"), info = document.createElement("div"), name = document.createElement("b"), when = document.createElement("small"), sel = document.createElement("select");
     row.className = "case";
     name.textContent = d.name; when.textContent = "Death " + d.number + ", " + ago(d.ts, data.now);
     info.append(name, when);
+    var thumb = document.createElement("div");
+    thumb.className = "face";
+    thumb.innerHTML = viking(true, "slice");
+    setArt(thumb, d, viking(true, "slice"));
     sel.id = "verdict-" + d.id;
     sel.setAttribute("aria-label", "Cause of death for " + d.name + ", death " + d.number);
     sel.className = d.cause ? "" : "open";
     var none = new Option("Who did it?", "");
     none.disabled = true;
     sel.add(none);
-    data.causes.forEach(function (c) { sel.add(new Option(CAUSE[c] ? CAUSE[c][0] : c, c)); });
+    data.causes.forEach(function (c) { sel.add(new Option(causeInfo(c)[0], c)); });
     sel.value = d.cause || "";
-    sel.addEventListener("change", function () { verdict(d, sel.value); });
-    row.append(info, sel);
+    sel.addEventListener("change", function () { verdict(d, sel.value, "Verdict recorded: " + causeInfo(sel.value)[0].toLowerCase() + "."); });
+    row.append(thumb, info, sel);
     box.append(row);
   });
 }
-function verdict(d, cause) {
+function verdict(d, cause, message) {
   fetch("/api/verdict", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: d.id, cause: cause }) })
-    .then(function (r) { if (!r.ok) throw new Error(); toast("Verdict recorded: " + CAUSE[cause][0].toLowerCase() + "."); if (document.activeElement) document.activeElement.blur(); refreshStatus(); })
+    .then(function (r) { if (!r.ok) throw new Error(); toast(message); if (document.activeElement) document.activeElement.blur(); refreshStatus(); })
     .catch(function () { toast("The coroner couldn't save that. Try again."); });
+}
+var BOSS_QUIPS = ["Odin is said to be mildly impressed.", "The trophy will be mounted somewhere nobody can find without a map.", "Rumours that it tripped remain unconfirmed.", "Survivors are already exaggerating."];
+function drawBosses(data) {
+  var box = $("bosses"), done = data.bosses.filter(function (b) { return b.ts; });
+  box.textContent = "";
+  $("boss-line").textContent = done.length ? done.length + " of " + data.bosses.length + " down. " + pick(BOSS_QUIPS, done.length) : "None down. They have heard of you, and they are not worried.";
+  data.bosses.forEach(function (b, i) {
+    var el = document.createElement("div"), number = document.createElement("span"), name = document.createElement("b"), note = document.createElement("span");
+    el.className = "boss" + (b.ts ? " down" : "");
+    number.className = "lab"; number.textContent = "No. " + (i + 1);
+    name.textContent = b.name;
+    note.className = "note"; note.textContent = b.ts ? clock(b.ts) : "At large";
+    el.append(number, name, note);
+    if (b.ts) { var stamp = document.createElement("span"); stamp.className = "stamp"; stamp.textContent = "SLAIN"; el.append(stamp); }
+    box.append(el);
+  });
 }
 function newsText(e) {
   var n = e.name || "", seed = Math.floor(e.ts);
   if (e.kind === "death") { var d = latest.deaths.filter(function (x) { return x.id === e.death_id; })[0]; return d ? deathHeadline(d) + "." : n + " died."; }
+  if (e.kind === "boss") return e.boss + " is dead, with the survivors already exaggerating. Trophy to follow.";
   if (e.label === "Joined") return fill(pick(JOINS, seed), n);
   if (e.label === "Left") return fill(pick(LEAVES, seed), n);
   if (e.label === "Failed") return "Someone tried a wrong password. Police are looking for a person who cannot read.";
@@ -331,12 +575,13 @@ function drawNews() {
   var ul = $("news");
   ul.textContent = "";
   if (!latest) return;
-  var rows = latest.events.filter(function (e) { return filter === "all" || e.kind === filter; }).slice(0, 12);
+  var rows = latest.events.filter(function (e) { return filter === "all" || e.kind === filter; }).slice(0, 10);
   if (!rows.length) { var none = document.createElement("li"); none.className = "empty"; none.textContent = "No news. Slow day in the fjord."; ul.append(none); }
   rows.forEach(function (e) {
-    var li = document.createElement("li"), t = document.createElement("time");
+    var li = document.createElement("li"), t = document.createElement("time"), text = document.createElement("span");
     t.textContent = clock(e.ts);
-    li.append(t, newsText(e));
+    setMixed(text, newsText(e));
+    li.append(t, text);
     ul.append(li);
   });
 }
@@ -344,22 +589,28 @@ function draw(data) {
   latest = data;
   document.title = "Valheim Vartha · " + data.state;
   $("world").textContent = data.world;
-  $("s-state").textContent = data.state.toUpperCase();
-  $("s-state").className = data.state === "online" ? "" : "down";
-  var online = data.players.filter(function (p) { return p.online; }).length;
-  $("s-online").textContent = online + (online === 1 ? " Viking" : " Vikings") + " online";
-  $("s-up").textContent = data.state === "offline" ? "Down" : "Up " + duration(data.now - data.active_since);
-  $("s-version").textContent = "Version " + (data.version || "unknown");
-  $("s-memory").textContent = "Memory " + (data.memory_used / 1073741824).toFixed(1) + " / " + (data.memory_total / 1073741824).toFixed(1) + " GB";
-  $("s-cpu").textContent = "CPU " + data.cpu + "%";
+  $("s-state").textContent = data.state.charAt(0).toUpperCase() + data.state.slice(1);
+  $("s-state").className = data.state === "online" ? "up" : "down";
+  $("s-online").textContent = data.players.filter(function (p) { return p.online; }).length;
+  $("s-up").textContent = data.state === "offline" ? "Down" : duration(data.now - data.active_since);
+  $("s-day").textContent = data.world_day === null ? "Unknown" : data.world_day;
+  $("s-version").textContent = data.version || "Unknown";
+  $("s-memory").textContent = (data.memory_used / 1073741824).toFixed(1) + " / " + (data.memory_total / 1073741824).toFixed(1) + " GB";
+  $("s-cpu").textContent = data.cpu + "%";
+  $("issue").textContent = "Vol. I, No. " + (data.total_deaths + 1);
+  $("today").textContent = new Date(data.now * 1000).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   $("address").textContent = location.hostname + ":" + data.game_port;
   $("seed").textContent = data.seed || "Unknown";
   if (data.seed) $("map").href = "https://valheim-map.world/?seed=" + encodeURIComponent(data.seed) + "&offset=0%2C0&zoom=0.12&view=0&ver=1.0.7";
-  $("save-line").textContent = "Last saved " + ago(data.last_save, data.now) + ". " + (data.backup_ok ? "Last backup " + ago(data.last_backup, data.now) : "Last backup failed") + ". World size " + size(data.world_size) + ". This is the latest automatic save, so it can be a few minutes behind live play.";
+  $("v-saved").textContent = ago(data.last_save, data.now);
+  $("v-backup").textContent = data.backup_ok ? ago(data.last_backup, data.now) : "Failed";
+  $("v-size").textContent = size(data.world_size);
   var top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0], day = Math.floor(data.now / 86400);
   $("ad").textContent = fill(pick(ADS, day), top ? top.name : "the editor");
-  $("forecast").textContent = pick(FORECASTS, day);
-  drawLead(data); drawObits(data); drawDesk(data); drawNews();
+  var outlook = pick(FORECASTS, day);
+  $("forecast-label").textContent = outlook[0];
+  $("forecast").textContent = outlook[1];
+  drawLead(data); drawObits(data); drawDesk(data); drawBosses(data); drawNews();
   var newest = data.deaths[0] ? data.deaths[0].id : 0;
   if (lastDeathId !== null && newest > lastDeathId) {
     toast("Stop the press: " + data.deaths[0].name + " is dead");
