@@ -46,4 +46,6 @@ backup_retention:
   keep_monthly: 12
 backup_paths:
   - "{{ valheim_data_dir }}/worlds_local"
+  # The dashboard keeps the shared atlas, death verdicts and pictures here.
+  - "/var/lib/valheim-dashboard"
 restic_repository: "s3:https://minio.cosmos.cboxlab.com/valheim-nomap-backup"

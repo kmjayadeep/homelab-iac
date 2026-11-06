@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vartha Atlas</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Gelasio:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Noto+Serif+Malayalam:wght@500;800&display=swap">
+<style>
+/* A full-screen sheet of parchment: header, the drawing surface, and a toolbar along the bottom. */
+:root {
+  color-scheme: light;
+  --paper: #e9e3d2; --sheet: #f2eddf; --ink: #17140f; --ink-2: #51493b; --line: #cfc7b1; --red: #b5141c; --red-fg: #fff6ea; --ok: #1f6b45;
+  --head: "Abril Fatface", "Noto Serif Malayalam", Georgia, serif; --body: "Gelasio", "Noto Serif Malayalam", Georgia, serif; --ml: "Noto Serif Malayalam", serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 1rem/1.4 var(--body); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: var(--sheet); }
+header.bar { padding-top: max(8px, env(safe-area-inset-top, 0px)); border-bottom: 3px double var(--ink); }
+.back { color: var(--ink); font-weight: 700; text-decoration: none; white-space: nowrap; }
+.back:hover { color: var(--red); }
+h1 { margin: 0; font: 400 clamp(1.35rem, 3vw, 1.9rem)/1.1 var(--head); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+h1 .ml { font: 800 .8em/1.3 var(--ml); color: var(--red); }
+.who { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: .9rem; }
+.who select { background: var(--paper); border: 1.5px solid var(--ink); padding: 3px 6px; max-width: 46vw; }
+.sync { font-size: .85rem; font-style: italic; color: var(--ink-2); white-space: nowrap; }
+.sync.off { color: var(--red); font-style: normal; font-weight: 700; }
+.stage { position: relative; min-height: 0; overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+canvas[data-tool="move"] { cursor: grab; }
+canvas[data-tool="erase"] { cursor: cell; }
+.empty { position: absolute; inset: 0; display: grid; place-content: start center; padding-top: 9vh; text-align: center; gap: 6px; padding-inline: 24px; pointer-events: none; }
+.empty b { font: 400 clamp(1.6rem, 4vw, 2.6rem)/1.1 var(--head); }
+.empty span { font-style: italic; color: var(--ink-2); max-width: 36ch; margin-inline: auto; }
+footer.bar { padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); border-top: 3px double var(--ink); gap: 8px 14px; }
+.group { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.group + .group { padding-left: 14px; border-left: 1px solid var(--line); }
+.tool, .act, .size { border: 1.5px solid var(--ink); background: transparent; padding: 5px 10px; font-weight: 700; font-size: .9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; }
+.tool[aria-pressed="true"], .size[aria-pressed="true"] { background: var(--ink); color: var(--sheet); }
+.tool:hover, .act:hover, .size:hover { border-color: var(--red); }
+.tool svg { width: 18px; height: 18px; flex: none; }
+.swatch { width: 30px; height: 30px; border: 1.5px solid var(--ink); border-radius: 50%; cursor: pointer; padding: 0; position: relative; }
+.swatch[aria-pressed="true"]::after { content: ""; position: absolute; inset: -5px; border: 2px solid var(--red); border-radius: 50%; }
+.current { font-size: .85rem; font-style: italic; color: var(--ink-2); min-width: 8ch; }
+.spacer { margin-left: auto; }
+.pop { position: absolute; z-index: 5; width: min(300px, calc(100% - 24px)); background: var(--sheet); border: 3px double var(--ink); padding: 12px; display: grid; gap: 10px; box-shadow: 0 10px 30px rgba(23, 20, 15, .25); }
+.pop h2 { margin: 0; font: 400 1.2rem/1.1 var(--head); }
+.pins { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.pins button { border: 1.5px solid var(--line); background: var(--paper); padding: 6px 2px; cursor: pointer; display: grid; justify-items: center; font-size: .78rem; font-weight: 600; }
+.pins button span { font-size: 1.35rem; line-height: 1.2; }
+.pins button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--sheet); }
+.pop input { width: 100%; padding: 6px 8px; border: 1.5px solid var(--ink); background: var(--paper); }
+.pop .row { display: flex; gap: 8px; justify-content: flex-end; }
+.pop .go { background: var(--red); border-color: var(--red); color: var(--red-fg); }
+.pop p { margin: 0; font-size: .92rem; }
+.pop .meta { font-style: italic; color: var(--ink-2); }
+.toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 9; max-width: calc(100% - 32px); background: var(--ink); color: var(--sheet); padding: 8px 14px; font-weight: 600; }
+@media (max-width: 720px) {
+  .who { margin-left: 0; width: 100%; justify-content: space-between; }
+  footer.bar { gap: 8px; }
+  .group + .group { padding-left: 0; border-left: 0; }
+  .label { display: none; }
+  .tool, .act, .size { padding: 5px 8px; }
+  .spacer { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="back" href="/">&larr; Vartha</a>
+  <h1>The Vartha Atlas <span class="ml" lang="ml">ഭൂപടം</span></h1>
+  <div class="who">
+    <span class="sync" id="sync">Unrolling the parchment</span>
+    <label>Drawing as <select id="name"></select></label>
+  </div>
+</header>
+
+<div class="stage" id="stage">
+  <canvas id="canvas" data-tool="pen" aria-label="Shared map. Draw with the pen, drop pins, and add text."></canvas>
+  <div class="empty" id="empty" hidden><b>Here be dragons.</b><span>Also trolls, and everything else, because nobody has drawn anything yet. The ring in the middle is the spawn stones, so start from there.</span></div>
+  <div class="pop" id="pop" hidden></div>
+</div>
+
+<footer class="bar">
+  <div class="group" role="group" aria-label="Tools">
+    <button class="tool" type="button" data-tool="move" aria-pressed="false" title="Move around (V)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M12 2l-3 3M12 2l3 3M12 22l-3-3M12 22l3-3M2 12l3-3M2 12l3 3M22 12l-3-3M22 12l-3 3"/></svg><span class="label">Move</span></button>
+    <button class="tool" type="button" data-tool="pen" aria-pressed="true" title="Draw (P)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L19 8l-3-3L5 16l-1 4zM14 7l3 3"/></svg><span class="label">Pen</span></button>
+    <button class="tool" type="button" data-tool="pin" aria-pressed="false" title="Drop a pin (I)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="label">Pin</span></button>
+    <button class="tool" type="button" data-tool="text" aria-pressed="false" title="Write a name (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg><span class="label">Text</span></button>
+    <button class="tool" type="button" data-tool="erase" aria-pressed="false" title="Erase whole lines and pins (E)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20h12M5 15l9-9 5 5-8 8H8z"/></svg><span class="label">Erase</span></button>
+  </div>
+  <div class="group" id="pen-options" role="group" aria-label="Pen colour and size">
+    <span id="swatches" class="group"></span>
+    <button class="size" type="button" data-size="3" aria-pressed="false">Fine</button>
+    <button class="size" type="button" data-size="7" aria-pressed="true">Line</button>
+    <button class="size" type="button" data-size="34" aria-pressed="false" title="A wide brush for painting biomes">Brush</button>
+    <span class="current" id="current"></span>
+  </div>
+  <div class="group spacer" role="group" aria-label="Map actions">
+    <button class="act" type="button" id="undo" title="Undo your last change (Ctrl+Z)">Undo</button>
+    <button class="act" type="button" id="fit" title="Show the whole map">Fit</button>
+    <button class="act" type="button" id="save" title="Download as a picture">Save PNG</button>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="/atlas.js"></script>
+<script>
+"use strict";
+var A = window.Atlas, store = new A.Store();
+var canvas = document.getElementById("canvas"), ctx = canvas.getContext("2d"), stage = document.getElementById("stage"), pop = document.getElementById("pop");
+var view = { x: 0, y: 0, scale: 1 }, W = 0, H = 0, fitted = false, dirty = true;
+var tool = "pen", color = "ink", sizePx = 7, current = null, undoSteps = [], online = true, toastTimer;
+var pointers = new Map(), gesture = null;
+
+function $(id) { return document.getElementById(id); }
+function saved(key, fallback) { try { return localStorage.getItem(key) || fallback; } catch (e) { return fallback; } }
+function remember(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private window */ } }
+function toast(text) { $("toast").textContent = text; $("toast").hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { $("toast").hidden = true; }, 3500); }
+function newId() { var b = new Uint8Array(12); crypto.getRandomValues(b); return Array.from(b, function (x) { return (x % 36).toString(36); }).join(""); }
+function ago(ts) {
+  var s = Math.max(0, Date.now() / 1000 - ts);
+  if (s < 60) return "just now";
+  if (s < 3600) return Math.floor(s / 60) + " min ago";
+  if (s < 86400) return Math.floor(s / 3600) + "h ago";
+  return Math.floor(s / 86400) + "d ago";
+}
+function who() { return $("name").value === "-" ? "" : $("name").value; }
+
+function resize() {
+  var r = stage.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  W = r.width; H = r.height;
+  canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  dirty = true;
+}
+function frame() {
+  if (dirty) {
+    dirty = false;
+    var items = store.list();
+    if (current) items.push(current);
+    A.draw(ctx, items, view, W, H);
+    $("empty").hidden = items.length > 0;
+  }
+  requestAnimationFrame(frame);
+}
+
+function send(body) {
+  return fetch("/api/map", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+    .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "The press refused that."); return j; }); });
+}
+function add(item, restoring) {
+  if (!restoring) { item.by = who(); undoSteps.push({ added: item.id }); }
+  store.items[item.id] = item;
+  dirty = true;
+  send({ op: "add", item: item }).catch(function (e) { delete store.items[item.id]; dirty = true; toast(e.message); });
+}
+function remove(item, undoing) {
+  if (!undoing) undoSteps.push({ removed: item });
+  delete store.items[item.id];
+  dirty = true;
+  send({ op: "delete", id: item.id }).catch(function (e) { store.items[item.id] = item; dirty = true; toast(e.message); });
+}
+// Undo takes back this visit's own additions and erasures, newest first.
+function undo() {
+  while (undoSteps.length) {
+    var step = undoSteps.pop();
+    if (step.added && store.items[step.added]) { remove(store.items[step.added], true); return; }
+    if (step.removed) {
+      var copy = Object.assign({}, step.removed, { id: newId() });
+      delete copy.rev; delete copy.ts;
+      add(copy, true);
+      return;
+    }
+  }
+  toast("Nothing of yours to undo in this visit.");
+}
+
+var polling = false;
+function poll() {
+  if (polling) return;
+  polling = true;
+  fetch("/api/map?since=" + store.rev).then(function (r) { if (!r.ok) throw new Error(); return r.json(); }).then(function (data) {
+    if (store.merge(data)) dirty = true;
+    if (!fitted) { fitted = true; view = Object.keys(store.items).length ? A.fit(store.list(), W, H, 60) : { x: 0, y: 0, scale: 1 }; dirty = true; }
+    online = true;
+    $("sync").className = "sync";
+    $("sync").textContent = "Live · " + Object.keys(store.items).length + " marks";
+  }).catch(function () {
+    online = false;
+    $("sync").className = "sync off";
+    $("sync").textContent = "Offline, retrying";
+  }).finally(function () { polling = false; });
+}
+
+function setTool(name) {
+  tool = name;
+  canvas.dataset.tool = name;
+  document.querySelectorAll(".tool").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.tool === name)); });
+  $("pen-options").hidden = name !== "pen";
+  closePop();
+}
+function setColor(name) {
+  color = name;
+  document.querySelectorAll(".swatch").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.color === name)); });
+  $("current").textContent = A.COLORS[name][0];
+}
+
+function local(e) { var r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+function zoomAt(sx, sy, factor) {
+  var before = A.toWorld(view, W, H, sx, sy);
+  view.scale = Math.max(.01, Math.min(8, view.scale * factor));
+  view.x = before[0] - (sx - W / 2) / view.scale;
+  view.y = before[1] - (sy - H / 2) / view.scale;
+  dirty = true;
+}
+function eraseAt(p) {
+  var item = A.hit(store.list(), view, W, H, p[0], p[1], 8);
+  if (item) remove(item);
+}
+canvas.addEventListener("pointerdown", function (e) {
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, local(e));
+  closePop();
+  if (pointers.size === 2) {
+    current = null;
+    var ps = Array.from(pointers.values());
+    gesture = { type: "pinch", dist: Math.hypot(ps[0][0] - ps[1][0], ps[0][1] - ps[1][1]) || 1, mid: [(ps[0][0] + ps[1][0]) / 2, (ps[0][1] + ps[1][1]) / 2], view: Object.assign({}, view) };
+    dirty = true;
+    return;
+  }
+  if (pointers.size > 2) return;
+  var p = local(e);
+  if (e.button === 1 || e.button === 2 || tool === "move") gesture = { type: "pan", start: p, view: Object.assign({}, view), tap: true };
+  else if (tool === "pen") { gesture = { type: "pen" }; current = { id: newId(), kind: "stroke", color: color, width: sizePx / view.scale, points: [A.toWorld(view, W, H, p[0], p[1])] }; dirty = true; }
+  else if (tool === "erase") { gesture = { type: "erase" }; eraseAt(p); }
+  else gesture = { type: "tap", start: p };
+});
+canvas.addEventListener("pointermove", function (e) {
+  if (!pointers.has(e.pointerId)) return;
+  var p = local(e);
+  pointers.set(e.pointerId, p);
+  if (!gesture) return;
+  if (gesture.type === "pinch" && pointers.size === 2) {
+    var ps = Array.from(pointers.values()), g = gesture;
+    var dist = Math.hypot(ps[0][0] - ps[1][0], ps[0][1] - ps[1][1]), mid = [(ps[0][0] + ps[1][0]) / 2, (ps[0][1] + ps[1][1]) / 2];
+    var anchor = A.toWorld(g.view, W, H, g.mid[0], g.mid[1]);
+    view.scale = Math.max(.01, Math.min(8, g.view.scale * dist / g.dist));
+    view.x = anchor[0] - (mid[0] - W / 2) / view.scale;
+    view.y = anchor[1] - (mid[1] - H / 2) / view.scale;
+    dirty = true;
+  } else if (gesture.type === "pan") {
+    if (Math.hypot(p[0] - gesture.start[0], p[1] - gesture.start[1]) > 5) gesture.tap = false;
+    view.x = gesture.view.x - (p[0] - gesture.start[0]) / view.scale;
+    view.y = gesture.view.y - (p[1] - gesture.start[1]) / view.scale;
+    dirty = true;
+  } else if (gesture.type === "pen" && current) {
+    var last = A.toScreen(view, W, H, current.points[current.points.length - 1][0], current.points[current.points.length - 1][1]);
+    if (Math.hypot(p[0] - last[0], p[1] - last[1]) >= 2) { current.points.push(A.toWorld(view, W, H, p[0], p[1])); dirty = true; }
+  } else if (gesture.type === "erase") eraseAt(p);
+});
+function release(e) {
+  if (!pointers.has(e.pointerId)) return;
+  var p = local(e);
+  pointers.delete(e.pointerId);
+  var g = gesture;
+  if (pointers.size) { if (g && g.type === "pinch") gesture = null; return; }
+  gesture = null;
+  if (!g || e.type === "pointercancel") { current = null; dirty = true; return; }
+  if (g.type === "pen" && current) {
+    var stroke = current;
+    current = null;
+    stroke.points = A.simplify(stroke.points, .8 / view.scale).slice(0, 4000).map(function (q) { return [Math.round(q[0] * 10) / 10, Math.round(q[1] * 10) / 10]; });
+    add(stroke);
+  } else if (g.type === "tap" && Math.hypot(p[0] - g.start[0], p[1] - g.start[1]) < 8) {
+    if (tool === "pin") openPin(p); else openText(p);
+  } else if (g.type === "pan" && g.tap) {
+    var item = A.hit(store.list(), view, W, H, p[0], p[1], 6);
+    if (item && item.kind !== "stroke") openInfo(item, p);
+  }
+}
+canvas.addEventListener("pointerup", release);
+canvas.addEventListener("pointercancel", release);
+canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+canvas.addEventListener("wheel", function (e) { e.preventDefault(); var p = local(e); zoomAt(p[0], p[1], Math.exp(-e.deltaY * (e.deltaMode ? .05 : .0015))); }, { passive: false });
+
+function place(p) {
+  var r = stage.getBoundingClientRect();
+  pop.hidden = false;
+  var w = pop.offsetWidth, h = pop.offsetHeight;
+  pop.style.left = Math.max(12, Math.min(p[0] - w / 2, r.width - w - 12)) + "px";
+  pop.style.top = Math.max(12, Math.min(p[1] + 18, r.height - h - 12)) + "px";
+}
+function closePop() { pop.hidden = true; pop.textContent = ""; }
+function button(text, cls, action) { var b = document.createElement("button"); b.type = "button"; b.className = "act" + (cls ? " " + cls : ""); b.textContent = text; b.addEventListener("click", action); return b; }
+function field(placeholder) { var i = document.createElement("input"); i.maxLength = 48; i.placeholder = placeholder; i.autocomplete = "off"; return i; }
+function heading(text) { var h = document.createElement("h2"); h.textContent = text; return h; }
+function openPin(p) {
+  closePop();
+  var world = A.toWorld(view, W, H, p[0], p[1]), icon = "base", grid = document.createElement("div"), input = field("Label, e.g. Eikthyr's altar");
+  grid.className = "pins";
+  Object.keys(A.PINS).forEach(function (key) {
+    var b = document.createElement("button"), e = document.createElement("span");
+    b.type = "button"; b.dataset.icon = key; b.setAttribute("aria-pressed", String(key === icon));
+    e.textContent = A.PINS[key][1];
+    b.append(e, A.PINS[key][0]);
+    b.addEventListener("click", function () { icon = key; grid.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.icon === key)); }); input.focus(); });
+    grid.append(b);
+  });
+  function go() { add({ id: newId(), kind: "pin", icon: icon, label: input.value.trim(), x: world[0], y: world[1] }); closePop(); }
+  input.addEventListener("keydown", function (e) { if (e.key === "Enter") go(); if (e.key === "Escape") closePop(); });
+  var row = document.createElement("div");
+  row.className = "row";
+  row.append(button("Cancel", "", closePop), button("Drop pin", "go", go));
+  pop.append(heading("Drop a pin"), grid, input, row);
+  place(p);
+  input.focus({ preventScroll: true });
+}
+function openText(p) {
+  closePop();
+  var world = A.toWorld(view, W, H, p[0], p[1]), input = field("e.g. Here be trolls");
+  function go() { var text = input.value.trim(); if (text) add({ id: newId(), kind: "text", label: text, size: 20 / view.scale, x: world[0], y: world[1] }); closePop(); }
+  input.addEventListener("keydown", function (e) { if (e.key === "Enter") go(); if (e.key === "Escape") closePop(); });
+  var row = document.createElement("div");
+  row.className = "row";
+  row.append(button("Cancel", "", closePop), button("Write it", "go", go));
+  pop.append(heading("Name this place"), input, row);
+  place(p);
+  input.focus({ preventScroll: true });
+}
+function openInfo(item, p) {
+  closePop();
+  var title = item.kind === "pin" ? (item.label || A.PINS[item.icon][0]) : item.label, meta = document.createElement("p"), row = document.createElement("div");
+  meta.className = "meta";
+  meta.textContent = (item.kind === "pin" ? A.PINS[item.icon][0] + ". " : "") + "Added by " + (item.by || "an anonymous Viking") + (item.ts ? ", " + ago(item.ts) : "") + ".";
+  row.className = "row";
+  row.append(button("Close", "", closePop), button("Erase", "go", function () { remove(item); closePop(); }));
+  pop.append(heading(title), meta, row);
+  place(p);
+}
+
+document.querySelectorAll(".tool").forEach(function (b) { b.addEventListener("click", function () { setTool(b.dataset.tool); }); });
+document.querySelectorAll(".size").forEach(function (b) {
+  b.addEventListener("click", function () { sizePx = Number(b.dataset.size); document.querySelectorAll(".size").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); }); });
+});
+Object.keys(A.COLORS).forEach(function (key) {
+  var b = document.createElement("button");
+  b.type = "button"; b.className = "swatch"; b.dataset.color = key; b.title = A.COLORS[key][0]; b.setAttribute("aria-label", A.COLORS[key][0]);
+  b.style.background = A.COLORS[key][1];
+  b.addEventListener("click", function () { setColor(key); });
+  $("swatches").append(b);
+});
+$("undo").addEventListener("click", undo);
+$("fit").addEventListener("click", function () { view = A.fit(store.list(), W, H, 60); dirty = true; });
+$("save").addEventListener("click", function () {
+  var items = store.list();
+  if (!items.length) { toast("Draw something first. A blank map is just paper."); return; }
+  var out = document.createElement("canvas"), box = A.bounds(items), ratio = Math.max(.4, Math.min(2.5, (box.y1 - box.y0 + 1) / (box.x1 - box.x0 + 1)));
+  out.width = 2400; out.height = Math.round(2400 * ratio);
+  var c = out.getContext("2d");
+  A.draw(c, items, A.fit(items, out.width, out.height, 120), out.width, out.height, { pinSize: 40 });
+  out.toBlob(function (blob) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "nomap-atlas-" + new Date().toISOString().slice(0, 10) + ".png";
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+  });
+});
+document.addEventListener("keydown", function (e) {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  var keys = { v: "move", p: "pen", i: "pin", t: "text", e: "erase" };
+  if (keys[e.key.toLowerCase()]) setTool(keys[e.key.toLowerCase()]);
+  if (e.key === "Escape") closePop();
+  if (e.key === "+" || e.key === "=") zoomAt(W / 2, H / 2, 1.25);
+  if (e.key === "-") zoomAt(W / 2, H / 2, .8);
+});
+
+// The name list comes from the Vikings the server has seen.
+function loadNames() {
+  var select = $("name"), want = saved("atlas-name", "-");
+  fetch("/api/status").then(function (r) { return r.json(); }).then(function (data) {
+    var names = data.players.map(function (p) { return p.name; }).sort(function (a, b) { return a.localeCompare(b); });
+    select.textContent = "";
+    [["-", "Anonymous Viking"]].concat(names.map(function (n) { return [n, n]; })).forEach(function (pair) {
+      var o = document.createElement("option"); o.value = pair[0]; o.textContent = pair[1]; select.append(o);
+    });
+    select.value = names.indexOf(want) > -1 ? want : "-";
+  }).catch(function () {
+    var o = document.createElement("option"); o.value = "-"; o.textContent = "Anonymous Viking"; select.append(o);
+  });
+  select.addEventListener("change", function () { remember("atlas-name", select.value); });
+}
+
+new ResizeObserver(resize).observe(stage);
+resize();
+setTool("pen");
+setColor("ink");
+loadNames();
+poll();
+setInterval(function () { if (!document.hidden) poll(); }, 2500);
+document.addEventListener("visibilitychange", function () { if (!document.hidden) poll(); });
+if (document.fonts) document.fonts.ready.then(function () { dirty = true; });
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

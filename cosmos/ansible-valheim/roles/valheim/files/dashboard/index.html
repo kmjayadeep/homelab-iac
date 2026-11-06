@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Valheim Vartha</title>
+<script src="/atlas.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Gelasio:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif+Malayalam:wght@500;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: a broadsheet front page. Masthead with ears, an edition bar, a lead story with art, then ruled sections on one shared grid. */
@@ -69,6 +70,15 @@ h2 { margin: 0; font: 400 clamp(1.75rem, 3.4vw, 2.6rem)/1.1 var(--head); }
 .section-title .ml { font: 800 clamp(1.1rem, 2.4vw, 1.7rem)/1.3 var(--ml); color: var(--red); }
 .kicker { margin-left: auto; font-style: italic; color: var(--ink-2); font-size: .98rem; text-align: right; }
 .empty { font-style: italic; color: var(--ink-2); }
+
+/* Atlas teaser */
+.atlas { position: relative; display: block; aspect-ratio: 16 / 6; max-width: 100%; border: 3px double var(--ink); background: #e9dcb8; color: var(--ink); text-decoration: none; overflow: hidden; }
+.atlas canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.atlas-card { position: absolute; left: 14px; bottom: 14px; max-width: min(380px, calc(100% - 28px)); display: grid; gap: 2px; background: var(--sheet); border: 1.5px solid var(--ink); padding: 8px 12px; }
+.atlas-card b { font: 400 1.35rem/1.1 var(--head); }
+.atlas-card span { font-size: .92rem; font-style: italic; color: var(--ink-2); }
+.atlas:hover .atlas-card { border-color: var(--red); }
+.atlas:hover .atlas-card b { color: var(--red); }
 
 /* Death leaderboard */
 #board { --board: 74px minmax(0, 1fr) 124px 84px 104px 112px 84px; list-style: none; margin: 0; padding: 0; border: 3px double var(--ink); background: var(--sheet); }
@@ -231,6 +241,7 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
   .lead { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 640px) {
+  .atlas { aspect-ratio: 4 / 3; }
   .ear small { display: none; }
   .ear b { font-size: 1rem; }
   .dateline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -300,6 +311,12 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
 
   <div class="section-title"><h2>Forsaken slain</h2><span class="kicker" id="boss-line"></span></div>
   <div class="bosses" id="bosses"></div>
+
+  <div class="section-title"><h2>The atlas</h2><span class="ml" lang="ml">ഭൂപടം</span><span class="kicker">Drawn by Vikings who refuse to ask for directions</span></div>
+  <a class="atlas" href="/map" aria-label="Open the shared atlas">
+    <canvas id="atlas" aria-hidden="true"></canvas>
+    <span class="atlas-card"><b id="atlas-title">Open the atlas &rarr;</b><span id="atlas-line">Pen, pins and place names, shared live with everyone on the server.</span></span>
+  </a>
 
   <div class="section-title"><h2>The editorial page</h2><span class="ml" lang="ml">മുഖപ്രസംഗം</span></div>
   <div class="editorial">
@@ -859,6 +876,31 @@ document.querySelector(".chips").addEventListener("click", function (ev) {
 });
 $("q").addEventListener("input", function () { clearTimeout(logTimer); logTimer = setTimeout(refreshLogs, 250); });
 $("all").addEventListener("change", refreshLogs);
+// The teaser redraws the shared atlas, fitted to its frame.
+var atlasStore = window.Atlas ? new Atlas.Store() : null;
+function drawAtlas() {
+  if (!atlasStore) return;
+  var c = $("atlas"), box = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1, items = atlasStore.list();
+  if (!box.width) return;
+  c.width = Math.round(box.width * dpr); c.height = Math.round(box.height * dpr);
+  var g = c.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  Atlas.draw(g, items, Atlas.fit(items, box.width, box.height, 30), box.width, box.height, { pinSize: 20, noLabels: box.width < 500 });
+  var pins = items.filter(function (i) { return i.kind === "pin"; }).length, latest = items.reduce(function (a, b) { return (b.ts || 0) > (a ? a.ts || 0 : 0) ? b : a; }, null);
+  if (items.length) {
+    $("atlas-title").textContent = "Open the atlas \u2192";
+    $("atlas-line").textContent = items.length + (items.length === 1 ? " mark" : " marks") + ", " + pins + (pins === 1 ? " pin" : " pins") + ". Last touched by " + (latest && latest.by ? latest.by : "an anonymous Viking") + (latest && latest.ts ? ", " + ago(latest.ts, Date.now() / 1000) : "") + ".";
+  }
+}
+function refreshAtlas() {
+  if (!atlasStore) return;
+  fetch("/api/map?since=" + atlasStore.rev).then(function (r) { if (!r.ok) throw new Error(); return r.json(); }).then(function (data) { atlasStore.merge(data); drawAtlas(); }).catch(function () {});
+}
+if (window.ResizeObserver) new ResizeObserver(drawAtlas).observe($("atlas"));
+if (document.fonts) document.fonts.ready.then(drawAtlas);
+refreshAtlas();
+setInterval(refreshAtlas, 15000);
+
 refreshStatus(); refreshLogs();
 setInterval(refreshStatus, 15000);
 setInterval(refreshLogs, 15000);
