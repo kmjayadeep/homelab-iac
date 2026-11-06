@@ -28,6 +28,8 @@
   loop:
     - server.py
     - index.html
+    - map.html
+    - atlas.js
   register: dashboard_files
 
 - name: Create dashboard settings

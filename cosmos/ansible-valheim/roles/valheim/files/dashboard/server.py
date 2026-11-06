@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Small read-only status page for one Valheim dedicated server."""
+"""Small status page and shared atlas for one Valheim dedicated server."""
 
 import gzip
 import json
+import math
 import os
 import re
 import struct
@@ -25,6 +26,9 @@ STATE_DIR = Path(os.environ.get("STATE_DIRECTORY", "/var/lib/valheim-dashboard")
 IGNORED_PLAYERS = set(filter(None, os.environ.get("VALHEIM_DASHBOARD_IGNORED_PLAYERS", "").split(",")))
 STATE_FILE = STATE_DIR / "state.json"
 INDEX_FILE = Path(__file__).with_name("index.html")
+MAP_PAGE = Path(__file__).with_name("map.html")
+ATLAS_SCRIPT = Path(__file__).with_name("atlas.js")
+MAP_FILE = STATE_DIR / "map.json"
 UNIT = "valheim"
 BACKUP_UNIT = "backup-valheim.service"
 MAX_EVENTS = 200
@@ -59,6 +63,120 @@ NOISE = re.compile(
 
 state_lock = threading.Lock()
 download_lock = threading.Lock()
+
+
+# The atlas is drawn by players, so it lives apart from the summary rebuilt from logs.
+MAP_COLORS = {"ink", "meadows", "forest", "swamp", "mountain", "plains", "mistlands", "ashlands", "ocean", "danger"}
+MAP_PINS = {"base", "portal", "boss", "dungeon", "trader", "ore", "ship", "death", "other"}
+MAP_ID = re.compile(r"[A-Za-z0-9_-]{8,40}")
+MAP_MAX_ITEMS = 20000
+MAP_MAX_POINTS = 4000
+MAP_MAX_BODY = 256 * 1024
+MAP_LIMIT = 1e6
+atlas = {"schema": 1, "rev": 0, "items": {}}
+atlas_lock = threading.Lock()
+
+
+def load_atlas():
+    try:
+        loaded = json.loads(MAP_FILE.read_text())
+    except (OSError, ValueError):
+        return
+    if loaded.get("schema") == 1:
+        atlas.update(loaded)
+
+
+def save_atlas():
+    data = json.dumps(atlas, separators=(",", ":"))
+    temporary = MAP_FILE.with_suffix(".tmp")
+    temporary.write_text(data)
+    temporary.replace(MAP_FILE)
+
+
+def map_number(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise ValueError("not a number")
+    if abs(value) > MAP_LIMIT:
+        raise ValueError("off the edge of the world")
+    return round(float(value), 1)
+
+
+def map_text(value, longest, required=False):
+    text = " ".join(str(value or "").split())[:longest]
+    if required and not text:
+        raise ValueError("empty text")
+    return text
+
+
+def clean_map_item(raw):
+    """Return a stored copy of one drawn item, or raise ValueError."""
+    if not isinstance(raw, dict) or not MAP_ID.fullmatch(str(raw.get("id", ""))):
+        raise ValueError("bad id")
+    item = {"id": raw["id"], "kind": raw.get("kind"), "by": map_text(raw.get("by"), 32)}
+    if item["kind"] == "stroke":
+        points = raw.get("points")
+        if not isinstance(points, list) or not 1 <= len(points) <= MAP_MAX_POINTS:
+            raise ValueError("bad points")
+        item["points"] = [[map_number(p[0]), map_number(p[1])] for p in points if isinstance(p, list) and len(p) == 2]
+        if len(item["points"]) != len(points) or raw.get("color") not in MAP_COLORS:
+            raise ValueError("bad stroke")
+        item["color"] = raw["color"]
+        item["width"] = map_number(raw.get("width"))
+        if not 0 < item["width"] <= 100000:
+            raise ValueError("bad width")
+    elif item["kind"] in ("pin", "text"):
+        item["x"], item["y"] = map_number(raw.get("x")), map_number(raw.get("y"))
+        if item["kind"] == "pin":
+            if raw.get("icon") not in MAP_PINS:
+                raise ValueError("bad pin")
+            item["icon"] = raw["icon"]
+            item["label"] = map_text(raw.get("label"), 48)
+        else:
+            item["label"] = map_text(raw.get("label"), 48, required=True)
+            item["size"] = map_number(raw.get("size"))
+            if not 0 < item["size"] <= 100000:
+                raise ValueError("bad size")
+    else:
+        raise ValueError("bad kind")
+    return item
+
+
+def change_map(body):
+    """Apply one add or delete from a player. Returns (status, payload)."""
+    op = body.get("op") if isinstance(body, dict) else None
+    with atlas_lock:
+        items = atlas["items"]
+        if op == "add":
+            try:
+                item = clean_map_item(body.get("item"))
+            except (ValueError, TypeError, IndexError):
+                return 400, {"error": "That drawing could not be read."}
+            if item["id"] in items:
+                return 200, {"ok": True, "rev": items[item["id"]]["rev"]}
+            if sum(1 for entry in items.values() if not entry.get("deleted")) >= MAP_MAX_ITEMS:
+                return 409, {"error": "The atlas is full. Erase something first."}
+        elif op == "delete":
+            target = items.get(str(body.get("id")))
+            if not target or target.get("deleted"):
+                return 200, {"ok": True, "rev": atlas["rev"]}
+            item = {"id": target["id"], "deleted": True}
+        else:
+            return 400, {"error": "Send an add or a delete."}
+        atlas["rev"] += 1
+        item.update(rev=atlas["rev"], ts=time.time())
+        items[item["id"]] = item
+        save_atlas()
+        return 200, {"ok": True, "rev": atlas["rev"]}
+
+
+def map_payload(query):
+    try:
+        since = int(query.get("since", ["0"])[0])
+    except ValueError:
+        since = 0
+    with atlas_lock:
+        items = [item for item in atlas["items"].values() if item["rev"] > since and (since or not item.get("deleted"))]
+        return {"rev": atlas["rev"], "items": items}
 
 
 def empty_state():
@@ -566,7 +684,11 @@ class Handler(BaseHTTPRequestHandler):
             download_lock.release()
 
     def do_POST(self):
-        if urlparse(self.path).path != "/api/verdict":
+        path = urlparse(self.path).path
+        if path == "/api/map":
+            self.post_map()
+            return
+        if path != "/api/verdict":
             self.send_json({"error": "Not found"}, 404)
             return
         # Requiring JSON stops other websites from posting here with a plain form.
@@ -588,11 +710,30 @@ class Handler(BaseHTTPRequestHandler):
             return
         self.send_json({"ok": True})
 
+    def post_map(self):
+        length = int(self.headers.get("Content-Length") or 0)
+        if self.headers.get("Content-Type") != "application/json" or not 0 < length <= MAP_MAX_BODY:
+            self.send_json({"error": "Send a JSON body under 256 KB."}, 400)
+            return
+        try:
+            body = json.loads(self.rfile.read(length))
+        except ValueError:
+            self.send_json({"error": "That was not JSON."}, 400)
+            return
+        status, payload = change_map(body)
+        self.send_json(payload, status)
+
     def do_GET(self):
         url = urlparse(self.path)
         try:
             if url.path == "/":
                 self.send_bytes(INDEX_FILE.read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/map":
+                self.send_bytes(MAP_PAGE.read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/atlas.js":
+                self.send_bytes(ATLAS_SCRIPT.read_bytes(), "text/javascript; charset=utf-8")
+            elif url.path == "/api/map":
+                self.send_json(map_payload(parse_qs(url.query)))
             elif url.path == "/api/status":
                 self.send_json(status_payload())
             elif url.path == "/api/logs":
@@ -620,6 +761,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     load_state()
+    load_atlas()
     threading.Thread(target=follow_journal, daemon=True).start()
     threading.Thread(target=background_work, daemon=True).start()
     ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()

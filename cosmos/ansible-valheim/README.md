@@ -60,7 +60,9 @@ of death on the page. It has no login, so it relies on the host firewall allowin
 that port only over Tailscale and the LAN. Its death illustrations are not in this repository.
 Copy them by hand to `/var/lib/valheim-dashboard/art/<name>.jpg`, owned by the
 `valheim` user, using the names in `ART_NAMES` in the dashboard's `server.py`. A
-missing image falls back to a drawn Viking. Deploy it without restarting the game using
+missing image falls back to a drawn Viking. Players draw a shared map at `/map`, which
+is stored in `/var/lib/valheim-dashboard/map.json`; the backup includes that directory.
+Deploy it without restarting the game using
 `ansible-playbook playbooks/dashboard.yml --limit valheim-nomap`.
 
 `valheim-speedrun` hosts the imported local `speedrun` world with the same
