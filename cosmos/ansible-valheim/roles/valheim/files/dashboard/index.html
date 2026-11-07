@@ -136,6 +136,9 @@ select.open { border-color: var(--red); color: var(--red); }
 /* Editorial page */
 .editorial { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .85fr) minmax(0, 1fr); gap: clamp(18px, 3vw, 32px); align-items: start; }
 .editorial > * { min-width: 0; }
+.leader { display: grid; gap: 4px; padding-top: 10px; border-top: 1px solid var(--ink); }
+.leader p { font-size: 1.04rem; }
+.leader .signed { text-align: right; }
 .toon-line { display: block; font: 800 clamp(1.15rem, 2vw, 1.45rem)/1.4 var(--ml); font-style: normal; color: var(--ink); }
 .wanted { background: #e3d5ae; border: 2px solid var(--ink); outline: 1px solid var(--ink); outline-offset: 3px; padding: 12px; text-align: center; display: grid; gap: 6px; transform: rotate(-1.2deg); transition: transform .18s ease; box-shadow: 3px 5px 14px rgba(23, 20, 15, .25); }
 .wanted:hover { transform: rotate(.6deg) scale(1.015); }
@@ -279,7 +282,7 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
     </div>
     <div class="ear"><span class="lab" id="forecast-label">The outlook</span><span id="forecast"></span></div>
   </header>
-  <div class="edition"><span id="issue">Vol. I</span><span id="today"></span><span>Late edition, still no map</span></div>
+  <div class="edition"><span id="issue">Vol. I</span><span id="today"></span><span id="edition-note">Late edition, still no map</span></div>
   <dl class="dateline">
     <div><dt>Server</dt><dd id="s-state">Checking</dd></div>
     <div><dt>Vikings online</dt><dd id="s-online">–</dd></div>
@@ -323,6 +326,7 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
     <figure class="cartoon">
       <div class="photo" id="cartoon"></div>
       <figcaption><span class="lab">Cartoon of the day</span><span class="toon-line" id="cartoon-caption"></span></figcaption>
+      <div class="leader" id="leader" hidden><span class="lab">From the editor's desk</span><p id="leader-text"></p><p class="signed">The Editor</p></div>
     </figure>
     <article class="wanted">
       <div class="wanted-head">Wanted</div>
@@ -568,12 +572,29 @@ function copy(text, label) {
 function lastWords(d) { return pick(LAST_WORDS, d.id - 1); }
 function deathHeadline(d) { return fill(d.cause ? causeInfo(d.cause)[1] : pick(HEADS, d.id - 1), d.name); }
 
+// The AI editor's latest edition, if it is recent enough to still be news.
+function freshEdition(data) {
+  var ed = data.edition;
+  return ed && data.now - ed.ts < 36 * 3600 ? ed : null;
+}
 function drawLead(data) {
-  var d = data.deaths[0], top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0];
+  var ed = freshEdition(data), d = data.deaths[0], top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0];
   var raid = data.events.filter(function (e) { return e.kind === "raid"; })[0];
   var raiding = raid && data.now - raid.ts < 600;
   var slain = data.bosses.filter(function (b) { return b.ts && data.now - b.ts < 3600; })[0];
   $("flash").textContent = data.state === "offline" ? "Presses stopped: server offline" : data.state === "starting" ? "Presses warming up" : raiding ? "Raid at the base" : slain ? slain.name + " is dead" : "Breaking";
+  if (ed && (!d || ed.ts >= d.ts)) {
+    // A death after the edition is breaking news, so the templates take over again.
+    $("pull").hidden = false;
+    setMixed($("headline"), ed.headline);
+    setMixed($("story"), ed.story);
+    setMixed($("pull-words"), ed.pull_quote.words);
+    $("pull-who").textContent = ed.pull_quote.who;
+    setMixed($("caption"), ed.caption);
+    if (d) setArt($("photo"), d, viking(false, "meet"));
+    else if (!$("photo").querySelector("svg")) { $("photo").classList.remove("art"); $("photo").innerHTML = viking(false, "meet"); }
+    return;
+  }
   $("pull").hidden = !d;
   if (d) {
     setMixed($("headline"), deathHeadline(d));
@@ -727,12 +748,14 @@ function drawEditorial(data, day) {
   }
   setMixed($("cartoon-caption"), today[1]);
   var worst = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0], target = worst ? worst.name : "our readers";
-  var list = $("letters");
+  var ed = freshEdition(data), list = $("letters");
+  $("leader").hidden = !ed;
+  if (ed) setMixed($("leader-text"), ed.editorial);
   list.textContent = "";
-  for (var i = 0; i < 3; i++) {
-    var letter = pick(LETTERS, day + i * 4), item = document.createElement("article"), body = document.createElement("p"), sign = document.createElement("p");
+  for (var i = 0; i < (ed ? ed.letters.length : 3); i++) {
+    var letter = ed ? [ed.letters[i].text, ed.letters[i].signed] : pick(LETTERS, day + i * 4), item = document.createElement("article"), body = document.createElement("p"), sign = document.createElement("p");
     item.className = "letter"; sign.className = "signed";
-    setMixed(body, fill(letter[0], target));
+    setMixed(body, ed ? letter[0] : fill(letter[0], target));
     setMixed(sign, letter[1]);
     item.append(body, sign);
     list.append(item);
@@ -741,6 +764,11 @@ function drawEditorial(data, day) {
   $("wanted-name").textContent = label;
   $("wanted-crime").textContent = cause ? "For the deaths of " + data.cause_tally[cause] + (data.cause_tally[cause] === 1 ? " Viking" : " Vikings") : "For failing to exist";
   $("wanted-reward").textContent = "Reward: " + pick(REWARDS, data.total_deaths);
+  if (ed) {
+    $("wanted-name").textContent = ed.wanted.name;
+    $("wanted-crime").textContent = ed.wanted.crime;
+    $("wanted-reward").textContent = "Reward: " + ed.wanted.reward;
+  }
   var mug = $("wanted-photo"), src = cause && ART.indexOf(cause) > -1 ? "/art/" + cause + ".jpg" : "";
   var shown = mug.querySelector("img");
   if ((shown ? shown.getAttribute("src") : "") !== src) {
@@ -749,7 +777,8 @@ function drawEditorial(data, day) {
   }
 }
 function drawStars(data, day) {
-  var box = $("stars");
+  var box = $("stars"), ed = freshEdition(data), written = {};
+  if (ed) ed.stars.forEach(function (s) { written[s.name] = s.text; });
   box.textContent = "";
   if (!data.players.length) { box.innerHTML = '<p class="empty">The astrologer is waiting for clients.</p>'; return; }
   data.players.forEach(function (p) {
@@ -759,7 +788,8 @@ function drawStars(data, day) {
     var favourite = topCause(p.causes);
     var text = p.deaths ? pick(STARS, seed) : pick(ALIVE_STARS, seed);
     if (p.deaths && favourite && seed % 3 === 0) text = "Avoid " + causeInfo(favourite)[0].toLowerCase() + " today. It remembers you.";
-    line.textContent = text.replace("{d}", p.deaths + (p.deaths === 1 ? " death" : " deaths"));
+    if (written[p.name]) setMixed(line, written[p.name]);
+    else line.textContent = text.replace("{d}", p.deaths + (p.deaths === 1 ? " death" : " deaths"));
     row.append(name, line);
     box.append(row);
   });
@@ -835,10 +865,11 @@ function draw(data) {
   $("v-backup").textContent = data.backup_ok ? ago(data.last_backup, data.now) : "Failed";
   $("v-size").textContent = size(data.world_size);
   var top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0], day = Math.floor(data.now / 86400);
-  $("ad").textContent = fill(pick(ADS, day), top ? top.name : "the editor");
-  var outlook = pick(FORECASTS, day);
-  $("forecast-label").textContent = outlook[0];
-  $("forecast").textContent = outlook[1];
+  var ed = freshEdition(data), outlook = pick(FORECASTS, day);
+  if (ed) setMixed($("ad"), ed.ad); else $("ad").textContent = fill(pick(ADS, day), top ? top.name : "the editor");
+  $("forecast-label").textContent = ed ? "The outlook" : outlook[0];
+  if (ed) setMixed($("forecast"), ed.forecast); else $("forecast").textContent = outlook[1];
+  $("edition-note").textContent = ed ? "Edition " + ed.number + ", written by the editor " + ago(ed.ts, data.now) : "Late edition, still no map";
   drawLead(data); drawBoard(data); drawDesk(data); drawBosses(data); drawEditorial(data, day); drawStars(data, day); drawAwards(data); drawNews();
   var newest = data.deaths[0] ? data.deaths[0].id : 0;
   if (lastDeathId !== null && newest > lastDeathId) {
