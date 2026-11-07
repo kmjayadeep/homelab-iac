@@ -8,3 +8,6 @@
     name: valheim
     state: restarted
 
+- name: reload networkd
+  ansible.builtin.command: networkctl reload
+  changed_when: true

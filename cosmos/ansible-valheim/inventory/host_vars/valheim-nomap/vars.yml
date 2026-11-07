@@ -2,6 +2,8 @@
 valheim_server_name: "nomap"
 valheim_world_name: "nomap"
 valheim_server_password: "{{ vault_valheim_server_password }}"
+# Bearer token for the AI editor that publishes editions of the paper.
+valheim_dashboard_editor_token: "{{ vault_valheim_dashboard_editor_token }}"
 valheim_server_port: 2456
 valheim_public: 0
 valheim_crossplay: false
@@ -49,3 +51,4 @@ backup_paths:
   # The dashboard keeps the shared atlas, death verdicts and pictures here.
   - "/var/lib/valheim-dashboard"
 restic_repository: "s3:https://minio.cosmos.cboxlab.com/valheim-nomap-backup"
+backup_ignore_ra_dns: true

@@ -48,6 +48,10 @@ valheim_mods_enabled: false
 # Backup Configuration
 backup_enabled: true
 backup_schedule: "hourly"  # hourly, daily, etc.
+# Ignore resolvers advertised by the IPv6 router; set where they cannot resolve
+# the backup repository.
+backup_ignore_ra_dns: false
+backup_dns_interface: eth0
 backup_retention:
   keep_last: 10
   keep_daily: 10

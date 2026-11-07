@@ -6,6 +6,34 @@
     update_cache: yes
   when: backup_enabled | default(false)
 
+# The router's IPv6 resolver returns no answer for internal names that resolve to
+# private addresses, so restic cannot find the MinIO repository when
+# systemd-resolved prefers it.
+- name: Create networkd drop-in directory for {{ backup_dns_interface }}
+  ansible.builtin.file:
+    path: "/etc/systemd/network/10-netplan-{{ backup_dns_interface }}.network.d"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  when:
+    - backup_enabled | default(false)
+    - backup_ignore_ra_dns | default(false) | bool
+
+- name: Ignore DNS servers from IPv6 router advertisements
+  ansible.builtin.copy:
+    dest: "/etc/systemd/network/10-netplan-{{ backup_dns_interface }}.network.d/50-ignore-ra-dns.conf"
+    content: |
+      [IPv6AcceptRA]
+      UseDNS=no
+    owner: root
+    group: root
+    mode: '0644'
+  when:
+    - backup_enabled | default(false)
+    - backup_ignore_ra_dns | default(false) | bool
+  notify: reload networkd
+
 - name: Create restic environment file
   ansible.builtin.template:
     src: restic-env.j2
