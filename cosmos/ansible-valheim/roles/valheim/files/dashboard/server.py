@@ -13,6 +13,7 @@ import tarfile
 import tempfile
 import threading
 import time
+from collections import Counter
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -72,6 +73,10 @@ download_lock = threading.Lock()
 # The atlas is drawn by players, so it lives apart from the summary rebuilt from logs.
 MAP_COLORS = {"ink", "meadows", "forest", "swamp", "mountain", "plains", "mistlands", "ashlands", "ocean", "danger"}
 MAP_PINS = {"base", "portal", "boss", "dungeon", "trader", "ore", "ship", "death", "other"}
+# How a stroke is drawn: a plain line, a dashed path, a river, a dotted border, or a filled biome area.
+MAP_STYLES = {"line", "path", "river", "border", "area"}
+BIOME_NAMES = {"meadows": "Meadows", "forest": "Black Forest", "swamp": "Swamp", "mountain": "Mountain", "plains": "Plains",
+               "mistlands": "Mistlands", "ashlands": "Ashlands", "ocean": "Ocean", "danger": "danger", "ink": "unnamed"}
 MAP_ID = re.compile(r"[A-Za-z0-9_-]{8,40}")
 MAP_MAX_ITEMS = 20000
 MAP_MAX_POINTS = 4000
@@ -246,9 +251,15 @@ def digest_text():
     marks = sorted((item for item in items if item.get("kind") in ("pin", "text")), key=lambda item: item.get("ts", 0))
     fresh = [item for item in items if item.get("ts", 0) >= since]
     strokes = sum(item.get("kind") == "stroke" for item in items)
+    styles = Counter(item.get("style", "line") for item in items if item.get("kind") == "stroke")
+    biomes = Counter(item["color"] for item in items if item.get("style") == "area")
     lines += ["", "SHARED ATLAS (players draw it by hand from memory; metres east and north of the spawn stones, "
               "negative means west or south): "
               f"{len(items)} marks in all ({len(marks)} pins and labels, {strokes} pen strokes); {len(fresh)} added since the last edition."]
+    drawn = [f"{styles[name]} {name}{'s' if styles[name] > 1 else ''}" for name in ("path", "river", "border") if styles[name]]
+    drawn += [f"{count} {BIOME_NAMES.get(name, name)} area{'s' if count > 1 else ''}" for name, count in sorted(biomes.items())]
+    if drawn:
+        lines.append(f"Drawn on it: {', '.join(drawn)}.")
     for item in marks[-40:]:
         label = item.get("label") or item.get("text") or ""
         new = "  [NEW]" if item.get("ts", 0) >= since else ""
@@ -302,6 +313,9 @@ def clean_map_item(raw):
         if len(item["points"]) != len(points) or raw.get("color") not in MAP_COLORS:
             raise ValueError("bad stroke")
         item["color"] = raw["color"]
+        item["style"] = raw.get("style", "line")
+        if item["style"] not in MAP_STYLES or (item["style"] == "area" and len(item["points"]) < 3):
+            raise ValueError("bad style")
         item["width"] = map_number(raw.get("width"))
         if not 0 < item["width"] <= 100000:
             raise ValueError("bad width")
@@ -322,8 +336,19 @@ def clean_map_item(raw):
     return item
 
 
+def moved_item(target, body):
+    """Return a copy of a stored item shifted by the body's dx and dy, or raise ValueError."""
+    dx, dy = map_number(body.get("dx")), map_number(body.get("dy"))
+    item = dict(target)
+    if item["kind"] == "stroke":
+        item["points"] = [[map_number(x + dx), map_number(y + dy)] for x, y in item["points"]]
+    else:
+        item["x"], item["y"] = map_number(item["x"] + dx), map_number(item["y"] + dy)
+    return item
+
+
 def change_map(body):
-    """Apply one add or delete from a player. Returns (status, payload)."""
+    """Apply one add, move or delete from a player. Returns (status, payload)."""
     op = body.get("op") if isinstance(body, dict) else None
     with atlas_lock:
         items = atlas["items"]
@@ -341,10 +366,20 @@ def change_map(body):
             if not target or target.get("deleted"):
                 return 200, {"ok": True, "rev": atlas["rev"]}
             item = {"id": target["id"], "deleted": True}
+        elif op == "move":
+            target = items.get(str(body.get("id")))
+            if not target or target.get("deleted"):
+                return 404, {"error": "Someone has already erased that."}
+            try:
+                item = moved_item(target, body)
+            except (ValueError, TypeError):
+                return 400, {"error": "That would move it off the edge of the world."}
+            item["moved_by"] = map_text(body.get("by"), 32)
         else:
-            return 400, {"error": "Send an add or a delete."}
+            return 400, {"error": "Send an add, a move or a delete."}
         atlas["rev"] += 1
-        item.update(rev=atlas["rev"], ts=time.time())
+        # A move keeps the time the mark was first drawn, so it does not count as news.
+        item.update(rev=atlas["rev"], ts=item["ts"] if op == "move" else time.time())
         items[item["id"]] = item
         save_atlas()
         return 200, {"ok": True, "rev": atlas["rev"]}
