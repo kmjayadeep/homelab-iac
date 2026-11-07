@@ -118,6 +118,22 @@ def clean_edition(raw):
             {field: edition_text(item.get(field) if isinstance(item, dict) else None, longest) for field, longest in fields.items()}
             for item in items[:most]
         ]
+    # The Malayalam edition is optional, so an editor without one still publishes.
+    malayalam = raw.get("malayalam")
+    if isinstance(malayalam, dict) and malayalam.get("headline") and malayalam.get("story"):
+        clean["malayalam"] = {"headline": edition_text(malayalam["headline"], 300), "story": edition_text(malayalam["story"], 3000)}
+        notices = malayalam.get("obituaries")
+        if isinstance(notices, list):
+            clean["malayalam"]["obituaries"] = [
+                {"name": edition_text(notice.get("name"), 60), "text": edition_text(notice.get("text"), 600)}
+                for notice in notices[:8] if isinstance(notice, dict) and notice.get("name") and notice.get("text")
+            ]
+        proverb = malayalam.get("proverb")
+        if isinstance(proverb, dict) and proverb.get("ml") and proverb.get("en"):
+            clean["malayalam"]["proverb"] = {"ml": edition_text(proverb["ml"], 300), "en": edition_text(proverb["en"], 300)}
+        if malayalam.get("cartoon_caption") and malayalam.get("cartoon") in ART_NAMES:
+            clean["malayalam"]["cartoon"] = malayalam["cartoon"]
+            clean["malayalam"]["cartoon_caption"] = edition_text(malayalam["cartoon_caption"], 200)
     if isinstance(raw.get("model"), str):
         clean["model"] = raw["model"][:60]
     return clean
@@ -224,6 +240,7 @@ def digest_text():
         new = "  [NEW]" if item.get("ts", 0) >= since else ""
         lines.append(f"- {item.get('icon') or 'text'} pin '{label}' by {item.get('by') or 'an anonymous cartographer'}, "
                      f"{round(item['x'])} E / {round(-item['y'])} N{new}")
+    lines += ["", f"CARTOON PICTURES the editor may choose from: {', '.join(ART_NAMES)}."]
     return "\n".join(lines) + "\n"
 
 

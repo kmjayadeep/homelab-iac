@@ -64,6 +64,26 @@ figure { margin: 0; display: grid; gap: 5px; }
 .photo.art::after, .face.art::after { opacity: .06; }
 figcaption { font-size: .86rem; font-style: italic; color: var(--ink-2); }
 
+/* Malayalam edition */
+.ml-edition { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); grid-template-areas: "flag story"; gap: 6px clamp(18px, 3vw, 36px); padding-block: 16px 20px; border-bottom: 2px solid var(--ink); }
+.ml-edition > * { min-width: 0; }
+.ml-edition.with-notices { grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr) minmax(0, 1.1fr); grid-template-areas: "flag story notices"; }
+.ml-edition .ml-flag { grid-area: flag; display: grid; align-content: start; gap: 2px; border-right: 1px solid var(--line); padding-right: 12px; }
+.ml-edition .ml-story { grid-area: story; }
+.proverb { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--ink); display: grid; gap: 4px; }
+.proverb q { quotes: "\201C" "\201D"; font: 800 1.12rem/1.6 var(--ml); }
+.proverb small { font: italic 400 .88rem/1.35 var(--body); color: var(--ink-2); }
+.charamam { grid-area: notices; display: grid; align-content: start; gap: 8px; border-left: 1px solid var(--line); padding-left: 14px; }
+.charamam h3 { margin: 0; font: 800 1.35rem/1.3 var(--ml); border-bottom: 3px double var(--ink); padding-bottom: 2px; }
+.notice { display: grid; gap: 2px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.notice b { font: 400 1.1rem/1.2 var(--head); }
+.notice span { font: 500 .98rem/1.7 var(--ml); }
+.ml-edition .ml-flag b { font: 800 clamp(1.4rem, 2.6vw, 2rem)/1.25 var(--ml); color: var(--red); }
+.ml-edition h2 { font: 800 clamp(1.5rem, 3vw, 2.3rem)/1.35 var(--ml); text-wrap: balance; }
+.ml-edition p { font: 500 1.08rem/1.85 var(--ml); max-width: 70ch; }
+@media (max-width: 1080px) { .ml-edition.with-notices { grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); grid-template-areas: "flag story" "notices notices"; } .charamam { border-left: 0; padding-left: 0; } }
+@media (max-width: 640px) { .ml-edition, .ml-edition.with-notices { grid-template-columns: minmax(0, 1fr); grid-template-areas: "flag" "story" "notices"; } .ml-edition .ml-flag { border-right: 0; padding-right: 0; } }
+
 /* Sections */
 .section-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin: var(--section) 0 var(--gap); border-bottom: 3px solid var(--ink); padding-bottom: 5px; }
 h2 { margin: 0; font: 400 clamp(1.75rem, 3.4vw, 2.6rem)/1.1 var(--head); }
@@ -304,6 +324,14 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
       <div class="photo" id="photo"></div>
       <figcaption id="caption"></figcaption>
     </figure>
+  </section>
+
+  <section class="ml-edition" id="ml-edition" lang="ml" hidden>
+    <div class="ml-flag"><b>മലയാളം പതിപ്പ്</b><span class="lab" lang="en">The Malayalam edition</span>
+      <div class="proverb" id="proverb" hidden><span class="lab" lang="en">Proverb of the day · പഴഞ്ചൊല്ല്</span><q id="proverb-ml"></q><small lang="en" id="proverb-en"></small></div>
+    </div>
+    <div class="ml-story"><h2 id="ml-headline"></h2><p id="ml-story"></p></div>
+    <div class="charamam" id="charamam" hidden><h3>ചരമം</h3><div id="notices"></div></div>
   </section>
 
   <div class="section-title"><h2>Death leaderboard</h2><span class="ml" lang="ml">മരണപ്പട്ടിക</span></div>
@@ -577,6 +605,25 @@ function freshEdition(data) {
   var ed = data.edition;
   return ed && data.now - ed.ts < 36 * 3600 ? ed : null;
 }
+function drawMalayalam(data) {
+  var ed = freshEdition(data), ml = ed && ed.malayalam;
+  $("ml-edition").hidden = !ml;
+  if (!ml) return;
+  $("ml-headline").textContent = ml.headline;
+  $("ml-story").textContent = ml.story;
+  var proverb = ml.proverb, notices = ml.obituaries || [];
+  $("proverb").hidden = !proverb;
+  if (proverb) { $("proverb-ml").textContent = proverb.ml; $("proverb-en").textContent = proverb.en; }
+  $("charamam").hidden = !notices.length;
+  $("ml-edition").classList.toggle("with-notices", notices.length > 0);
+  var list = $("notices");
+  list.textContent = "";
+  notices.forEach(function (n) {
+    var item = document.createElement("div"), name = document.createElement("b"), text = document.createElement("span");
+    item.className = "notice"; name.textContent = n.name; text.textContent = n.text;
+    item.append(name, text); list.append(item);
+  });
+}
 function drawLead(data) {
   var ed = freshEdition(data), d = data.deaths[0], top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0];
   var raid = data.events.filter(function (e) { return e.kind === "raid"; })[0];
@@ -736,7 +783,8 @@ function drawBosses(data) {
   });
 }
 function drawEditorial(data, day) {
-  var today = pick(CARTOONS, day), box = $("cartoon");
+  var edition = freshEdition(data), chosen = edition && edition.malayalam && edition.malayalam.cartoon;
+  var today = chosen ? [chosen, edition.malayalam.cartoon_caption] : pick(CARTOONS, day), box = $("cartoon");
   var toonSrc = "/art/" + today[0] + ".jpg", toon = box.querySelector("img");
   if (!toon || toon.getAttribute("src") !== toonSrc) {
     var img = new Image();
@@ -870,7 +918,7 @@ function draw(data) {
   $("forecast-label").textContent = ed ? "The outlook" : outlook[0];
   if (ed) setMixed($("forecast"), ed.forecast); else $("forecast").textContent = outlook[1];
   $("edition-note").textContent = ed ? "Edition " + ed.number + ", written by the editor " + ago(ed.ts, data.now) : "Late edition, still no map";
-  drawLead(data); drawBoard(data); drawDesk(data); drawBosses(data); drawEditorial(data, day); drawStars(data, day); drawAwards(data); drawNews();
+  drawLead(data); drawMalayalam(data); drawBoard(data); drawDesk(data); drawBosses(data); drawEditorial(data, day); drawStars(data, day); drawAwards(data); drawNews();
   var newest = data.deaths[0] ? data.deaths[0].id : 0;
   if (lastDeathId !== null && newest > lastDeathId) {
     toast("Stop the press: " + data.deaths[0].name + " is dead");
