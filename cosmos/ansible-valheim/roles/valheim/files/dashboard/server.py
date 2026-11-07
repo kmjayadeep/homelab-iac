@@ -131,6 +131,20 @@ def clean_edition(raw):
         proverb = malayalam.get("proverb")
         if isinstance(proverb, dict) and proverb.get("ml") and proverb.get("en"):
             clean["malayalam"]["proverb"] = {"ml": edition_text(proverb["ml"], 300), "en": edition_text(proverb["en"], 300)}
+        sport = malayalam.get("sport")
+        if isinstance(sport, dict) and sport.get("headline") and sport.get("story"):
+            clean["malayalam"]["sport"] = {"headline": edition_text(sport["headline"], 300), "story": edition_text(sport["story"], 2000)}
+            if sport.get("score"):
+                clean["malayalam"]["sport"]["score"] = edition_text(sport["score"], 80)
+        shows = malayalam.get("tv")
+        if isinstance(shows, list):
+            clean["malayalam"]["tv"] = [
+                {"time": edition_text(show.get("time"), 10), "show": edition_text(show.get("show"), 120), "about": edition_text(show.get("about"), 300)}
+                for show in shows[:8] if isinstance(show, dict) and show.get("time") and show.get("show") and show.get("about")
+            ]
+        ads = malayalam.get("matrimonials")
+        if isinstance(ads, list):
+            clean["malayalam"]["matrimonials"] = [edition_text(ad, 600) for ad in ads[:4] if isinstance(ad, str) and ad.strip()]
         if malayalam.get("cartoon_caption") and malayalam.get("cartoon") in ART_NAMES:
             clean["malayalam"]["cartoon"] = malayalam["cartoon"]
             clean["malayalam"]["cartoon_caption"] = edition_text(malayalam["cartoon_caption"], 200)
