@@ -26,6 +26,15 @@
     death: ["Tombstone", "\u{1F480}"],
     other: ["Something", "⭐"]
   };
+  // Kinds of line: each one has its own look, so a path never reads as a coastline.
+  var STYLES = {
+    line: ["Line", "Coasts, cliffs, anything"],
+    path: ["Path", "Roads and trails you walked"],
+    river: ["River", "Rivers and streams"],
+    border: ["Border", "Where one biome meets another"],
+    area: ["Biome", "Draw round a region to fill it"]
+  };
+  var PATH = "#7a5a32", RIVER = "#4f86b0";
   var PAPER = "#e9dcb8", GRID = "rgba(80, 58, 30, .13)", LABEL = "#2b2118", HALO = "rgba(242, 233, 207, .92)";
   var PIN_SIZE = 26;
 
@@ -85,13 +94,8 @@
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, w, h);
   }
-  function stroke(ctx, view, w, h, item) {
-    var pts = item.points.map(function (p) { return toScreen(view, w, h, p[0], p[1]); });
-    ctx.strokeStyle = (COLORS[item.color] || COLORS.ink)[1];
-    ctx.lineWidth = Math.max(1, item.width * view.scale);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.globalAlpha = item.width * view.scale > 18 ? .78 : 1;
+  // Trace a smoothed line through screen points; closed traces end back at the start.
+  function trace(ctx, pts, closed) {
     ctx.beginPath();
     ctx.moveTo(pts[0][0], pts[0][1]);
     if (pts.length < 3) pts.slice(1).concat(pts.length === 1 ? [[pts[0][0] + .01, pts[0][1]]] : []).forEach(function (p) { ctx.lineTo(p[0], p[1]); });
@@ -100,8 +104,58 @@
       ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
     }
     if (pts.length >= 3) ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+    if (closed) ctx.closePath();
+  }
+  function style(item) { return item.kind === "stroke" ? item.style || "line" : item.kind; }
+  function stroke(ctx, view, w, h, item, opts) {
+    var pts = item.points.map(function (p) { return toScreen(view, w, h, p[0], p[1]); });
+    var kind = style(item), paint = (COLORS[item.color] || COLORS.ink)[1], small = opts && opts.noLabels;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    if (kind === "area") {
+      trace(ctx, pts, true);
+      ctx.globalAlpha = .5;
+      ctx.fillStyle = paint;
+      ctx.fill();
+      ctx.globalAlpha = .85;
+      ctx.strokeStyle = item.color === "mountain" ? "#8f8a80" : paint;
+      ctx.lineWidth = small ? 1.5 : 2.5;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      return;
+    }
+    if (kind === "line") {
+      ctx.strokeStyle = paint;
+      ctx.lineWidth = Math.max(1, item.width * view.scale);
+      ctx.globalAlpha = item.width * view.scale > 18 ? .78 : 1;
+    } else {
+      // Paths, rivers and borders keep the same weight at every zoom, like the symbols on a printed map.
+      var thin = small ? .6 : 1;
+      ctx.strokeStyle = kind === "path" ? PATH : kind === "river" ? RIVER : LABEL;
+      ctx.lineWidth = (kind === "river" ? 4 : kind === "path" ? 3 : 2.5) * thin;
+      ctx.globalAlpha = kind === "border" ? .7 : 1;
+      if (kind === "path") ctx.setLineDash([9 * thin, 6 * thin]);
+      if (kind === "border") { ctx.setLineDash([.1, 7 * thin]); ctx.lineWidth = 3.5 * thin; }
+    }
+    trace(ctx, pts, false);
     ctx.stroke();
+    ctx.setLineDash([]);
     ctx.globalAlpha = 1;
+  }
+  function centre(points) {
+    var x = 0, y = 0;
+    points.forEach(function (p) { x += p[0]; y += p[1]; });
+    return [x / points.length, y / points.length];
+  }
+  // A biome area names itself in small capitals when it is big enough on screen.
+  function areaLabel(ctx, view, w, h, item) {
+    var box = bounds([item]), size = Math.min((box.x1 - box.x0), (box.y1 - box.y0)) * view.scale;
+    if (size < 70 || !COLORS[item.color] || item.color === "ink" || item.color === "danger") return;
+    var c = centre(item.points), p = toScreen(view, w, h, c[0], c[1]);
+    ctx.save();
+    ctx.globalAlpha = .75;
+    label(ctx, COLORS[item.color][0].toUpperCase(), p[0], p[1], Math.max(11, Math.min(22, size / 9)), true);
+    ctx.restore();
   }
   function label(ctx, text, x, y, size, italic) {
     ctx.font = (italic ? "italic 600 " : "700 ") + size + 'px Gelasio, "Noto Serif Malayalam", Georgia, serif';
@@ -145,12 +199,21 @@
   function draw(ctx, items, view, w, h, opts) {
     opts = opts || {};
     background(ctx, view, w, h);
-    var order = { stroke: 0, text: 1, pin: 2 };
-    items.slice().sort(function (a, b) {
-      var wide = function (i) { return i.kind === "stroke" && i.width * view.scale > 18 ? 0 : 1; };
-      return order[a.kind] - order[b.kind] || wide(a) - wide(b);
-    }).forEach(function (item) {
-      if (item.kind === "stroke") stroke(ctx, view, w, h, item);
+    // Biome areas lie under wide brushes, which lie under lines, names and pins.
+    function layer(i) {
+      if (i.kind === "pin") return 5;
+      if (i.kind === "text") return 4;
+      var kind = style(i);
+      return kind === "area" ? 0 : kind === "line" && i.width * view.scale > 18 ? 1 : kind === "border" ? 2 : 3;
+    }
+    var sorted = items.slice().sort(function (a, b) { return layer(a) - layer(b); }), named = false;
+    sorted.forEach(function (item) {
+      // Biome names go on once every area is painted, under the lines, names and pins.
+      if (!named && layer(item) > 0) {
+        named = true;
+        if (!opts.noLabels) sorted.forEach(function (area) { if (style(area) === "area") areaLabel(ctx, view, w, h, area); });
+      }
+      if (item.kind === "stroke") stroke(ctx, view, w, h, item, opts);
       else {
         var p = toScreen(view, w, h, item.x, item.y);
         if (p[0] < -200 || p[1] < -60 || p[0] > w + 200 || p[1] > h + 60) return;
@@ -175,15 +238,25 @@
         }
       }
     });
+    if (!named && !opts.noLabels) sorted.forEach(function (area) { if (style(area) === "area") areaLabel(ctx, view, w, h, area); });
     spawn(ctx, view, w, h, opts.noLabels);
+  }
+  function inside(x, y, points) {
+    var yes = false;
+    for (var i = 0, j = points.length - 1; i < points.length; j = i++) {
+      var a = points[i], b = points[j];
+      if ((a[1] > y) !== (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]) yes = !yes;
+    }
+    return yes;
   }
   function distToSegment(px, py, a, b) {
     var dx = b[0] - a[0], dy = b[1] - a[1], len = dx * dx + dy * dy;
     var t = len ? Math.max(0, Math.min(1, ((px - a[0]) * dx + (py - a[1]) * dy) / len)) : 0;
     return Math.hypot(px - (a[0] + t * dx), py - (a[1] + t * dy));
   }
-  // The top item under a screen point, or null.
-  function hit(items, view, w, h, sx, sy, slop) {
+  // The top item under a screen point, or null. Pins and names win over lines, and lines over biome areas;
+  // an area counts only along its edge unless opts.inside is set, so a sweep of the eraser cannot wipe a whole biome.
+  function hit(items, view, w, h, sx, sy, slop, opts) {
     for (var i = items.length - 1; i >= 0; i--) {
       var item = items[i];
       if (item.kind === "pin") {
@@ -198,9 +271,14 @@
     for (var j = items.length - 1; j >= 0; j--) {
       var s = items[j];
       if (s.kind !== "stroke") continue;
-      var reach = s.width / 2 + slop / view.scale;
+      var reach = (style(s) === "line" ? s.width / 2 : 3 / view.scale) + slop / view.scale;
       for (var k = 0; k < s.points.length; k++) {
         if (distToSegment(world[0], world[1], s.points[k], s.points[Math.min(k + 1, s.points.length - 1)]) <= reach) return s;
+      }
+    }
+    if (opts && opts.inside) {
+      for (var m = items.length - 1; m >= 0; m--) {
+        if (style(items[m]) === "area" && inside(world[0], world[1], items[m].points)) return items[m];
       }
     }
     return null;
@@ -221,5 +299,5 @@
     return points.filter(function (_, i) { return keep[i]; });
   }
 
-  window.Atlas = { COLORS: COLORS, PINS: PINS, Store: Store, bounds: bounds, fit: fit, draw: draw, hit: hit, simplify: simplify, toScreen: toScreen, toWorld: toWorld };
+  window.Atlas = { COLORS: COLORS, PINS: PINS, STYLES: STYLES, Store: Store, bounds: bounds, fit: fit, draw: draw, hit: hit, simplify: simplify, toScreen: toScreen, toWorld: toWorld };
 })();
