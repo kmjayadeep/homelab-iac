@@ -64,6 +64,15 @@ figure { margin: 0; display: grid; gap: 5px; }
 .photo.art::after, .face.art::after { opacity: .06; }
 figcaption { font-size: .86rem; font-style: italic; color: var(--ink-2); }
 
+/* Malayalam edition */
+.ml-edition { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); gap: 6px clamp(18px, 3vw, 36px); padding-block: 16px 20px; border-bottom: 2px solid var(--ink); }
+.ml-edition > * { min-width: 0; }
+.ml-edition .ml-flag { display: grid; align-content: start; gap: 2px; border-right: 1px solid var(--line); padding-right: 12px; }
+.ml-edition .ml-flag b { font: 800 clamp(1.4rem, 2.6vw, 2rem)/1.25 var(--ml); color: var(--red); }
+.ml-edition h2 { font: 800 clamp(1.5rem, 3vw, 2.3rem)/1.35 var(--ml); text-wrap: balance; }
+.ml-edition p { font: 500 1.08rem/1.85 var(--ml); max-width: 70ch; }
+@media (max-width: 640px) { .ml-edition { grid-template-columns: minmax(0, 1fr); } .ml-edition .ml-flag { border-right: 0; padding-right: 0; } }
+
 /* Sections */
 .section-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin: var(--section) 0 var(--gap); border-bottom: 3px solid var(--ink); padding-bottom: 5px; }
 h2 { margin: 0; font: 400 clamp(1.75rem, 3.4vw, 2.6rem)/1.1 var(--head); }
@@ -304,6 +313,11 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
       <div class="photo" id="photo"></div>
       <figcaption id="caption"></figcaption>
     </figure>
+  </section>
+
+  <section class="ml-edition" id="ml-edition" lang="ml" hidden>
+    <div class="ml-flag"><b>മലയാളം പതിപ്പ്</b><span class="lab" lang="en">The Malayalam edition</span></div>
+    <div><h2 id="ml-headline"></h2><p id="ml-story"></p></div>
   </section>
 
   <div class="section-title"><h2>Death leaderboard</h2><span class="ml" lang="ml">മരണപ്പട്ടിക</span></div>
@@ -576,6 +590,13 @@ function deathHeadline(d) { return fill(d.cause ? causeInfo(d.cause)[1] : pick(H
 function freshEdition(data) {
   var ed = data.edition;
   return ed && data.now - ed.ts < 36 * 3600 ? ed : null;
+}
+function drawMalayalam(data) {
+  var ed = freshEdition(data), ml = ed && ed.malayalam;
+  $("ml-edition").hidden = !ml;
+  if (!ml) return;
+  $("ml-headline").textContent = ml.headline;
+  $("ml-story").textContent = ml.story;
 }
 function drawLead(data) {
   var ed = freshEdition(data), d = data.deaths[0], top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0];
@@ -870,7 +891,7 @@ function draw(data) {
   $("forecast-label").textContent = ed ? "The outlook" : outlook[0];
   if (ed) setMixed($("forecast"), ed.forecast); else $("forecast").textContent = outlook[1];
   $("edition-note").textContent = ed ? "Edition " + ed.number + ", written by the editor " + ago(ed.ts, data.now) : "Late edition, still no map";
-  drawLead(data); drawBoard(data); drawDesk(data); drawBosses(data); drawEditorial(data, day); drawStars(data, day); drawAwards(data); drawNews();
+  drawLead(data); drawMalayalam(data); drawBoard(data); drawDesk(data); drawBosses(data); drawEditorial(data, day); drawStars(data, day); drawAwards(data); drawNews();
   var newest = data.deaths[0] ? data.deaths[0].id : 0;
   if (lastDeathId !== null && newest > lastDeathId) {
     toast("Stop the press: " + data.deaths[0].name + " is dead");

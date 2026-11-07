@@ -118,6 +118,10 @@ def clean_edition(raw):
             {field: edition_text(item.get(field) if isinstance(item, dict) else None, longest) for field, longest in fields.items()}
             for item in items[:most]
         ]
+    # The Malayalam edition is optional, so an editor without one still publishes.
+    malayalam = raw.get("malayalam")
+    if isinstance(malayalam, dict) and malayalam.get("headline") and malayalam.get("story"):
+        clean["malayalam"] = {"headline": edition_text(malayalam["headline"], 300), "story": edition_text(malayalam["story"], 3000)}
     if isinstance(raw.get("model"), str):
         clean["model"] = raw["model"][:60]
     return clean
