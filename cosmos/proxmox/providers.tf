@@ -6,7 +6,7 @@ terraform {
     }
     minio = {
       source  = "aminueza/minio"
-      version = "3.46.0"
+      version = "3.46.1"
     }
     proxmox-bpg = {
       source  = "bpg/proxmox"
