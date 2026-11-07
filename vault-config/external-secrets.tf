@@ -64,6 +64,9 @@ variable "external_secrets_roles" {
         "services/github/kagent-gitops",
         "services/jellyfin/music-mcp",
         "services/lastfm/music-mcp",
+        "services/tmdb/movie-mcp",
+        "services/jellyfin/movie-mcp",
+        "services/radarr/movie-mcp",
         "apps/valheim-vartha/editor",
       ]
     }
