@@ -62,6 +62,8 @@ variable "external_secrets_roles" {
         "services/postgresql/kagent",
         "services/telegram/kagent-bot",
         "services/github/kagent-gitops",
+        "services/jellyfin/music-mcp",
+        "services/lastfm/music-mcp",
       ]
     }
     llm-gateway = {
