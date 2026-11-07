@@ -113,6 +113,8 @@ lists property names only, never values.
 | kagent PostgreSQL identity | `services/postgresql/kagent` | `password`; host, port, database and username remain in the kagent manifests (homelab-k8s plan 0020) |
 | Telegram bot token for kagent | `services/telegram/kagent-bot` | `token` and `chat_id`; BotFather token of the bot that fronts the kagent SRE agent and the operator chat that may use it and receives alert investigations (homelab-k8s plan 0020 phase 4) |
 | GitHub App for the kagent GitOps agent | `services/github/kagent-gitops` | `app_id`, `installation_id`, `private_key`; GitHub App installed on `homelab-k8s` only, used by the GitHub MCP server in `kagent` to read the repo and open branches and pull requests; never merges (homelab-k8s plan 0021) |
+| Jellyfin API key for music-mcp | `services/jellyfin/music-mcp` | `api_key`; Jellyfin API key used only by the music-mcp server in `kagent` for read-only library queries. Jellyfin keys are not scoped, so the server calls GET endpoints only and the key never reaches the model (homelab-k8s plan 0026) |
+| Last.fm API key for music-mcp | `services/lastfm/music-mcp` | `api_key`; Last.fm API account key used by the music-mcp server for public read methods (similar artists and tracks); no shared secret stored (homelab-k8s plan 0026) |
 | Open WebUI application secret | `apps/open-webui/core` | `webui_secret_key`; stable random key used to sign sessions and encrypt application data |
 | Hugging Face model-serving identity | `services/huggingface/model-serving` | `token`; ESO maps it to `HF_TOKEN` in each authorized workload namespace |
 | `otpcloud-secret` application item | `apps/otpcloud/core` | `app_key` |
