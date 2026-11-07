@@ -2,6 +2,7 @@
 """Small status page and shared atlas for one Valheim dedicated server."""
 
 import gzip
+import hmac
 import json
 import math
 import os
@@ -29,6 +30,9 @@ INDEX_FILE = Path(__file__).with_name("index.html")
 MAP_PAGE = Path(__file__).with_name("map.html")
 ATLAS_SCRIPT = Path(__file__).with_name("atlas.js")
 MAP_FILE = STATE_DIR / "map.json"
+EDITION_FILE = STATE_DIR / "edition.json"
+EDITIONS_DIR = STATE_DIR / "editions"
+EDITOR_TOKEN = os.environ.get("VALHEIM_DASHBOARD_EDITOR_TOKEN", "")
 UNIT = "valheim"
 BACKUP_UNIT = "backup-valheim.service"
 MAX_EVENTS = 200
@@ -75,6 +79,152 @@ MAP_MAX_BODY = 256 * 1024
 MAP_LIMIT = 1e6
 atlas = {"schema": 1, "rev": 0, "items": {}}
 atlas_lock = threading.Lock()
+
+
+# The editor is an AI agent outside this host. It reads /api/digest and posts each edition
+# with a bearer token; the page falls back to its templates when there is none.
+EDITION_MAX_BODY = 32 * 1024
+EDITION_KEEP = 60
+EDITION_TEXT = {"headline": 160, "story": 1500, "caption": 300, "editorial": 1200, "ad": 400, "forecast": 120}
+EDITION_PARTS = {
+    "pull_quote": {"words": 300, "who": 160},
+    "wanted": {"name": 120, "crime": 200, "reward": 160},
+}
+EDITION_LISTS = {"letters": ({"text": 600, "signed": 160}, 1, 5), "stars": ({"name": 60, "text": 300}, 0, 40)}
+edition = None
+edition_lock = threading.Lock()
+
+
+def edition_text(value, longest):
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError
+    return " ".join(value.split())[:longest]
+
+
+def clean_edition(raw):
+    if not isinstance(raw, dict):
+        raise ValueError
+    clean = {key: edition_text(raw.get(key), longest) for key, longest in EDITION_TEXT.items()}
+    for key, fields in EDITION_PARTS.items():
+        part = raw.get(key)
+        if not isinstance(part, dict):
+            raise ValueError
+        clean[key] = {field: edition_text(part.get(field), longest) for field, longest in fields.items()}
+    for key, (fields, fewest, most) in EDITION_LISTS.items():
+        items = raw.get(key)
+        if not isinstance(items, list) or not fewest <= len(items):
+            raise ValueError
+        clean[key] = [
+            {field: edition_text(item.get(field) if isinstance(item, dict) else None, longest) for field, longest in fields.items()}
+            for item in items[:most]
+        ]
+    if isinstance(raw.get("model"), str):
+        clean["model"] = raw["model"][:60]
+    return clean
+
+
+def load_edition():
+    global edition
+    try:
+        edition = json.loads(EDITION_FILE.read_text())
+    except (OSError, ValueError):
+        edition = None
+
+
+def publish_edition(raw):
+    global edition
+    clean = clean_edition(raw)
+    with edition_lock:
+        number = (edition or {}).get("number", 0) + 1
+        clean.update({"number": number, "ts": time.time()})
+        EDITIONS_DIR.mkdir(parents=True, exist_ok=True)
+        text = json.dumps(clean, ensure_ascii=False)
+        (EDITIONS_DIR / f"{number:05d}.json").write_text(text)
+        temporary = EDITION_FILE.with_suffix(".tmp")
+        temporary.write_text(text)
+        temporary.replace(EDITION_FILE)
+        for old in sorted(EDITIONS_DIR.glob("*.json"))[:-EDITION_KEEP]:
+            old.unlink(missing_ok=True)
+        edition = clean
+    return clean
+
+
+def digest_duration(seconds):
+    minutes = round(seconds / 60)
+    if minutes < 60:
+        return f"{minutes} min"
+    return f"{minutes // 60} h {minutes % 60:02d} min"
+
+
+def digest_text():
+    """Plain-text facts for the editor, worked out in full so the model has nothing to calculate.
+
+    [NEW] marks what happened since the last edition.
+    """
+    with edition_lock:
+        previous = edition
+    now = time.time()
+    since = previous["ts"] if previous else now - 86400
+    clock = lambda ts: time.strftime("%a %H:%M", time.localtime(ts))
+    status = status_payload()
+    with state_lock:
+        history = [(death, state["verdicts"].get(death_key(death), {}).get("cause") or "unknown") for death in state["deaths"]]
+        events = sorted(state["events"], key=lambda item: item["ts"])
+    joins = {}
+    for event in events:
+        if event["kind"] == "player" and event["label"] == "Joined":
+            joins.setdefault(event["name"], []).append(event["ts"])
+    lines = [
+        f"World '{WORLD_NAME}', in-game day {status['world_day']}. No-map run: players may not use the in-game map. "
+        f"Server {status['state']}, version {status['version']}. Now: {clock(now)}.",
+        "Last edition: " + (f"No. {previous['number']}, {clock(previous['ts'])}, headline '{previous['headline']}'. Do not repeat its jokes."
+                            if previous else "none, this is the first edition."),
+        "",
+        "PLAYERS (all time). These lines are complete: a player died only of the causes listed for them.",
+    ]
+    by_player = {}
+    for death, cause in history:
+        by_player.setdefault(death["name"], []).append(f"{cause} ({clock(death['ts'])})")
+    for entry in status["players"]:
+        count = entry["deaths"]
+        died = f"died {count} {'time' if count == 1 else 'times'}: " + ", ".join(by_player.get(entry["name"], [])) if count else "has never died"
+        lines.append(
+            f"- {entry['name']} {died}. Played {digest_duration(entry['played'])} in {entry['sessions']} sessions; "
+            f"longest life {digest_duration(entry['longest_life'])}; "
+            + ("ONLINE now." if entry["online"] else f"last seen {clock(entry['last_seen'])}.")
+        )
+    lines += ["", f"DEATHS, oldest first ({status['total_deaths']} in all; causes are recorded by players):"]
+    for death, cause in history[-40:]:
+        joined = [ts for ts in joins.get(death["name"], []) if ts <= death["ts"]]
+        alive = f", {digest_duration(death['ts'] - joined[-1])} after joining at {clock(joined[-1])}" if joined else ""
+        new = "  [NEW]" if death["ts"] >= since else ""
+        lines.append(f"- {clock(death['ts'])}: {death['name']}, their death number {death['number']}, cause {cause}{alive}{new}")
+    victims = {}
+    for death, cause in history:
+        if cause != "unknown":
+            victims.setdefault(cause, []).append(f"{death['name']} {clock(death['ts'])}")
+    if victims:
+        ranked = sorted(victims.items(), key=lambda item: -len(item[1]))
+        lines += ["", f"KILLERS, most dangerous first (the Wanted poster is for '{ranked[0][0]}'):"]
+        lines += [f"- {cause}: {len(names)} {'kill' if len(names) == 1 else 'kills'} ({', '.join(names)})" for cause, names in ranked]
+    slain = [boss["name"] + (" [NEW]" if boss["ts"] >= since else "") for boss in status["bosses"] if boss["ts"]]
+    lines += ["", f"BOSSES defeated in this world: {', '.join(slain) or 'none yet'}."]
+    wire = [f"- {clock(event['ts'])}: {event['text']}" for event in events if event["ts"] >= since and event["kind"] != "death"]
+    lines += ["", f"WIRE since the last edition, oldest first ({len(wire)} lines):"] + (wire[-60:] or ["- nothing happened"])
+    with atlas_lock:
+        items = [item for item in atlas["items"].values() if not item.get("deleted")]
+    marks = sorted((item for item in items if item.get("kind") in ("pin", "text")), key=lambda item: item.get("ts", 0))
+    fresh = [item for item in items if item.get("ts", 0) >= since]
+    strokes = sum(item.get("kind") == "stroke" for item in items)
+    lines += ["", "SHARED ATLAS (players draw it by hand from memory; metres east and north of the spawn stones, "
+              "negative means west or south): "
+              f"{len(items)} marks in all ({len(marks)} pins and labels, {strokes} pen strokes); {len(fresh)} added since the last edition."]
+    for item in marks[-40:]:
+        label = item.get("label") or item.get("text") or ""
+        new = "  [NEW]" if item.get("ts", 0) >= since else ""
+        lines.append(f"- {item.get('icon') or 'text'} pin '{label}' by {item.get('by') or 'an anonymous cartographer'}, "
+                     f"{round(item['x'])} E / {round(-item['y'])} N{new}")
+    return "\n".join(lines) + "\n"
 
 
 def load_atlas():
@@ -572,6 +722,7 @@ def status_payload():
         "last_backup": unix_time(backup.get("ExecMainExitTimestamp")),
         "backup_ok": backup.get("Result", "success") == "success",
         "now": time.time(),
+        "edition": edition,
     }
 
 
@@ -688,6 +839,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/map":
             self.post_map()
             return
+        if path == "/api/edition":
+            self.post_edition()
+            return
         if path != "/api/verdict":
             self.send_json({"error": "Not found"}, 404)
             return
@@ -723,6 +877,22 @@ class Handler(BaseHTTPRequestHandler):
         status, payload = change_map(body)
         self.send_json(payload, status)
 
+    def post_edition(self):
+        supplied = self.headers.get("Authorization", "").removeprefix("Bearer ")
+        if not EDITOR_TOKEN or not hmac.compare_digest(supplied.encode(), EDITOR_TOKEN.encode()):
+            self.send_json({"error": "Only the editor can publish."}, 403)
+            return
+        length = int(self.headers.get("Content-Length") or 0)
+        if self.headers.get("Content-Type") != "application/json" or not 0 < length <= EDITION_MAX_BODY:
+            self.send_json({"error": "Send a JSON edition under 32 KB."}, 400)
+            return
+        try:
+            published = publish_edition(json.loads(self.rfile.read(length)))
+        except ValueError:
+            self.send_json({"error": "The edition is missing a section or has an empty one."}, 400)
+            return
+        self.send_json({"ok": True, "number": published["number"]})
+
     def do_GET(self):
         url = urlparse(self.path)
         try:
@@ -736,6 +906,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(map_payload(parse_qs(url.query)))
             elif url.path == "/api/status":
                 self.send_json(status_payload())
+            elif url.path == "/api/digest":
+                self.send_bytes(digest_text().encode(), "text/plain; charset=utf-8")
             elif url.path == "/api/logs":
                 self.send_json(logs_payload(parse_qs(url.query)))
             elif (match := re.fullmatch(r"/art/([a-z]+)\.jpg", url.path)) and match.group(1) in ART_NAMES:
@@ -762,6 +934,7 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     load_state()
     load_atlas()
+    load_edition()
     threading.Thread(target=follow_journal, daemon=True).start()
     threading.Thread(target=background_work, daemon=True).start()
     ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()

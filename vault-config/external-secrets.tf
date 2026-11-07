@@ -64,6 +64,7 @@ variable "external_secrets_roles" {
         "services/github/kagent-gitops",
         "services/jellyfin/music-mcp",
         "services/lastfm/music-mcp",
+        "apps/valheim-vartha/editor",
       ]
     }
     llm-gateway = {
