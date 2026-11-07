@@ -23,6 +23,13 @@ Keep `restic_password`, `restic_s3_access_key`, `restic_s3_secret_key`, and
 `uptime_url` only in the host's encrypted `vault.yml`. The rendered environment
 file is mode `0600`, and secret-bearing template tasks suppress logs and diffs.
 
+If restic cannot resolve the MinIO host, check which DNS server
+systemd-resolved uses. The router's IPv6 resolver returns no answer for
+internal names that resolve to private addresses. Set
+`backup_ignore_ra_dns: true` (with `backup_dns_interface`, default `eth0`) to
+add a networkd drop-in that ignores DNS servers from router advertisements, as
+`valheim-nomap` does.
+
 ## Host-limited operations
 
 ```bash

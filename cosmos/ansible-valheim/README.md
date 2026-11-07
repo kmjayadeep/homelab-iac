@@ -5,8 +5,9 @@ services. Configuration is host-specific, secrets are encrypted with Ansible
 Vault, and every mutating playbook requires `--limit <hostname>` resolving to
 one host.
 
-See [QUICKSTART.md](QUICKSTART.md) for deployment and routine operations and
-[BACKUP.md](BACKUP.md) for backup and restore drills.
+See [QUICKSTART.md](QUICKSTART.md) for deployment and routine operations,
+[BACKUP.md](BACKUP.md) for backup and restore drills, and [VARTHA.md](VARTHA.md)
+for the `valheim-nomap` newspaper, its AI editor, and the shared atlas.
 
 ## Managed hosts
 
@@ -63,7 +64,8 @@ Copy them by hand to `/var/lib/valheim-dashboard/art/<name>.jpg`, owned by the
 missing image falls back to a drawn Viking. Players draw a shared map at `/map`, which
 is stored in `/var/lib/valheim-dashboard/map.json`; the backup includes that directory.
 Deploy it without restarting the game using
-`ansible-playbook playbooks/dashboard.yml --limit valheim-nomap`.
+`ansible-playbook playbooks/dashboard.yml --limit valheim-nomap`. [VARTHA.md](VARTHA.md)
+describes the editions, the atlas, and how to work on them.
 
 `valheim-speedrun` hosts the imported local `speedrun` world with the same
 private Steam-over-Tailscale configuration. Connect through
