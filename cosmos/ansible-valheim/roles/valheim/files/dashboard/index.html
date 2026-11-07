@@ -64,25 +64,41 @@ figure { margin: 0; display: grid; gap: 5px; }
 .photo.art::after, .face.art::after { opacity: .06; }
 figcaption { font-size: .86rem; font-style: italic; color: var(--ink-2); }
 
-/* Malayalam edition */
-.ml-edition { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); grid-template-areas: "flag story"; gap: 6px clamp(18px, 3vw, 36px); padding-block: 16px 20px; border-bottom: 2px solid var(--ink); }
-.ml-edition > * { min-width: 0; }
-.ml-edition.with-notices { grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr) minmax(0, 1.1fr); grid-template-areas: "flag story notices"; }
-.ml-edition .ml-flag { grid-area: flag; display: grid; align-content: start; gap: 2px; border-right: 1px solid var(--line); padding-right: 12px; }
-.ml-edition .ml-story { grid-area: story; }
-.proverb { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--ink); display: grid; gap: 4px; }
-.proverb q { quotes: "\201C" "\201D"; font: 800 1.12rem/1.6 var(--ml); }
-.proverb small { font: italic 400 .88rem/1.35 var(--body); color: var(--ink-2); }
-.charamam { grid-area: notices; display: grid; align-content: start; gap: 8px; border-left: 1px solid var(--line); padding-left: 14px; }
-.charamam h3 { margin: 0; font: 800 1.35rem/1.3 var(--ml); border-bottom: 3px double var(--ink); padding-bottom: 2px; }
-.notice { display: grid; gap: 2px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
-.notice b { font: 400 1.1rem/1.2 var(--head); }
-.notice span { font: 500 .98rem/1.7 var(--ml); }
-.ml-edition .ml-flag b { font: 800 clamp(1.4rem, 2.6vw, 2rem)/1.25 var(--ml); color: var(--red); }
-.ml-edition h2 { font: 800 clamp(1.5rem, 3vw, 2.3rem)/1.35 var(--ml); text-wrap: balance; }
-.ml-edition p { font: 500 1.08rem/1.85 var(--ml); max-width: 70ch; }
-@media (max-width: 1080px) { .ml-edition.with-notices { grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); grid-template-areas: "flag story" "notices notices"; } .charamam { border-left: 0; padding-left: 0; } }
-@media (max-width: 640px) { .ml-edition, .ml-edition.with-notices { grid-template-columns: minmax(0, 1fr); grid-template-areas: "flag" "story" "notices"; } .ml-edition .ml-flag { border-right: 0; padding-right: 0; } }
+/* Malayalam lead, proverb and ചരമം */
+.story.ml-lead { font: 500 1.16rem/1.9 var(--ml); max-width: 62ch; }
+.story.ml-lead::first-letter { font: inherit; float: none; padding: 0; color: inherit; initial-letter: normal; }
+h1.ml-head { font: 800 clamp(2rem, 4.6vw, 3.7rem)/1.3 var(--ml); }
+.ml-band { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 8px clamp(18px, 3vw, 36px); padding-block: 16px 20px; border-bottom: 2px solid var(--ink); }
+.ml-band > * { min-width: 0; }
+.ml-band.solo { grid-template-columns: minmax(0, 1fr); }
+.proverb { display: grid; align-content: start; gap: 6px; }
+.proverb b { font: 800 clamp(1.3rem, 2.4vw, 1.7rem)/1.3 var(--ml); color: var(--red); }
+.proverb q { quotes: "\201C" "\201D"; font: 800 clamp(1.2rem, 2.2vw, 1.5rem)/1.6 var(--ml); }
+.proverb small { font: italic 400 .92rem/1.4 var(--body); color: var(--ink-2); }
+.charamam { display: grid; align-content: start; gap: 8px; }
+.charamam h3 { margin: 0; font: 800 1.5rem/1.3 var(--ml); border-bottom: 3px double var(--ink); padding-bottom: 2px; }
+#notices { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 10px 22px; }
+.notice { display: grid; gap: 2px; align-content: start; padding: 8px 10px; border: 1px solid var(--ink); background: var(--sheet); }
+.notice b { font: 400 1.15rem/1.2 var(--head); }
+.notice span { font: 500 .98rem/1.75 var(--ml); }
+
+/* Back page */
+.backpage { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: clamp(18px, 3vw, 32px); align-items: start; }
+.backpage > * { min-width: 0; display: grid; gap: 8px; align-content: start; }
+.backpage h3 { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; border-bottom: 2px solid var(--ink); padding-bottom: 3px; font: 800 1.45rem/1.3 var(--ml); }
+.backpage h3 .lab { font-family: var(--body); }
+.sport-head { font: 800 clamp(1.2rem, 2.2vw, 1.55rem)/1.4 var(--ml); }
+.sport-story { font: 500 1rem/1.85 var(--ml); }
+.score { display: inline-block; justify-self: start; border: 2px solid var(--ink); padding: 2px 10px; font: 400 1.25rem/1.3 var(--head); font-variant-numeric: tabular-nums; background: var(--sheet); }
+.tv { list-style: none; margin: 0; padding: 0; display: grid; }
+.tv li { display: grid; grid-template-columns: 3.6em minmax(0, 1fr); gap: 2px 10px; padding-block: 6px; border-bottom: 1px dotted var(--soft); }
+.tv time { font: 600 .95rem/1.6 var(--mono); font-variant-numeric: tabular-nums; }
+.tv b { font: 800 1.02rem/1.5 var(--ml); }
+.tv small { grid-column: 2; font: 500 .9rem/1.6 var(--ml); color: var(--ink-2); }
+.matri { display: grid; gap: 8px; }
+.matri p { border: 1px solid var(--ink); padding: 8px 10px; background: var(--sheet); font: 500 .95rem/1.75 var(--ml); }
+@media (max-width: 1080px) { .backpage { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .backpage .matri-col { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .ml-band, .backpage { grid-template-columns: minmax(0, 1fr); } }
 
 /* Sections */
 .section-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin: var(--section) 0 var(--gap); border-bottom: 3px solid var(--ink); padding-bottom: 5px; }
@@ -326,11 +342,8 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
     </figure>
   </section>
 
-  <section class="ml-edition" id="ml-edition" lang="ml" hidden>
-    <div class="ml-flag"><b>മലയാളം പതിപ്പ്</b><span class="lab" lang="en">The Malayalam edition</span>
-      <div class="proverb" id="proverb" hidden><span class="lab" lang="en">Proverb of the day · പഴഞ്ചൊല്ല്</span><q id="proverb-ml"></q><small lang="en" id="proverb-en"></small></div>
-    </div>
-    <div class="ml-story"><h2 id="ml-headline"></h2><p id="ml-story"></p></div>
+  <section class="ml-band" id="ml-band" lang="ml" hidden>
+    <div class="proverb" id="proverb" hidden><b>പഴഞ്ചൊല്ല്</b><span class="lab" lang="en">Proverb of the day</span><q id="proverb-ml"></q><small lang="en" id="proverb-en"></small></div>
     <div class="charamam" id="charamam" hidden><h3>ചരമം</h3><div id="notices"></div></div>
   </section>
 
@@ -374,6 +387,15 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
 
   <div class="section-title"><h2>The Vartha Awards</h2><span class="kicker">Winners from the last 7 days</span></div>
   <div class="awards" id="awards"></div>
+
+  <div id="backpage-wrap" hidden>
+    <div class="section-title"><h2>The back page</h2><span class="ml" lang="ml">പിൻപേജ്</span><span class="kicker">Sport, television and matters of the heart</span></div>
+    <div class="backpage" lang="ml">
+      <div id="sport" hidden><h3>കായികം <span class="lab" lang="en">Sport</span></h3><span class="score" id="sport-score" lang="en" hidden></span><div class="sport-head" id="sport-head"></div><p class="sport-story" id="sport-story"></p></div>
+      <div id="tv-col" hidden><h3>ടിവി ഇന്ന് <span class="lab" lang="en">Television tonight</span></h3><ul class="tv" id="tv"></ul></div>
+      <div class="matri-col" id="matri-col" hidden><h3>വിവാഹ പരസ്യങ്ങൾ <span class="lab" lang="en">Matrimonials</span></h3><div class="matri" id="matri"></div></div>
+    </div>
+  </div>
 
   <div class="back">
     <div class="col">
@@ -606,16 +628,13 @@ function freshEdition(data) {
   return ed && data.now - ed.ts < 36 * 3600 ? ed : null;
 }
 function drawMalayalam(data) {
-  var ed = freshEdition(data), ml = ed && ed.malayalam;
-  $("ml-edition").hidden = !ml;
-  if (!ml) return;
-  $("ml-headline").textContent = ml.headline;
-  $("ml-story").textContent = ml.story;
+  var ed = freshEdition(data), ml = (ed && ed.malayalam) || {};
   var proverb = ml.proverb, notices = ml.obituaries || [];
   $("proverb").hidden = !proverb;
   if (proverb) { $("proverb-ml").textContent = proverb.ml; $("proverb-en").textContent = proverb.en; }
   $("charamam").hidden = !notices.length;
-  $("ml-edition").classList.toggle("with-notices", notices.length > 0);
+  $("ml-band").hidden = !proverb && !notices.length;
+  $("ml-band").classList.toggle("solo", !proverb || !notices.length);
   var list = $("notices");
   list.textContent = "";
   notices.forEach(function (n) {
@@ -623,6 +642,25 @@ function drawMalayalam(data) {
     item.className = "notice"; name.textContent = n.name; text.textContent = n.text;
     item.append(name, text); list.append(item);
   });
+  var sport = ml.sport, tv = ml.tv || [], matri = ml.matrimonials || [];
+  $("sport").hidden = !sport;
+  if (sport) {
+    $("sport-head").textContent = sport.headline;
+    $("sport-story").textContent = sport.story;
+    $("sport-score").hidden = !sport.score;
+    $("sport-score").textContent = sport.score || "";
+  }
+  $("tv-col").hidden = !tv.length;
+  $("tv").textContent = "";
+  tv.forEach(function (show) {
+    var li = document.createElement("li"), time = document.createElement("time"), name = document.createElement("b"), about = document.createElement("small");
+    time.textContent = show.time; name.textContent = show.show; about.textContent = show.about;
+    li.append(time, name, about); $("tv").append(li);
+  });
+  $("matri-col").hidden = !matri.length;
+  $("matri").textContent = "";
+  matri.forEach(function (ad) { var p = document.createElement("p"); p.textContent = ad; $("matri").append(p); });
+  $("backpage-wrap").hidden = !sport && !tv.length && !matri.length;
 }
 function drawLead(data) {
   var ed = freshEdition(data), d = data.deaths[0], top = data.players.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0];
@@ -633,8 +671,12 @@ function drawLead(data) {
   if (ed && (!d || ed.ts >= d.ts)) {
     // A death after the edition is breaking news, so the templates take over again.
     $("pull").hidden = false;
-    setMixed($("headline"), ed.headline);
-    setMixed($("story"), ed.story);
+    var ml = ed.malayalam;
+    $("headline").classList.toggle("ml-head", !!ml);
+    $("story").classList.toggle("ml-lead", !!ml);
+    if (ml && $("flash").textContent === "Breaking") $("flash").textContent = "ബ്രേക്കിങ് ന്യൂസ്";
+    setMixed($("headline"), ml ? ml.headline : ed.headline);
+    setMixed($("story"), ml ? ml.story : ed.story);
     setMixed($("pull-words"), ed.pull_quote.words);
     $("pull-who").textContent = ed.pull_quote.who;
     setMixed($("caption"), ed.caption);
@@ -642,6 +684,8 @@ function drawLead(data) {
     else if (!$("photo").querySelector("svg")) { $("photo").classList.remove("art"); $("photo").innerHTML = viking(false, "meet"); }
     return;
   }
+  $("headline").classList.remove("ml-head");
+  $("story").classList.remove("ml-lead");
   $("pull").hidden = !d;
   if (d) {
     setMixed($("headline"), deathHeadline(d));
