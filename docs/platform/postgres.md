@@ -85,7 +85,9 @@ Backup policy:
 | RPO | <= 1 hour for databases included in backup policy |
 | RTO | Best effort, target < 4 hours for normal restore |
 | Retention | keep last 10, daily 10, monthly 12 |
-| Restore tests | Target monthly or quarterly |
+| Prune | Daily at 03:30 (`backup-postgres-prune`) |
+| Repository check | Weekly, Sunday 04:30 (`backup-postgres-check`) |
+| Restore tests | Monthly, automated by the `postgres-restore-drill` CronJob in homelab-k8s |
 
 Current backup implementation lives in `nixos-images/postgres/modules/backup.nix`.
 
@@ -96,10 +98,12 @@ Backup layout in the Restic snapshot:
   metadata.json
   globals.sql
   databases/
-    <database>.dump    # one per catalog entry with backup = true
+    <database>.dump    # every database except postgres and backup = false entries
 ```
 
 `metadata.json` records backup timestamps, host, Postgres version, included databases, retention target, and dump sizes.
+
+Each run also writes `/var/lib/postgres-backup/status.json` on Helios with the result, snapshot ID, timings, and dump sizes.
 
 Helios also keeps one previous local backup under `/var/tmp/postgres-backup/previous`, but Restic only uploads `/var/tmp/postgres-backup/current`.
 
@@ -274,6 +278,8 @@ Current alerting direction:
 - Helios exporter scrape failures should be critical.
 - Backup stale beyond the hourly RPO should be critical.
 - `backup-postgres.service` failure is critical.
+- `backup-postgres-check.service` failure is critical.
+- A restore drill older than 35 days is critical.
 - Any other failed systemd unit on Helios is a warning.
 - Cache hit ratio is warning-level, not critical, because Immich can legitimately do large scans.
 

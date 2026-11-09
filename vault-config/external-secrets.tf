@@ -130,6 +130,10 @@ variable "external_secrets_roles" {
         "services/postgresql/otpcloud",
       ]
     }
+    postgres-restore-drill = {
+      kubernetes_namespace = "postgres-restore-drill"
+      secret_paths         = ["services/object-storage/postgres-restic"]
+    }
     psuite = {
       kubernetes_namespace = "psuite"
       secret_paths         = ["apps/psuite/wiki"]
