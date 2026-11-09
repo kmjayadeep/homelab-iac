@@ -100,6 +100,7 @@ lists property names only, never values.
 | Vault Raft snapshot backup | `services/object-storage/vault-backup` | `endpoint`, `bucket`, `region`, `access_key`, and `secret_key`; consumed only by the Vault backup job |
 | `ghcr-secret` | `services/ghcr/baskit-pull` | `dockerconfigjson`; ESO maps it to `.dockerconfigjson` and sets the Kubernetes Secret type |
 | `fava-auth` | `apps/beancount/auth` | `auth` |
+| `fava-ledger-git` | `apps/beancount/git-sync` | `ssh_private_key` (read-only GitLab deploy key; `ssh` in the Kubernetes Secret) |
 | `dotbintask-secret` | `apps/dotbintask/api` | `tokens` |
 | `glance-secret` AdGuard item | `services/adguard/glance` | `password` or token issued for Glance |
 | `glance-secret` Immich item | `services/immich/glance` | `api_key` issued for Glance |
