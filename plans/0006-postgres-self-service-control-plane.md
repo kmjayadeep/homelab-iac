@@ -185,15 +185,15 @@ Exit: `pgweb` survives a reboot, and a failed test unit raises an alert.
 
 ## Phase 1: Prove restore
 
-- [ ] Import restic credentials to `services/object-storage/postgres-restic`
+- [x] Import restic credentials to `services/object-storage/postgres-restic`
       through the stdin workflow, using a new read-only R2 token.
-- [ ] Add the Vault role and CronJob. Run it once by hand.
-- [ ] Back up every non-template database except `postgres` unless excluded.
-- [ ] Make `metadata.json` valid JSON.
-- [ ] Write `status.json` after each run with snapshot ID, timings and sizes.
-- [ ] Add a weekly `restic check` timer and move `forget --prune` to daily.
-- [ ] Alert on a failed check and on a drill older than 35 days.
-- [ ] Record the first drill's date, snapshot and duration in
+- [x] Add the Vault role and CronJob. Run it once by hand.
+- [x] Back up every non-template database except `postgres` unless excluded.
+- [x] Make `metadata.json` valid JSON.
+- [x] Write `status.json` after each run with snapshot ID, timings and sizes.
+- [x] Add a weekly `restic check` timer and move `forget --prune` to daily.
+- [x] Alert on a failed check and on a drill older than 35 days.
+- [x] Record the first drill's date, snapshot and duration in
       `inventory/backups.md`.
 
 Exit: all 13 databases restore and pass validation. Nothing later starts until

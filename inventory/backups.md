@@ -4,7 +4,7 @@ This is a platform-level backup summary. It tracks source, mechanism, target, lo
 
 | Source | Mechanism | Destination | Offsite | Confidence | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `helios` Postgres databases | `pg_dumpall --globals-only` plus per-DB `pg_dump -F c`, then Restic via hourly systemd timer | Cloudflare R2 bucket `postgres-cosmos-backup` | Yes | Medium | Covers every database except `postgres` and those set to `backup = false` in the catalog. RPO <= 1 hour; RTO target < 4 hours. Weekly `restic check`. Monthly restore drill (`postgres-restore-drill` in homelab-k8s); first drill not yet run. |
+| `helios` Postgres databases | `pg_dumpall --globals-only` plus per-DB `pg_dump -F c`, then Restic via hourly systemd timer | Cloudflare R2 bucket `postgres-cosmos-backup` | Yes | High | Covers every database except `postgres` and those set to `backup = false` in the catalog. RPO <= 1 hour; RTO target < 4 hours. Weekly `restic check`. Monthly restore drill (`postgres-restore-drill` in homelab-k8s). First drill 2026-11-09: snapshot `0273f9ce`, all 13 databases restored and validated in 2 min 49 s. |
 | Valheim worlds | Restic via Ansible and/or NixOS backup timer | MinIO running in a TrueNAS Docker jail, backed by mounted NAS storage | No, unless MinIO/NAS replication covers it | Medium | Active path per host needs confirmation. |
 | Windrose data | MinIO bucket is provisioned | MinIO running in a TrueNAS Docker jail, backed by mounted NAS storage | No, unless MinIO/NAS replication covers it | Low | Backup job and restore flow are not yet identified. |
 | TrueNAS datasets | Unknown NAS replication/backup jobs | Unknown remote bucket | Yes | Unknown | Needs manual TrueNAS inventory: datasets, snapshots, replication tasks, retention, encryption, and restore tests. |
@@ -16,6 +16,6 @@ This is a platform-level backup summary. It tracks source, mechanism, target, lo
 - Record the Docker jail name/config and the exact TrueNAS dataset path mounted by MinIO.
 - Confirm whether MinIO buckets replicate to a remote bucket.
 - Record all TrueNAS snapshot and cloud-sync/replication tasks.
-- Add restore test dates for Postgres and at least one game-world backup.
+- Add a restore test date for at least one game-world backup.
 - Evaluate using local MinIO on TrueNAS as an additional high-frequency Postgres backup target, with Cloudflare R2 kept as lower-frequency/offsite disaster recovery if appropriate.
 - Record PBS datastore, VM coverage, retention, prune/verify jobs, and restore test dates.
