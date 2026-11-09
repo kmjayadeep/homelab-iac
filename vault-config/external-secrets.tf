@@ -32,7 +32,10 @@ variable "external_secrets_roles" {
     }
     beancount = {
       kubernetes_namespace = "beancount"
-      secret_paths         = ["apps/beancount/auth"]
+      secret_paths = [
+        "apps/beancount/auth",
+        "apps/beancount/git-sync",
+      ]
     }
     cert-manager-cloudflare = {
       kubernetes_namespace = "cert-manager"
