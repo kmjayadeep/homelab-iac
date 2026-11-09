@@ -41,6 +41,10 @@ variable "external_secrets_roles" {
       kubernetes_namespace = "cert-manager"
       secret_paths         = ["services/cloudflare/dns-cboxlab"]
     }
+    comfyui = {
+      kubernetes_namespace = "comfyui"
+      secret_paths         = ["apps/gpu-portal/ui-basic-auth"]
+    }
     dotbintask = {
       kubernetes_namespace = "dotbintask"
       secret_paths         = ["apps/dotbintask/api"]
@@ -48,6 +52,10 @@ variable "external_secrets_roles" {
     external-dns-cloudflare = {
       kubernetes_namespace = "external-dns"
       secret_paths         = ["services/cloudflare/dns-cboxlab"]
+    }
+    gpu-portal = {
+      kubernetes_namespace = "gpu-portal"
+      secret_paths         = ["apps/gpu-portal/ui-basic-auth"]
     }
     glance = {
       kubernetes_namespace = "glance"
