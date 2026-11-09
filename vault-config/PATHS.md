@@ -127,6 +127,7 @@ lists property names only, never values.
 | `otpcloud-secret` database item | `services/postgresql/otpcloud` | `connection_string`; splitting it into canonical components is optional follow-up work |
 | `psuite-wiki-creds` | `apps/psuite/wiki` | `creds` |
 | `psuite-restic-creds` | `services/object-storage/psuite-restic` | repository, access key, secret key, and Restic password |
+| `postgres-restic` | `services/object-storage/postgres-restic` | `repository`, `access_key`, `secret_key`, and `restic_password`; read-only R2 token for the restore drill, created and rotated by `cloudflare/create-postgres-restic-reader.sh` |
 | `shoppinglist-config` | `services/postgresql/shoppinglist` | `password`; non-secret connection components remain in application configuration |
 | `taskplanner-config` | `services/postgresql/taskplanner` | `password`; non-secret connection components remain in application configuration |
 | `openvpn-config` | `services/vpn/deluge-openvpn` | authentication and client configuration documents |
