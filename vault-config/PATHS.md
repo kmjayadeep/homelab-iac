@@ -108,6 +108,7 @@ lists property names only, never values.
 | LiteLLM Open WebUI virtual key | `apps/litellm/open-webui` | `api_key`; model-scoped LiteLLM virtual key used only by Open WebUI, never the LiteLLM master key |
 | Google Gemini API key for LiteLLM | `services/gemini/litellm` | `api_key`; Gemini API key that LiteLLM maps to `GEMINI_API_KEY` for the `gemini/` provider entries (embeddings for kagent memory) |
 | DeepSeek API key for LiteLLM | `services/deepseek/litellm` | `api_key`; DeepSeek platform key that LiteLLM maps to `DEEPSEEK_API_KEY` for the Git-managed `deepseek/` entries (`deepseek-v4-flash`, `deepseek-v4-pro`); previously held only in LiteLLM's database |
+| GPU portal UI basic auth | `apps/gpu-portal/ui-basic-auth` | `username`, `password`; HTTP basic-auth credential for the GPU portal, imagine and ComfyUI Ingresses; External Secrets renders the htpasswd Secret in `gpu-portal` and `comfyui` (homelab-k8s plan 0030) |
 | kagent UI basic auth | `apps/kagent/ui-basic-auth` | `username`, `password`; HTTP basic-auth credential for the kagent UI Ingress; External Secrets renders the htpasswd Secret from them (homelab-k8s plan 0019 follow-up) |
 | LiteLLM kagent virtual key | `apps/litellm/kagent` | `api_key`; LiteLLM virtual key (alias `kagent`) used only by kagent; the model is chosen in kagent's `ModelConfig`, not by key scope (homelab-k8s plan 0019) |
 | Grafana service-account token for kagent | `services/grafana/kagent` | `token`; Viewer-role Grafana service account used by the Grafana MCP server in the `kagent` namespace (homelab-k8s plan 0020) |
