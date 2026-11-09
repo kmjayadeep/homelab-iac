@@ -35,7 +35,9 @@ Game events and player names go to Anthropic with every edition.
   metres east and north), and marks with `[NEW]` everything since the last
   edition. It also lists `ART_NAMES` so the editor can pick a cartoon. A model
   is good at the voice and bad at counting, so keep new facts in the digest
-  rather than asking the model to work them out.
+  rather than asking the model to work them out. For variety it also prints
+  a `NEWS VOLUME` (QUIET, LIGHT or BUSY), a `DESK FILE` of true odds and ends,
+  what recent editions already used, and back issues to revisit.
 - **`POST /api/edition`** compares the token with `hmac.compare_digest` and
   rejects an edition with any section missing or empty (`EDITION_TEXT`,
   `EDITION_PARTS`, `EDITION_LISTS`, and the optional `malayalam` object). It
@@ -58,8 +60,10 @@ Game events and player names go to Anthropic with every edition.
   and caption, and the back page (sport, TV, matrimonials). The masthead,
   leaderboard, coroner's desk, bosses, awards, atlas, and wire always come
   from live data.
-- **No news, no edition.** The CronJob skips publishing when the digest has
-  nothing new.
+- **Quiet editions.** When the digest has nothing new, the CronJob still
+  publishes a feature edition, at most 2 in a row (`QUIET_LIMIT`, one day), and
+  then skips until something happens. Deploy the dashboard before the CronJob
+  script, which reads the digest's `NEWS VOLUME` line.
 
 ### Why Claude Opus
 
