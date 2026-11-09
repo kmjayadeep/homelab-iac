@@ -39,10 +39,16 @@ Game events and player names go to Anthropic with every edition.
 - **`POST /api/edition`** compares the token with `hmac.compare_digest` and
   rejects an edition with any section missing or empty (`EDITION_TEXT`,
   `EDITION_PARTS`, `EDITION_LISTS`, and the optional `malayalam` object). It
-  writes `/var/lib/valheim-dashboard/edition.json` and keeps the last 60 under
+  writes `/var/lib/valheim-dashboard/edition.json` and keeps every edition under
   `editions/NNNNN.json`. The host gets the token as
   `valheim_dashboard_editor_token` from `vault.yml`. The same value is in
   `pass homelab/valheim/vartha-editor-token` and in Vault.
+- **Back issues** are at `/archive`, and `/archive/<n>` reprints one edition in
+  the newspaper layout. `index.html` serves both, using `/api/editions` and
+  `/api/editions/<n>`. A reprint shows only what the editor wrote, because the
+  leaderboard, atlas and wire are live and would be wrong for that date.
+  Editions before `EDITION_ARCHIVE_FROM` were trial runs. They stay on disk
+  but are not served.
 - **The page uses an edition** only while it is less than 36 hours old and no
   death has happened since it was written (`freshEdition` and `drawLead` in
   `index.html`). Otherwise the built-in templates write the lead, so the
