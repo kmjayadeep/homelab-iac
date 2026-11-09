@@ -96,14 +96,7 @@ Backup layout in the Restic snapshot:
   metadata.json
   globals.sql
   databases/
-    planka.dump
-    totp.dump
-    immich.dump
-    coder.dump
-    shoppinglist.dump
-    uptimekuma.dump
-    taskplanner.dump
-    k3s.dump
+    <database>.dump    # one per catalog entry with backup = true
 ```
 
 `metadata.json` records backup timestamps, host, Postgres version, included databases, retention target, and dump sizes.
@@ -197,11 +190,16 @@ Example:
 ```bash
 sudo -u postgres psql -f "$RESTORE_DIR/globals.sql"
 
-for DB in planka totp immich coder shoppinglist uptimekuma taskplanner k3s; do
-  sudo -u postgres createdb -O "$DB" "$DB"
-  sudo -u postgres pg_restore -d "$DB" "$RESTORE_DIR/databases/$DB.dump"
+for DUMP in "$RESTORE_DIR"/databases/*.dump; do
+  DB="$(basename "$DUMP" .dump)"
+  # A host rebuilt from the catalog may have created the database already.
+  sudo -u postgres psql -Atc "SELECT 1 FROM pg_database WHERE datname = '$DB'" | grep -q 1 \
+    || sudo -u postgres createdb -O "$DB" "$DB"
+  sudo -u postgres pg_restore -d "$DB" "$DUMP"
 done
 ```
+
+On a host rebuilt from the catalog, `globals.sql` reports that roles already exist. Those errors are expected, and its `ALTER ROLE` statements still restore the passwords. Do not run this loop against databases that already hold data.
 
 Important note: logical dumps support full and selective restore to the latest successful dump time. They do not provide point-in-time recovery; WAL/PITR is a future improvement.
 
@@ -275,12 +273,9 @@ Current alerting direction:
 - Postgres exporter down/query failure should be critical.
 - Helios exporter scrape failures should be critical.
 - Backup stale beyond the hourly RPO should be critical.
-- `backup-postgres.service` failure should become critical after systemd metrics are exposed.
+- `backup-postgres.service` failure is critical.
+- Any other failed systemd unit on Helios is a warning.
 - Cache hit ratio is warning-level, not critical, because Immich can legitimately do large scans.
-
-Current metric caveat:
-
-- `node_systemd_unit_state` is not currently exposed for Helios, so backup service failure is covered indirectly through stale Restic snapshot alerts for now.
 
 True synthetic SQL checks are still a future improvement.
 

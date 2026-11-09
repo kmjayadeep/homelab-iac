@@ -9,7 +9,14 @@
   systemd.services.pgweb = {
     enable = true;
     wantedBy = ["multi-user.target"];
+    after = ["postgresql.service"];
+    requires = ["postgresql.service"];
     description = "Postgres visualizer";
+
+    serviceConfig = {
+      Restart = "on-failure";
+      RestartSec = "5s";
+    };
 
     script = ''
       source /etc/pgweb-env
