@@ -89,7 +89,8 @@ atlas_lock = threading.Lock()
 # The editor is an AI agent outside this host. It reads /api/digest and posts each edition
 # with a bearer token; the page falls back to its templates when there is none.
 EDITION_MAX_BODY = 32 * 1024
-EDITION_KEEP = 60
+# Editions 1 to 3 were trial runs of the same news, so the archive starts at 4.
+EDITION_ARCHIVE_FROM = 4
 EDITION_TEXT = {"headline": 160, "story": 1500, "caption": 300, "editorial": 1200, "ad": 400, "forecast": 120}
 EDITION_PARTS = {
     "pull_quote": {"words": 300, "who": 160},
@@ -178,10 +179,28 @@ def publish_edition(raw):
         temporary = EDITION_FILE.with_suffix(".tmp")
         temporary.write_text(text)
         temporary.replace(EDITION_FILE)
-        for old in sorted(EDITIONS_DIR.glob("*.json"))[:-EDITION_KEEP]:
-            old.unlink(missing_ok=True)
         edition = clean
     return clean
+
+
+def archived_edition(number):
+    if number < EDITION_ARCHIVE_FROM:
+        return None
+    try:
+        return json.loads((EDITIONS_DIR / f"{number:05d}.json").read_text())
+    except (OSError, ValueError):
+        return None
+
+
+def edition_index():
+    """Every edition in the archive, newest first, with what the list of back issues prints."""
+    index = []
+    for path in sorted(EDITIONS_DIR.glob("*.json"), reverse=True):
+        if not path.stem.isdigit() or not (paper := archived_edition(int(path.stem))):
+            continue
+        index.append({"number": paper["number"], "ts": paper["ts"], "headline": paper["headline"],
+                      "ml_headline": paper.get("malayalam", {}).get("headline")})
+    return index
 
 
 def digest_duration(seconds):
@@ -962,8 +981,16 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         url = urlparse(self.path)
         try:
-            if url.path == "/":
+            if url.path == "/" or re.fullmatch(r"/archive(/\d{1,5})?/?", url.path):
                 self.send_bytes(INDEX_FILE.read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/api/editions":
+                self.send_json({"editions": edition_index()})
+            elif match := re.fullmatch(r"/api/editions/(\d{1,5})", url.path):
+                paper = archived_edition(int(match.group(1)))
+                if paper:
+                    self.send_json(paper)
+                else:
+                    self.send_json({"error": "That edition is not in the archive."}, 404)
             elif url.path == "/map":
                 self.send_bytes(MAP_PAGE.read_bytes(), "text/html; charset=utf-8")
             elif url.path == "/atlas.js":

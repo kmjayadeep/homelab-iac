@@ -32,6 +32,17 @@ p { margin: 0; text-wrap: pretty; }
 .ear { border: 1px solid var(--ink); padding: 8px 10px; font-size: .9rem; line-height: 1.3; min-height: 86px; display: flex; flex-direction: column; justify-content: center; gap: 3px; background: var(--sheet); }
 .ear b { font: 400 1.1rem/1.15 var(--head); }
 .edition { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2px 18px; border-block: 3px double var(--ink); padding-block: 4px; font-size: .9rem; font-style: italic; }
+.edition a, .archive-nav a { color: inherit; }
+.archive-nav { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 18px; padding-block: 7px; border-bottom: 2px solid var(--ink); font-weight: 600; }
+#paper > .archive-nav { margin-top: var(--section); border-top: 2px solid var(--ink); border-bottom: 0; }
+.back-issues { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: var(--gap); }
+.back-issue { display: grid; gap: 3px; align-content: start; padding: 10px 12px; border: 1px solid var(--ink); background: var(--sheet); color: var(--ink); text-decoration: none; }
+.back-issue:hover { border-color: var(--red); }
+.back-issue b { font: 800 1.3rem/1.45 var(--ml); overflow-wrap: anywhere; }
+.back-issue small { font-size: .95rem; font-style: italic; color: var(--ink-2); }
+.live-block { display: contents; }
+.back.solo { grid-template-columns: minmax(0, 1fr); }
+.flash.still { animation: none; }
 .dateline { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: 0; border-bottom: 2px solid var(--ink); font-variant-numeric: tabular-nums; }
 .dateline > div { padding: 6px 10px; border-left: 1px solid var(--line); min-width: 0; }
 .dateline > div:first-child { border-left: 0; padding-left: 0; }
@@ -318,8 +329,13 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
     </div>
     <div class="ear"><span class="lab" id="forecast-label">The outlook</span><span id="forecast"></span></div>
   </header>
-  <div class="edition"><span id="issue">Vol. I</span><span id="today"></span><span id="edition-note">Late edition, still no map</span></div>
-  <dl class="dateline">
+  <div class="edition"><span><span id="issue">Vol. I</span> · <a href="/archive">Back issues</a></span><span id="today"></span><span id="edition-note">Late edition, still no map</span></div>
+  <nav class="archive-nav" aria-label="Back issues" hidden></nav>
+  <section id="archive-list" hidden>
+    <div class="section-title"><h2>Back issues</h2><span class="ml" lang="ml">പഴയ ലക്കങ്ങൾ</span><span class="kicker">Yesterday's news, kept for the inquest</span></div>
+    <div class="back-issues" id="back-issues"></div>
+  </section>
+  <dl class="dateline" data-live>
     <div><dt>Server</dt><dd id="s-state">Checking</dd></div>
     <div><dt>Vikings online</dt><dd id="s-online">–</dd></div>
     <div><dt>World day</dt><dd id="s-day">–</dd></div>
@@ -329,6 +345,7 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
     <div><dt>CPU</dt><dd id="s-cpu">–</dd></div>
   </dl>
 
+  <div id="paper">
   <section class="lead">
     <div class="lead-text">
       <span class="flash" id="flash">Breaking</span>
@@ -347,6 +364,7 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
     <div class="charamam" id="charamam" hidden><h3>ചരമം <span class="lab" lang="en">Obituaries</span></h3><div id="notices"></div></div>
   </section>
 
+  <div data-live>
   <div class="section-title"><h2>Death leaderboard</h2><span class="ml" lang="ml">മരണപ്പട്ടിക</span></div>
   <ol id="board"></ol>
 
@@ -361,6 +379,7 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
     <canvas id="atlas" aria-hidden="true"></canvas>
     <span class="atlas-card"><b id="atlas-title">Open the atlas &rarr;</b><span id="atlas-line">Pen, pins and place names, shared live with everyone on the server.</span></span>
   </a>
+  </div>
 
   <div class="section-title"><h2>The editorial page</h2><span class="ml" lang="ml">മുഖപ്രസംഗം</span></div>
   <div class="editorial">
@@ -385,8 +404,10 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
   <div class="section-title"><h2>Your stars</h2><span class="kicker">Today's reading, and no refunds</span></div>
   <div class="stars" id="stars"></div>
 
+  <div data-live>
   <div class="section-title"><h2>The Vartha Awards</h2><span class="kicker">Winners from the last 7 days</span></div>
   <div class="awards" id="awards"></div>
+  </div>
 
   <div id="backpage-wrap" hidden>
     <div class="section-title"><h2>The back page</h2><span class="ml" lang="ml">പിൻപേജ്</span><span class="kicker">Sport, television and matters of the heart</span></div>
@@ -397,9 +418,10 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
     </div>
   </div>
 
-  <div class="back">
+  <div class="back" id="back">
     <div class="col">
       <h3>Classifieds</h3>
+      <div class="live-block" data-live>
       <div class="classified"><div><span class="lab">Wanted: Vikings. Report to</span><code id="address">–</code></div><button class="btn" type="button" id="copy-address">Copy</button></div>
       <div class="classified"><div><span class="lab">Password</span><code>•••••</code></div><button class="btn" type="button" id="copy-password">Copy</button></div>
       <div class="classified"><div><span class="lab">Seed. Map not included</span><code id="seed">–</code></div><a class="btn" id="map" href="https://valheim-map.world/" target="_blank" rel="noopener">Map ↗</a></div>
@@ -410,9 +432,10 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
         <div><dt>Size</dt><dd id="v-size">–</dd></div>
       </dl>
       <p class="note">This is the latest automatic save, so it can be a few minutes behind live play.</p>
+      </div>
       <p class="ad" id="ad"></p>
     </div>
-    <div class="col">
+    <div class="col" data-live>
       <h3>In brief</h3>
       <div class="chips" role="group" aria-label="Filter news">
         <button type="button" class="chip" data-f="all" aria-pressed="true">All</button>
@@ -424,12 +447,14 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
       </div>
       <ul class="news" id="news"></ul>
     </div>
-    <div class="col">
+    <div class="col" data-live>
       <h3>From the wire</h3>
       <input type="search" id="q" placeholder="Search logs" aria-label="Search logs">
       <div class="wire-tools"><label class="check"><input type="checkbox" id="all"> Show all lines</label><a class="btn" href="/download/logs">Download logs</a></div>
       <div class="wire" id="wire" tabindex="0" aria-label="Server log lines"></div>
     </div>
+  </div>
+  <nav class="archive-nav" aria-label="Back issues" hidden></nav>
   </div>
 </div>
 <div id="toast" role="status" hidden></div>
@@ -437,6 +462,7 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
 var $ = function (id) { return document.getElementById(id); };
 var pick = function (list, n) { return list[Math.abs(Math.floor(n)) % list.length]; };
 var latest = null, password = null, filter = "all", lastDeathId = null, toastTimer, logTimer;
+var ARCHIVE = location.pathname.match(/^\/archive(?:\/(\d+))?\/?$/);
 
 /* Each entry: menu label, headline, and the obituary's closing line. */
 var CAUSE = {
@@ -1021,12 +1047,81 @@ function refreshAtlas() {
 }
 if (window.ResizeObserver) new ResizeObserver(drawAtlas).observe($("atlas"));
 if (document.fonts) document.fonts.ready.then(drawAtlas);
-refreshAtlas();
-setInterval(refreshAtlas, 15000);
 
-refreshStatus(); refreshLogs();
-setInterval(refreshStatus, 15000);
-setInterval(refreshLogs, 15000);
+/* Back issues: /archive lists them and /archive/<n> reprints one. A reprint shows only what the editor wrote, because the live sections would be wrong for that date. */
+function fetchJson(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error(); return r.json(); }); }
+function issueDate(ts) {
+  var d = new Date(ts * 1000);
+  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) + ", " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+function showBackIssues(list) {
+  var box = $("back-issues");
+  document.title = "Valheim Vartha · Back issues";
+  $("issue").textContent = "Vol. I";
+  $("today").textContent = list.length + (list.length === 1 ? " edition" : " editions") + " on file";
+  $("edition-note").textContent = "Late edition, still no map";
+  $("forecast").textContent = "Already happened.";
+  $("archive-list").hidden = false;
+  box.textContent = "";
+  if (!list.length) { box.innerHTML = '<p class="empty">The archive is empty. The filing clerk has gone for ചായ.</p>'; return; }
+  list.forEach(function (ed) {
+    var link = document.createElement("a"), when = document.createElement("span"), head = document.createElement("b");
+    link.className = "back-issue"; link.href = "/archive/" + ed.number;
+    when.className = "lab"; when.textContent = "No. " + ed.number + " · " + issueDate(ed.ts);
+    head.textContent = ed.ml_headline || ed.headline;
+    link.append(when, head);
+    if (ed.ml_headline) { var english = document.createElement("small"); english.textContent = ed.headline; link.append(english); }
+    box.append(link);
+  });
+}
+function drawIssueNav(ed, list) {
+  var at = list.findIndex(function (item) { return item.number === ed.number; }), newer = list[at - 1], older = list[at + 1];
+  function link(href, text) { var a = document.createElement("a"); a.href = href; a.textContent = text; return a; }
+  document.querySelectorAll(".archive-nav").forEach(function (nav) {
+    nav.textContent = "";
+    nav.append(older ? link("/archive/" + older.number, "← No. " + older.number) : document.createElement("span"), link("/archive", "All back issues"), newer ? link("/archive/" + newer.number, "No. " + newer.number + " →") : link("/", "Today's paper →"));
+    nav.hidden = false;
+  });
+}
+function reprint(ed, list, status) {
+  // The deaths known when it was printed choose the same photo and Wanted mugshot as the day it ran.
+  var deaths = status.deaths.filter(function (d) { return d.ts <= ed.ts; }), tally = {}, day = Math.floor(ed.ts / 86400);
+  deaths.forEach(function (d) { if (d.cause) tally[d.cause] = (tally[d.cause] || 0) + 1; });
+  var data = { edition: ed, now: ed.ts, state: "online", deaths: deaths, events: [], bosses: [], cause_tally: tally, total_deaths: deaths.length, players: ed.stars.map(function (s) { return { name: s.name, deaths: 0, causes: {} }; }) };
+  document.title = "Valheim Vartha · No. " + ed.number;
+  if (status.world) $("world").textContent = status.world;
+  $("issue").textContent = "Vol. I, No. " + ed.number;
+  $("today").textContent = new Date(ed.ts * 1000).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  $("edition-note").textContent = "Reprinted from the archive";
+  setMixed($("ad"), ed.ad);
+  setMixed($("forecast"), ed.forecast);
+  drawLead(data); drawMalayalam(data); drawEditorial(data, day); drawStars(data, day);
+  $("flash").textContent = "From the archive";
+  $("flash").classList.add("still");
+  $("back").classList.add("solo");
+  drawIssueNav(ed, list);
+  $("paper").hidden = false;
+}
+function openArchive() {
+  document.querySelectorAll("[data-live]").forEach(function (el) { el.hidden = true; });
+  $("paper").hidden = true;
+  fetchJson("/api/editions").then(function (index) {
+    if (!ARCHIVE[1]) { showBackIssues(index.editions); return; }
+    return Promise.all([fetchJson("/api/editions/" + ARCHIVE[1]), fetchJson("/api/status").catch(function () { return { deaths: [] }; })])
+      .then(function (found) { reprint(found[0], index.editions, found[1]); })
+      .catch(function () { showBackIssues(index.editions); toast("That edition is not in the archive."); });
+  }).catch(function () { $("conn").hidden = false; });
+}
+
+if (ARCHIVE) {
+  openArchive();
+} else {
+  refreshAtlas();
+  setInterval(refreshAtlas, 15000);
+  refreshStatus(); refreshLogs();
+  setInterval(refreshStatus, 15000);
+  setInterval(refreshLogs, 15000);
+}
 </script>
 </body>
 </html>
