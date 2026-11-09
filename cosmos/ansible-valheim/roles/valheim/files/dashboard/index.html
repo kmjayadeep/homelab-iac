@@ -183,6 +183,8 @@ select.open { border-color: var(--red); color: var(--red); }
 /* Editorial page */
 .editorial { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .85fr) minmax(0, 1fr); gap: clamp(18px, 3vw, 32px); align-items: start; }
 .editorial > * { min-width: 0; }
+.from-archives { display: grid; gap: 6px; max-width: 70ch; }
+.from-archives a { color: inherit; font: 400 1.35rem/1.2 var(--head); }
 .leader { display: grid; gap: 4px; padding-top: 10px; border-top: 1px solid var(--ink); }
 .leader p { font-size: 1.04rem; }
 .leader .signed { text-align: right; }
@@ -403,6 +405,11 @@ label.check { display: inline-flex; gap: 6px; align-items: center; cursor: point
 
   <div class="section-title"><h2>Your stars</h2><span class="kicker">Today's reading, and no refunds</span></div>
   <div class="stars" id="stars"></div>
+
+  <div id="from-archives" hidden>
+    <div class="section-title"><h2>From our archives</h2><span class="ml" lang="ml">പഴയ താളുകളിൽ നിന്ന്</span><span class="kicker">The paper looks back, and is rarely proud</span></div>
+    <article class="from-archives"><a id="from-archives-link"></a><p id="from-archives-text"></p></article>
+  </div>
 
   <div data-live>
   <div class="section-title"><h2>The Vartha Awards</h2><span class="kicker">Winners from the last 7 days</span></div>
@@ -700,7 +707,8 @@ function drawLead(data) {
     var ml = ed.malayalam;
     $("headline").classList.toggle("ml-head", !!ml);
     $("story").classList.toggle("ml-lead", !!ml);
-    if (ml && $("flash").textContent === "Breaking") $("flash").textContent = "ബ്രേക്കിങ് ന്യൂസ്";
+    if ($("flash").textContent === "Breaking" && ed.quiet) $("flash").textContent = "വിശേഷാൽ പതിപ്പ്";
+    else if (ml && $("flash").textContent === "Breaking") $("flash").textContent = "ബ്രേക്കിങ് ന്യൂസ്";
     setMixed($("headline"), ml ? ml.headline : ed.headline);
     setMixed($("story"), ml ? ml.story : ed.story);
     setMixed($("pull-words"), ed.pull_quote.words);
@@ -887,12 +895,22 @@ function drawEditorial(data, day) {
     $("wanted-crime").textContent = ed.wanted.crime;
     $("wanted-reward").textContent = "Reward: " + ed.wanted.reward;
   }
-  var mug = $("wanted-photo"), src = cause && ART.indexOf(cause) > -1 ? "/art/" + cause + ".jpg" : "";
+  // The editor may name anyone, so its poster shows a picture only when the name matches one.
+  var likeness = ed ? ART.filter(function (name) { return ed.wanted.name.toLowerCase().indexOf(name) > -1; })[0] : cause;
+  var mug = $("wanted-photo"), src = likeness && ART.indexOf(likeness) > -1 ? "/art/" + likeness + ".jpg" : "";
   var shown = mug.querySelector("img");
   if ((shown ? shown.getAttribute("src") : "") !== src) {
     mug.textContent = "?";
     if (src) { var pic = new Image(); pic.alt = "Likeness of the accused"; pic.src = src; mug.textContent = ""; mug.append(pic); }
   }
+}
+function drawFromArchives(data) {
+  var ed = freshEdition(data), past = ed && ed.from_archives;
+  $("from-archives").hidden = !past;
+  if (!past) return;
+  $("from-archives-link").href = "/archive/" + past.number;
+  $("from-archives-link").textContent = "No. " + past.number + ": " + past.headline;
+  setMixed($("from-archives-text"), past.text);
 }
 function drawStars(data, day) {
   var box = $("stars"), ed = freshEdition(data), written = {};
@@ -988,7 +1006,7 @@ function draw(data) {
   $("forecast-label").textContent = ed ? "The outlook" : outlook[0];
   if (ed) setMixed($("forecast"), ed.forecast); else $("forecast").textContent = outlook[1];
   $("edition-note").textContent = ed ? "Edition " + ed.number + ", written by the editor " + ago(ed.ts, data.now) : "Late edition, still no map";
-  drawLead(data); drawMalayalam(data); drawBoard(data); drawDesk(data); drawBosses(data); drawEditorial(data, day); drawStars(data, day); drawAwards(data); drawNews();
+  drawLead(data); drawMalayalam(data); drawBoard(data); drawDesk(data); drawBosses(data); drawEditorial(data, day); drawStars(data, day); drawFromArchives(data); drawAwards(data); drawNews();
   var newest = data.deaths[0] ? data.deaths[0].id : 0;
   if (lastDeathId !== null && newest > lastDeathId) {
     toast("Stop the press: " + data.deaths[0].name + " is dead");
@@ -1095,7 +1113,7 @@ function reprint(ed, list, status) {
   $("edition-note").textContent = "Reprinted from the archive";
   setMixed($("ad"), ed.ad);
   setMixed($("forecast"), ed.forecast);
-  drawLead(data); drawMalayalam(data); drawEditorial(data, day); drawStars(data, day);
+  drawLead(data); drawMalayalam(data); drawEditorial(data, day); drawStars(data, day); drawFromArchives(data);
   $("flash").textContent = "From the archive";
   $("flash").classList.add("still");
   $("back").classList.add("solo");

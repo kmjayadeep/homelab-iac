@@ -6,6 +6,7 @@ import hmac
 import json
 import math
 import os
+import random
 import re
 import struct
 import subprocess
@@ -91,6 +92,7 @@ atlas_lock = threading.Lock()
 EDITION_MAX_BODY = 32 * 1024
 # Editions 1 to 3 were trial runs of the same news, so the archive starts at 4.
 EDITION_ARCHIVE_FROM = 4
+EDITION_RECENT = 5
 EDITION_TEXT = {"headline": 160, "story": 1500, "caption": 300, "editorial": 1200, "ad": 400, "forecast": 120}
 EDITION_PARTS = {
     "pull_quote": {"words": 300, "who": 160},
@@ -156,6 +158,14 @@ def clean_edition(raw):
             clean["malayalam"]["cartoon_caption"] = edition_text(malayalam["cartoon_caption"], 200)
     if isinstance(raw.get("model"), str):
         clean["model"] = raw["model"][:60]
+    if raw.get("quiet") is True:
+        clean["quiet"] = True
+    # An editor citing a back issue that does not exist loses the column, not the edition.
+    past = raw.get("from_archives")
+    if isinstance(past, dict) and past.get("text") and isinstance(past.get("number"), int):
+        cited = archived_edition(past["number"])
+        if cited:
+            clean["from_archives"] = {"number": past["number"], "headline": cited["headline"], "text": edition_text(past["text"], 900)}
     return clean
 
 
@@ -192,15 +202,21 @@ def archived_edition(number):
         return None
 
 
-def edition_index():
-    """Every edition in the archive, newest first, with what the list of back issues prints."""
-    index = []
+def past_editions(limit=None):
+    """Editions in the archive, newest first."""
+    papers = []
     for path in sorted(EDITIONS_DIR.glob("*.json"), reverse=True):
-        if not path.stem.isdigit() or not (paper := archived_edition(int(path.stem))):
-            continue
-        index.append({"number": paper["number"], "ts": paper["ts"], "headline": paper["headline"],
-                      "ml_headline": paper.get("malayalam", {}).get("headline")})
-    return index
+        if limit is not None and len(papers) == limit:
+            break
+        if path.stem.isdigit() and (paper := archived_edition(int(path.stem))):
+            papers.append(paper)
+    return papers
+
+
+def edition_index():
+    """What the list of back issues prints."""
+    return [{"number": paper["number"], "ts": paper["ts"], "headline": paper["headline"],
+             "ml_headline": paper.get("malayalam", {}).get("headline")} for paper in past_editions()]
 
 
 def digest_duration(seconds):
@@ -208,6 +224,59 @@ def digest_duration(seconds):
     if minutes < 60:
         return f"{minutes} min"
     return f"{minutes // 60} h {minutes % 60:02d} min"
+
+
+def first_words(text, count):
+    return " ".join(text.split()[:count])
+
+
+def desk_file(status, history, joins, marks, now, clock):
+    """True odds and ends for the sections the day's news cannot fill."""
+    lines = ["", "DESK FILE (all true, for sections the day's news cannot fill):"]
+    last_death, last_kill, quickest = {}, {}, []
+    for death, cause in history:
+        last_death[death["name"]] = (death, cause)
+        if cause != "unknown":
+            last_kill[cause] = death
+        joined = [ts for ts in joins.get(death["name"], []) if ts <= death["ts"]]
+        if joined:
+            quickest.append((death["ts"] - joined[-1], death["name"], cause, clock(death["ts"])))
+    for entry in status["players"]:
+        away = "is online now" if entry["online"] else f"has been away for {digest_duration(now - entry['last_seen'])}"
+        if entry["name"] in last_death:
+            death, cause = last_death[entry["name"]]
+            lines.append(f"- {entry['name']} {away}; last died {digest_duration(now - death['ts'])} ago, of {cause}.")
+        else:
+            lines.append(f"- {entry['name']} {away}; has never died in {digest_duration(entry['played'])} of play.")
+    if quickest:
+        seconds, name, cause, when = min(quickest)
+        lines.append(f"- Quickest death after joining: {name}, {digest_duration(seconds)}, of {cause}, {when}.")
+    if status["players"]:
+        survivor = max(status["players"], key=lambda entry: entry["longest_life"])
+        keen = max(status["players"], key=lambda entry: entry["played"])
+        lines.append(f"- Longest life: {survivor['name']}, {digest_duration(survivor['longest_life'])}. Most time played: {keen['name']}, {digest_duration(keen['played'])}.")
+    lines += [f"- The {cause} last killed {digest_duration(now - death['ts'])} ago ({death['name']})." for cause, death in last_kill.items()]
+    named = {}
+    for item in marks:
+        label = (item.get("label") or item.get("text") or "").strip()
+        if label:
+            named.setdefault(label.lower(), []).append(item)
+    for label, found in named.items():
+        if len(found) > 1:
+            where = " and ".join(f"{round(item['x'])} E / {round(-item['y'])} N" for item in found)
+            lines.append(f"- The atlas has {len(found)} marks named '{label}': {where}.")
+    authors = Counter(item["by"] for item in marks if item.get("by"))
+    if authors:
+        lines.append("- Pins and labels by author: " + ", ".join(f"{name} {count}" for name, count in authors.most_common())
+                     + f", unsigned {sum(not item.get('by') for item in marks)}.")
+    if marks:
+        far = max(marks, key=lambda item: math.hypot(item["x"], item["y"]))
+        lines.append(f"- Farthest mark from the spawn stones: '{far.get('label') or far.get('text') or ''}', {round(math.hypot(far['x'], far['y']))} metres out.")
+    boss_pins = [item.get("label") or item.get("text") or "unnamed" for item in marks if item.get("icon") == "boss"]
+    slain = sum(1 for boss in status["bosses"] if boss["ts"])
+    lines.append(f"- {slain} of {len(status['bosses'])} bosses slain by in-game day {status['world_day']}"
+                 + (f"; boss pins on the atlas: {', '.join(boss_pins)}." if boss_pins else "; no boss is pinned on the atlas."))
+    return lines
 
 
 def digest_text():
@@ -257,11 +326,19 @@ def digest_text():
     for death, cause in history:
         if cause != "unknown":
             victims.setdefault(cause, []).append(f"{death['name']} {clock(death['ts'])}")
+    recent = past_editions(EDITION_RECENT)
+
+    def poster_note(cause):
+        for paper in recent:
+            if cause.lower() in paper["wanted"]["name"].lower():
+                return f"last on the Wanted poster in No. {paper['number']}"
+        return "not on a recent Wanted poster"
+
     if victims:
         ranked = sorted(victims.items(), key=lambda item: -len(item[1]))
-        lines += ["", f"KILLERS, most dangerous first (the Wanted poster is for '{ranked[0][0]}'):"]
-        lines += [f"- {cause}: {len(names)} {'kill' if len(names) == 1 else 'kills'} ({', '.join(names)})" for cause, names in ranked]
-    slain = [boss["name"] + (" [NEW]" if boss["ts"] >= since else "") for boss in status["bosses"] if boss["ts"]]
+        lines += ["", "KILLERS, most kills first:"]
+        lines += [f"- {cause}: {len(names)} {'kill' if len(names) == 1 else 'kills'} ({', '.join(names)}); {poster_note(cause)}" for cause, names in ranked]
+    slain =[boss["name"] + (" [NEW]" if boss["ts"] >= since else "") for boss in status["bosses"] if boss["ts"]]
     lines += ["", f"BOSSES defeated in this world: {', '.join(slain) or 'none yet'}."]
     wire = [f"- {clock(event['ts'])}: {event['text']}" for event in events if event["ts"] >= since and event["kind"] != "death"]
     lines += ["", f"WIRE since the last edition, oldest first ({len(wire)} lines):"] + (wire[-60:] or ["- nothing happened"])
@@ -284,6 +361,36 @@ def digest_text():
         new = "  [NEW]" if item.get("ts", 0) >= since else ""
         lines.append(f"- {item.get('icon') or 'text'} pin '{label}' by {item.get('by') or 'an anonymous cartographer'}, "
                      f"{round(item['x'])} E / {round(-item['y'])} N{new}")
+    lines += desk_file(status, history, joins, marks, now, clock)
+    lines += ["", "RECENT EDITIONS, newest first. Do not reuse their subjects, openings, signers or jokes:"]
+    for paper in recent:
+        extra = paper.get("malayalam", {})
+        lines.append(f"- No. {paper['number']}, {clock(paper['ts'])}: '{paper['headline']}'. Editorial opened '{first_words(paper['editorial'], 8)}'. "
+                     f"Wanted: {paper['wanted']['name']}. Ad opened '{first_words(paper['ad'], 3)}'. "
+                     f"Letters signed: {'; '.join(letter['signed'] for letter in paper['letters'])}. "
+                     f"Score: {extra.get('sport', {}).get('score', 'none')}. Cartoon: {extra.get('cartoon', 'none')}.")
+    cited = {paper["from_archives"]["number"] for paper in recent if "from_archives" in paper}
+    older = [paper for paper in past_editions()[2:] if paper["number"] not in cited]
+    # Seeded by the edition number, so a retry sees the same list and later editions see a different one.
+    chosen = random.Random(previous["number"] if previous else 0).sample(older, min(8, len(older)))
+    lines += ["", "BACK ISSUES the From Our Archives column may revisit:"]
+    lines += [f"- No. {paper['number']}, {time.strftime('%d %b', time.localtime(paper['ts']))}: '{paper['headline']}'. {first_words(paper['story'], 35)}..."
+              for paper in sorted(chosen, key=lambda paper: paper["number"])] or ["- none yet"]
+    fallen = {death["name"] for death, _ in history if death["ts"] >= since}
+    visitors = {event["name"] for event in events if event["ts"] >= since and event["kind"] == "player" and event["label"] == "Joined"} - fallen
+    counts = {
+        "death": sum(death["ts"] >= since for death, _ in history),
+        "boss kill": sum(boss["ts"] >= since for boss in status["bosses"] if boss["ts"]),
+        "raid": sum(event["ts"] >= since and event["kind"] == "raid" for event in events),
+        "visiting player": len(visitors),
+        "atlas update": 1 if fresh else 0,
+    }
+    total = sum(counts.values())
+    summary = ", ".join(f"{count} {name}{'' if count == 1 else 's'}" for name, count in counts.items() if count) or "nothing new"
+    streak = next((position for position, paper in enumerate(recent) if not paper.get("quiet")), len(recent))
+    # Goes above the player list; publish.py reads both lines to decide whether to print at all.
+    lines[2:2] = [f"NEWS VOLUME: {'QUIET' if not total else 'LIGHT' if total <= 2 else 'BUSY'} ({summary}).",
+                  f"Quiet editions in a row: {streak}."]
     lines += ["", f"CARTOON PICTURES the editor may choose from: {', '.join(ART_NAMES)}."]
     return "\n".join(lines) + "\n"
 
