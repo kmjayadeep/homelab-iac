@@ -64,6 +64,17 @@ Game events and player names go to Anthropic with every edition.
   publishes a feature edition, at most 2 in a row (`QUIET_LIMIT`, one day), and
   then skips until something happens. Deploy the dashboard before the CronJob
   script, which reads the digest's `NEWS VOLUME` line.
+- **Memory.** The agent has kagent memory (365-day TTL, pgvector on Helios).
+  It loads the paper's running story before writing and saves new threads
+  before its final message. `LORE` memories are the paper's own inventions and
+  `FACT` memories are dated game events. Only the digest may supply this
+  edition's game events. The CronJob's calls all run as kagent's default user,
+  so they share one memory. List it with
+  `GET /api/memories?agent_name=kagent__NS__vartha_editor&user_id=admin@kagent.dev`
+  on the controller. kagent can only delete all of an agent's memories at once.
+- **Cost.** kagent's LiteLLM key has a budget of $1 per 24 hours, which also
+  covers the `frontier` agents. Local and embedding models are exempt. Past the
+  limit an edition fails with `ExceededBudget` in the job log.
 
 ### Why Claude Opus
 
