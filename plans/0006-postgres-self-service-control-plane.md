@@ -209,7 +209,7 @@ this holds.
 - [x] Move `docs/platform/postgres.md`. Update `AGENTS.md`, `inventory/*`,
       `todo/index.md` and the kagent gitops agent prompt.
 - [x] Enable Renovate, then remove the directory from `homelab-iac`.
-- [ ] Take a fresh backup, then move nixpkgs to the current stable channel and
+- [x] Take a fresh backup, then move nixpkgs to the current stable channel and
       apply it. Postgres stays on major version 16.
 
 Exit: Helios deploys from the new repository on a current nixpkgs.
