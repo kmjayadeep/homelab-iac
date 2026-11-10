@@ -71,6 +71,13 @@ vault kv metadata put -mount=homelab/kv \
   services/cloudflare/dns-cboxlab
 ```
 
+## Prefix exception: `pgctl`
+
+Policies grant exact paths, with one exception. The `pgctl` AppRole may create
+and update `services/postgresql/*` and read its metadata, because new databases
+cannot be listed in advance. It cannot read any password. Defined in
+`pgctl.tf`.
+
 ## Top-level paths
 
 | Prefix | Purpose | Example |
