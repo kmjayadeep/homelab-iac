@@ -9,7 +9,8 @@ set -euo pipefail
 account_id="de346322c951eb2e500a79df4f02317f"
 secret_path="services/object-storage/postgres-restic"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-restic_env="$script_dir/../nixos-images/postgres/secrets/secret-restic.env"
+# homelab-postgres is expected as a sibling checkout of this repository.
+restic_env="${RESTIC_ENV_FILE:-$script_dir/../../homelab-postgres/secrets/secret-restic.env}"
 
 fail() {
   printf '%s\n' "$1" >&2

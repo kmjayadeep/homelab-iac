@@ -82,12 +82,13 @@ From `nixos-images/*` directories, use the Makefiles to rebuild.
 Examples:
 - `nixos-images/k3s/`: `make rebuild`
 - `nixos-images/valheim/`: `make rebuild-fireland`
-- `nixos-images/postgres/`: `make rebuild`
 - `nixos-images/gatekeeper/`: `make rebuild`
 - `nixos-images/github-runner/`: `make rebuild`
 - `nixos-images/jd-workspace/`: `make rebuild`
 - `nixos-images/golem/`: `make rebuild`
 - `nixos-images/coder/`: `make rebuild`
+
+The Helios PostgreSQL NixOS configuration lives in the private `homelab-postgres` repository.
 
 Base image build (from `nixos-images/nixos-base-image/`):
 - `nix build .#proxmox`

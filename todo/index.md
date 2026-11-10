@@ -4,6 +4,8 @@ Platform improvement plans and current status.
 
 ## Helios Postgres Platform
 
+The configuration and service contract moved to the private `homelab-postgres` repository. Paths under `nixos-images/postgres/` in these notes are historical. Remaining work is tracked in [`plans/0006-postgres-self-service-control-plane.md`](../plans/0006-postgres-self-service-control-plane.md).
+
 | Phase | Status | Document |
 | --- | --- | --- |
 | 0 | Done | [00-postgres-service-contract.md](00-postgres-service-contract.md) |
