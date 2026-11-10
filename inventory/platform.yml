@@ -214,7 +214,7 @@ storage:
     role: "Remote bucket for Postgres restic backups."
     known_from:
       - "cloudflare/main.tf"
-      - "nixos-images/postgres/modules/backup.nix"
+      - "homelab-postgres/modules/backup.nix"
     depends_on:
       - "network.isp_router"
       - "external.cloudflare"
@@ -310,15 +310,15 @@ platforms:
     role: "Postgres platform running on the dedicated helios VM. Apps should depend on this platform as a black box."
     endpoint: "postgres.cosmos.cboxlab.com:5432"
     network_scope: "LAN only"
-    service_contract: "docs/platform/postgres.md"
+    service_contract: "homelab-postgres/docs/postgres.md"
     availability_target: "99% monthly, excluding planned maintenance and upstream homelab dependencies"
     rpo: "<= 1 hour for databases included in backup policy"
     rto: "best effort, target < 4 hours for normal restore"
     maintenance_policy: "may happen any time"
     known_from:
       - "cosmos/proxmox/helios.tf"
-      - "nixos-images/postgres"
-      - "docs/platform/postgres.md"
+      - "homelab-postgres"
+      - "homelab-postgres/docs/postgres.md"
     depends_on:
       - "vm.helios"
       - "storage.cloudflare_r2_postgres"
@@ -366,7 +366,7 @@ vms:
     ip: "192.168.1.77"
     known_from:
       - "cosmos/proxmox/helios.tf"
-      - "nixos-images/postgres"
+      - "homelab-postgres"
     depends_on:
       - "hardware.compute.mars"
       - "network.switch_2_5g"
@@ -488,10 +488,10 @@ services:
     endpoint: "postgres.cosmos.cboxlab.com:5432"
     backup: "backup.postgres_r2"
     known_from:
-      - "nixos-images/postgres/modules/postgres-catalog.nix"
-      - "nixos-images/postgres/modules/postgres.nix"
-      - "nixos-images/postgres/modules/backup.nix"
-      - "docs/platform/postgres.md"
+      - "homelab-postgres/modules/postgres-catalog.nix"
+      - "homelab-postgres/modules/postgres.nix"
+      - "homelab-postgres/modules/backup.nix"
+      - "homelab-postgres/docs/postgres.md"
 
 backups:
   vm_pbs:
@@ -518,7 +518,7 @@ backups:
     offsite: true
     restore_confidence: "medium"
     known_from:
-      - "nixos-images/postgres/modules/backup.nix"
+      - "homelab-postgres/modules/backup.nix"
       - "cloudflare/main.tf"
     todos:
       - "Document restore command, test restore into temporary database, and record RPO/RTO."

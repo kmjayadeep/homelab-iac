@@ -201,14 +201,14 @@ this holds.
 
 ## Phase 2: Split the repository and update the platform
 
-- [ ] Create private `homelab-postgres`. Extract history with
+- [x] Create private `homelab-postgres`. Extract history with
       `git filter-repo --subdirectory-filter nixos-images/postgres`.
-- [ ] Add `.gitattributes` and reuse the existing git-crypt key. The key never
+- [x] Add `.gitattributes` and reuse the existing git-crypt key. The key never
       goes on Helios, so sharing it does not widen `pgctl`'s access.
-- [ ] Prove `nixos-rebuild build` gives the same system as before the move.
-- [ ] Move `docs/platform/postgres.md`. Update `AGENTS.md`, `inventory/*`,
+- [x] Prove `nixos-rebuild build` gives the same system as before the move.
+- [x] Move `docs/platform/postgres.md`. Update `AGENTS.md`, `inventory/*`,
       `todo/index.md` and the kagent gitops agent prompt.
-- [ ] Enable Renovate, then remove the directory from `homelab-iac`.
+- [x] Enable Renovate, then remove the directory from `homelab-iac`.
 - [ ] Take a fresh backup, then move nixpkgs to the current stable channel and
       apply it. Postgres stays on major version 16.
 
