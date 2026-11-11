@@ -218,13 +218,13 @@ across minor versions.
 
 ## Phase 3: Catalog, reconcile and CLI
 
-- [ ] Convert the catalog to `catalog.json`, consumed through `fromJSON`.
-- [ ] Build `pgctl` with `buildGoModule`, with `reconcile` and read-only commands.
-- [ ] Add a NixOS VM test for reconcile, idempotence and "never drops".
-- [ ] Run `reconcile` against live and confirm it reports no changes.
-- [ ] Add the boot reconcile unit and remove `ensure*` and
+- [x] Convert the catalog to `catalog.json`, consumed through `fromJSON`.
+- [x] Build `pgctl` with `buildGoModule`, with `reconcile` and read-only commands.
+- [x] Add a NixOS VM test for reconcile, idempotence and "never drops".
+- [x] Run `reconcile` against live and confirm it reports no changes.
+- [x] Add the boot reconcile unit and remove `ensure*` and
       `postgresql-extensions`. This needs one Postgres restart.
-- [ ] Add `db create` and the Vault AppRole. Test with a throwaway database.
+- [x] Add `db create` and the Vault AppRole. Test with a throwaway database.
 
 Exit: a new database appears with no rebuild and no restart.
 Rollback: restore the `ensure*` generation. Roles and databases are unaffected.
