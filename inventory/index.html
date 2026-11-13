@@ -655,7 +655,7 @@
       { id: "k8sApps", name: "Kubernetes apps", tier: "unknown", kind: "app-group", layer: "app", x: 625, y: 660, role: "Apps running on the K3s platform. Names and persistence need inventory.", known: "placeholder from platform scope", todos: ["Record namespaces, ingress names, persistent volumes, and database dependencies."] },
 
       { id: "r2", name: "Cloudflare R2", tier: "P1", kind: "storage", layer: "platform", x: 360, y: 795, role: "Remote bucket for Postgres Restic backups.", known: "cloudflare/main.tf" },
-      { id: "postgresBackedApps", name: "Postgres-backed apps", tier: "P1", kind: "app-group", layer: "app", x: 560, y: 795, role: "Apps using helios/Postgres databases: totp, planka, immich, coder, taskplanner.", known: "homelab-postgres/modules/backup.nix" },
+      { id: "postgresBackedApps", name: "Postgres-backed apps", tier: "P1", kind: "app-group", layer: "app", x: 560, y: 795, role: "Apps using helios/Postgres databases: bookorbit, immich, kagent, litellm, shoppinglist, taskplanner, totp, wallabag.", known: "homelab-postgres/catalog.json" },
       { id: "backupPaths", name: "Backup paths", tier: "P1", kind: "backup", layer: "backup", x: 760, y: 795, role: "Most VMs to PBS, Postgres to R2, game worlds to MinIO, and NAS remote bucket backups.", known: "inventory/backups.md + repo backup configs", todos: ["Split backup path details once restore tests are documented."] }
     ];
 

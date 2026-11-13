@@ -247,13 +247,29 @@ oversized snapshots were forgotten.
 
 ## Phase 5: Write operations
 
-- [ ] Add create, adopt, rotate, add-readonly, retire, drop, back up now, repository
-      check and restore to a new database, each covered by the VM test.
-- [ ] Use retire on `k3s` and `uptimekuma` as the first real run.
-- [ ] Import the six missing passwords with `user import-password`.
-- [ ] Remove pgweb, its role, DNS record and the Homer and Glance links.
+- [x] Add create, adopt, rotate, retire, drop, back up now, repository check and
+      restore to a new database, each covered by the VM test.
+- [ ] Add `user add-readonly`. It needs catalog users and reconcile support.
+- [x] Use retire on `k3s` and `uptimekuma` as the first real run.
+- [x] Import the six missing passwords with `user import-password`.
+- [x] Remove pgweb, its role, DNS record and the Homer and Glance links.
 
 Exit: a new app is onboarded from the UI, and only the access PRs are manual.
+
+Done 2026-11-13 (homelab-postgres #7, #8 and #9; homelab-k8s #608), except
+`add-readonly`. The exit was proven live: `pgctl_ui_smoke` was created, retired
+and dropped from the UI, then its Vault secret and final snapshot were removed.
+
+- Only `immich` needed its password imported. `coder`, `planka` and `streakslap`
+  had no clients, so they were retired and dropped with `k3s` and `uptimekuma`.
+  Each final snapshot is tagged `final` and kept by retention. Uptime Kuma 1.x
+  uses SQLite, so its empty database was never in use.
+- Retire blocks connections and the owner's login through reconcile, so a
+  retired database is skipped by the hourly backup. Drop needs the final
+  snapshot and the name typed.
+- A polkit rule lets `postgres` start only the backup and check units.
+- UI actions run as jobs under the pgctl lock. Forms carry a per-process token
+  and cross-site posts are refused. Commits record the UI user.
 
 ## Phase 6: Hardening
 
