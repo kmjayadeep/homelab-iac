@@ -328,7 +328,6 @@ platforms:
       - "postgres_backed_apps_unknown"
     important_databases:
       - "immich"
-      - "uptimekuma"
     ha_status: "single_vm_no_automatic_failover"
     todos:
       - "Record client apps, restore order, and whether standby/replica options are worth it."
@@ -375,7 +374,7 @@ vms:
       - "platform.postgres_helios"
       - "database.postgres"
       - "database.mongodb"
-      - "service.pgweb"
+      - "service.pgctl"
     backup: "backup.postgres_r2"
   titania_master:
     kind: "vm"
@@ -483,12 +482,12 @@ services:
       - "nixos-images/gatekeeper/modules/proxy.nix"
   postgres:
     tier: "P1"
-    role: "Postgres databases for homelab LAN apps; immich and uptimekuma are the most important current databases."
+    role: "Postgres databases for homelab LAN apps; immich is the most important current database. Managed with pgctl (https://pgctl.cosmos.cboxlab.com)."
     runs_on: "platform.postgres_helios"
     endpoint: "postgres.cosmos.cboxlab.com:5432"
     backup: "backup.postgres_r2"
     known_from:
-      - "homelab-postgres/modules/postgres-catalog.nix"
+      - "homelab-postgres/catalog.json"
       - "homelab-postgres/modules/postgres.nix"
       - "homelab-postgres/modules/backup.nix"
       - "homelab-postgres/docs/postgres.md"
