@@ -231,11 +231,19 @@ Rollback: restore the `ensure*` generation. Roles and databases are unaffected.
 
 ## Phase 4: Read-only UI
 
-- [ ] Add Databases, Database detail and Backups as in the mockup.
-- [ ] Add the nginx virtual host, certificate, DNS record and basic auth.
-- [ ] Add drift flags and deployed revision.
+- [x] Add Databases, Database detail and Backups as in the mockup.
+- [x] Add the nginx virtual host, certificate, DNS record and basic auth.
+- [x] Add drift flags and deployed revision.
 
 Exit: "are backups working?" can be answered from the UI alone.
+
+Done 2026-11-13 (homelab-postgres #6, homelab-k8s #606). pgctl checks basic auth
+itself against a bcrypt hash from `pgctl ui-password`, because nginx cannot
+read `/var/lib/pgctl/secrets`. R2 usage and the restore drill come from
+Prometheus. While building it, the R2 repository was found at 30 GB: LiteLLM's
+spend-log retention made every litellm dump change throughout. Its rows are now
+excluded through `backupExcludeTableData` (homelab-postgres #4), and the 27
+oversized snapshots were forgotten.
 
 ## Phase 5: Write operations
 
