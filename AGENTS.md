@@ -5,7 +5,7 @@ Applies to the entire repository unless a deeper `AGENTS.md` exists.
 
 ## Project Overview
 Infrastructure-as-code repo with:
-- Terraform stacks (`cloudflare/`, `cosmos/proxmox/`, `cosmos/pluto/`, `storage/minio/`, `vault-config/`).
+- Terraform stacks (`cloudflare/`, `cosmos/proxmox/`, `storage/minio/`, `vault-config/`).
 - Terraform modules (`terraform-modules/*`).
 - Ansible projects (`cosmos/ansible-k3s/`, `cosmos/ansible-valheim/`).
 - NixOS flake images under `nixos-images/*`.
@@ -25,7 +25,6 @@ Run these in the specific Terraform root directory.
 Terraform directories include:
 - `cloudflare/`
 - `cosmos/proxmox/`
-- `cosmos/pluto/`
 - `vault-config/`
 - `storage/minio/`
 - `terraform-modules/*` (modules only; no direct apply)
@@ -40,9 +39,6 @@ Format/validate (if needed):
 
 ### Terraform (Justfile helpers)
 Some stacks provide `just` recipes.
-- `cosmos/pluto/justfile`
-  - `just plan`
-  - `just apply`
 - `cosmos/proxmox/justfile`
   - `just plan`
   - `just apply`

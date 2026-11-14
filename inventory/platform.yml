@@ -66,7 +66,7 @@ hardware:
       role: "Hardware directly connected to ISP router at 1 Gbps. Runs PBS as a backup target for most VMs."
       known_from:
         - "user stated Pluto runs PBS"
-        - "cosmos/pluto"
+        - "cosmos/proxmox/node-pluto.tf"
       depends_on:
         - "network.isp_router"
       supports:
@@ -241,7 +241,6 @@ platforms:
     tier: "P0"
     known_from:
       - "cosmos/proxmox"
-      - "cosmos/pluto"
     depends_on:
       - "hardware.compute.mars"
       - "hardware.compute.jupiter"

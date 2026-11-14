@@ -647,7 +647,7 @@
       { id: "minio", name: "MinIO", tier: "P0", kind: "platform", layer: "platform", x: 870, y: 420, role: "S3-compatible object storage inside the TrueNAS Docker jail with mounted NAS storage.", known: "user stated + minio_s3_bucket module", todos: ["Record mounted dataset path, lifecycle policy, versioning, credentials location, and remote replication."] },
       { id: "nasRemote", name: "NAS remote backup", tier: "P0", kind: "backup", layer: "backup", x: 755, y: 525, role: "TrueNAS dataset backup or replication to an unknown remote bucket.", known: "user stated", todos: ["Record provider, bucket, datasets, retention, encryption, and restore tests."] },
 
-      { id: "pluto", name: "pluto hardware", tier: "P1", kind: "hardware", layer: "hardware", groupOnly: true, x: 1215, y: 260, role: "Hardware directly connected to ISP router at 1 Gbps. Runs PBS as a backup target for most VMs.", known: "user stated + cosmos/pluto", todos: ["Record PBS datastore path, retention, prune/verify schedule, and disk layout."] },
+      { id: "pluto", name: "pluto hardware", tier: "P1", kind: "hardware", layer: "hardware", groupOnly: true, x: 1215, y: 260, role: "Hardware directly connected to ISP router at 1 Gbps. Runs PBS as a backup target for most VMs.", known: "user stated + cosmos/proxmox/node-pluto.tf", todos: ["Record PBS datastore path, retention, prune/verify schedule, and disk layout."] },
       { id: "pbs", name: "PBS", tier: "P1", kind: "backup", layer: "platform", x: 1105, y: 300, role: "Proxmox Backup Server running on pluto; backup target for most VMs.", known: "user stated", todos: ["Record covered VMs, datastore, retention, verify jobs, and restore test status."] },
 
 
