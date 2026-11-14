@@ -76,7 +76,6 @@ From `cosmos/ansible-valheim/`:
 ### NixOS images
 From `nixos-images/*` directories, use the Makefiles to rebuild.
 Examples:
-- `nixos-images/k3s/`: `make rebuild`
 - `nixos-images/valheim/`: `make rebuild-fireland`
 - `nixos-images/gatekeeper/`: `make rebuild`
 - `nixos-images/github-runner/`: `make rebuild`

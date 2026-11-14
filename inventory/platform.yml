@@ -291,7 +291,6 @@ platforms:
     tier: "P1"
     known_from:
       - "cosmos/ansible-k3s"
-      - "nixos-images/k3s"
     depends_on:
       - "vm.titania_master"
       - "vm.titania_worker1"
