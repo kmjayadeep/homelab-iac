@@ -651,7 +651,7 @@
       { id: "pbs", name: "PBS", tier: "P1", kind: "backup", layer: "platform", x: 1105, y: 300, role: "Proxmox Backup Server running on pluto; backup target for most VMs.", known: "user stated", todos: ["Record covered VMs, datastore, retention, verify jobs, and restore test status."] },
 
 
-      { id: "k3s", name: "K3s platform", tier: "P1", kind: "platform", layer: "platform", x: 425, y: 660, role: "Kubernetes abstraction running over titania-master and titania-worker1.", known: "cosmos/ansible-k3s + nixos-images/k3s", todos: ["Record workloads, ingress, persistent volumes, and cluster backup/restore path."] },
+      { id: "k3s", name: "K3s platform", tier: "P1", kind: "platform", layer: "platform", x: 425, y: 660, role: "Kubernetes abstraction running over titania-master and titania-worker1.", known: "cosmos/ansible-k3s", todos: ["Record workloads, ingress, persistent volumes, and cluster backup/restore path."] },
       { id: "k8sApps", name: "Kubernetes apps", tier: "unknown", kind: "app-group", layer: "app", x: 625, y: 660, role: "Apps running on the K3s platform. Names and persistence need inventory.", known: "placeholder from platform scope", todos: ["Record namespaces, ingress names, persistent volumes, and database dependencies."] },
 
       { id: "r2", name: "Cloudflare R2", tier: "P1", kind: "storage", layer: "platform", x: 360, y: 795, role: "Remote bucket for Postgres Restic backups.", known: "cloudflare/main.tf" },

@@ -10,3 +10,7 @@ tracked by Renovate.
   managed with the Telmate provider. The VM was deleted by hand on
   2026-11-14; the state still lists it and must not be applied. Pluto's
   ACME resources stay in `cosmos/proxmox/node-pluto.tf`.
+- `nixos-k3s/`: the NixOS flake for the first Titania k3s cluster (master
+  at 192.168.1.40, workers .78/.79). Replaced by Debian nodes managed from
+  `cosmos/ansible-k3s`; the master VM was deleted on 2026-11-14. Secrets
+  stay git-crypt encrypted.
