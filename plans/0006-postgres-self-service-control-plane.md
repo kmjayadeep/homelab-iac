@@ -273,14 +273,29 @@ and dropped from the UI, then its Vault secret and final snapshot were removed.
 
 ## Phase 6: Hardening
 
-- [ ] Set `runAsLocalSuperUser` on the exporter, then change `local trust` to
+- [x] Set `runAsLocalSuperUser` on the exporter, then change `local trust` to
       `peer`. Verify the exporter and backups.
-- [ ] Add `pg_stat_statements` and slow-query logging, and surface them in the UI.
-- [ ] Raise RAM to 4 GB and tune `shared_buffers` and related settings.
+- [x] Add `pg_stat_statements` and slow-query logging, and surface them in the UI.
+- [x] Raise RAM to 4 GB and tune `shared_buffers` and related settings.
 - [ ] Enable data checksums with `pg_checksums` in a maintenance window.
-- [ ] Fix `PostgreSQLSlowQueries`, which uses `rate()` on a duration.
-- [ ] Point the important-database alert at `immich` instead of `uptimekuma`.
-- [ ] Decide MongoDB: remove it, or add a backup.
+- [x] Fix `PostgreSQLSlowQueries`, which uses `rate()` on a duration.
+- [x] Point the important-database alert at `immich` instead of `uptimekuma`.
+- [x] Decide MongoDB: remove it, or add a backup.
+
+Done 2026-11-13 except checksums (homelab-postgres #10, homelab-k8s #609, this
+repository's `cosmos/proxmox/helios.tf`).
+
+- One reboot applied the RAM and the new settings: `nixos-rebuild boot`, then
+  the Terraform change restarted the VM. Proxmox ballooning then held the guest
+  at about 2 GB, because mars runs near 80% memory. `balloon = 4096` pins it.
+- `PostgreSQLSlowQueries` became `PostgreSQLLongTransaction`: any transaction
+  open over 5 minutes. The hourly dumps take under a minute.
+- MongoDB was removed with its 404 MB of data, on request.
+- `uptimekuma` was not unused after all: two Uptime Kuma monitors log in to it
+  every minute as a health check. Its role was restored from the final
+  snapshot's `globals.sql` with the same password hash, the empty database was
+  recreated and adopted. Before dropping a database, check the journal for
+  failed or successful logins, not only for tables and sessions.
 
 ## Risks
 

@@ -373,7 +373,6 @@ vms:
     supports:
       - "platform.postgres_helios"
       - "database.postgres"
-      - "database.mongodb"
       - "service.pgctl"
     backup: "backup.postgres_r2"
   titania_master:
