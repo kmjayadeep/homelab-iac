@@ -1,6 +1,6 @@
 # Plan 0006: Postgres self-service control plane (`pgctl`)
 
-- Status: Proposed
+- Status: Completed with follow-up work
 - Date: 2026-11-09
 - Supersedes: `todo/02`, `todo/05`, `todo/06` and the replica part of `todo/07`
 - Related: `docs/platform/postgres.md`, `vault-config/PATHS.md`
@@ -250,6 +250,7 @@ oversized snapshots were forgotten.
 - [x] Add create, adopt, rotate, retire, drop, back up now, repository check and
       restore to a new database, each covered by the VM test.
 - [ ] Add `user add-readonly`. It needs catalog users and reconcile support.
+      Deferred 2026-11-14: no app or dashboard needs a read-only role yet.
 - [x] Use retire on `k3s` and `uptimekuma` as the first real run.
 - [x] Import the six missing passwords with `user import-password`.
 - [x] Remove pgweb, its role, DNS record and the Homer and Glance links.
@@ -277,12 +278,13 @@ and dropped from the UI, then its Vault secret and final snapshot were removed.
       `peer`. Verify the exporter and backups.
 - [x] Add `pg_stat_statements` and slow-query logging, and surface them in the UI.
 - [x] Raise RAM to 4 GB and tune `shared_buffers` and related settings.
-- [ ] Enable data checksums with `pg_checksums` in a maintenance window.
+- [x] Enable data checksums with `pg_checksums` in a maintenance window.
+- [x] Enable the host firewall.
 - [x] Fix `PostgreSQLSlowQueries`, which uses `rate()` on a duration.
 - [x] Point the important-database alert at `immich` instead of `uptimekuma`.
 - [x] Decide MongoDB: remove it, or add a backup.
 
-Done 2026-11-13 except checksums (homelab-postgres #10, homelab-k8s #609, this
+Done 2026-11-14 (homelab-postgres #10 and #11, homelab-k8s #609, this
 repository's `cosmos/proxmox/helios.tf`).
 
 - One reboot applied the RAM and the new settings: `nixos-rebuild boot`, then
@@ -296,6 +298,15 @@ repository's `cosmos/proxmox/helios.tf`).
   snapshot's `globals.sql` with the same password hash, the empty database was
   recreated and adopted. Before dropping a database, check the journal for
   failed or successful logins, not only for tables and sessions.
+- Checksums: after the 05:00 hourly backup, Postgres was stopped and
+  `pg_checksums --enable` rewrote all 465k blocks in 1m24s. New clusters get
+  `--data-checksums` from `initdbArgs`. The first backup afterwards read every
+  table page with no checksum failures.
+- Helios has public IPv6 addresses and had no firewall, so the exporters were
+  listening on them. The nftables firewall opens 22, 80 and 443; Postgres and
+  the exporters accept only the networks `pg_hba` trusts. The fresh-host VM test
+  checks both from a second node over IPv4 and IPv6. The firewall and the
+  checksum conversion shared one reboot.
 
 ## Risks
 
