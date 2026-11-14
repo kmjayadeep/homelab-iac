@@ -79,6 +79,7 @@ variable "external_secrets_roles" {
         "services/jellyfin/movie-mcp",
         "services/radarr/movie-mcp",
         "apps/valheim-vartha/editor",
+        "services/home-assistant/kagent",
       ]
     }
     llm-gateway = {
@@ -108,6 +109,11 @@ variable "external_secrets_roles" {
       kubernetes_namespace = "monitoring"
       service_account_name = "external-secrets-vault-grafana"
       secret_paths         = ["platform/monitoring/grafana-admin"]
+    }
+    monitoring-home-assistant = {
+      kubernetes_namespace = "monitoring"
+      service_account_name = "external-secrets-vault-home-assistant"
+      secret_paths         = ["services/home-assistant/prometheus"]
     }
     monitoring-loki = {
       kubernetes_namespace = "monitoring"
