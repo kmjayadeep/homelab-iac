@@ -60,5 +60,10 @@
         - "{{ k3s_tls_san }}"
       kubelet-arg:
         - "allowed-unsafe-sysctls=net.ipv6.*,net.ipv4.*"
+        # Image GC below the Longhorn disk alerts (70 %): images share the root disk with Longhorn, and
+        # with the kubelet default (85/80) unused images filled ~142G per node by 2026-11-25 and kept the
+        # Longhorn storage warnings firing for a week. GC deletes unused images down to the low threshold.
+        - "image-gc-high-threshold={{ k3s_image_gc_high_threshold | default(65) }}"
+        - "image-gc-low-threshold={{ k3s_image_gc_low_threshold | default(55) }}"
   notify: restart k3s
 
